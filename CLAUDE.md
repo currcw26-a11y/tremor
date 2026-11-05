@@ -1,0 +1,166 @@
+# Tremor — Project Spec (Claude's memory file)
+
+
+## What Tremor is
+
+An early warning system for biotech stocks. It watches public data about cancer drug trials and emails users when something looks off before big news comes out. Pitch: "The Pentagon pizza index, but for cancer drug trials."
+
+When a trial is in trouble, companies rarely say so right away, but clues show up first: quiet edits to the trial's official record (changing the main goal, cutting patients, pushing dates back), executives selling stock, a key executive quitting, hiring stopping, layoff notices, the FDA scheduling an advisory meeting, or a rival drug that works the same way failing. Tremor checks all of these every 4 hours, turns them into a 0 to 100 worry score for each trial, and explains every change in plain English.
+
+## Who it's for
+
+Beginner investors, starting with my classmates. Most have never bought a stock. Everything must make sense to them.
+
+## Hard rules
+
+1. Never tell anyone to buy or sell. Show what changed, what happened in similar past cases, and the possible upside and downside. Every user sees the same content for the same trial. Nothing is tailored to anyone's own money.
+2. Code computes every number from real data. Claude only explains those numbers. Claude must never invent a statistic, prediction, or price target.
+3. A "Not investment advice" note in the footer of every page and every email.
+4. Plain English everywhere. Write for someone who has never bought a stock. Use "9 out of 14," not "64%." Use "typically," not "median." Explain or skip any finance or science term. Self-check: could a college freshman explain this back to a friend?
+5. Be honest about uncertainty. Every breakdown shows how many past cases it's based on. Many trial edits are harmless paperwork, and the site should say so.
+
+## Scope (version 1)
+
+- Phase 2 and Phase 3 cancer (oncology) trials sponsored by companies traded on US stock exchanges.
+- Matching trial sponsors to stock tickers is tricky, because names differ and partners sometimes run trials. Keep a sponsor-to-ticker lookup table. Claude can suggest matches, but I confirm each one before it's used for alerts, through a simple admin page or a CSV I edit.
+
+## The worry score
+
+- 0 to 100 for each trial, with a label and color: Calm (green), Shaky (yellow), Tremor (red). Start with cutoffs of 0 to 39, 40 to 69, and 70 to 100, kept in one config file.
+- Rules-based and transparent for version 1, not machine learning. Each signal adds points, points fade over time, and a few events jump straight to red. Put every weight in one config file. Starting guesses, to tune later with the backtest:
+  - Main goal (primary outcome) changed or removed: +25
+  - Enrollment cut by 15% or more: +15
+  - Completion date pushed back 3+ months: +10
+  - Trial suspended, terminated, or withdrawn: straight to red
+  - Results overdue (finished 12+ months ago, no results posted): +10
+  - Insider selling cluster (2+ insiders selling within 30 days, not marked as pre-planned 10b5-1 trades): +10
+  - Key executive leaves, like the chief medical officer or head of R&D (often an 8-K with item 5.02): +15
+  - FDA advisory committee meeting scheduled for the drug: +10
+  - Layoff notice filed by the company: +15
+  - Clinical job postings drop sharply: +5
+  - A rival trial with the same mechanism in the same cancer fails: +10
+- Save every score change along with the signals behind it, so the site can show exactly why a score moved.
+
+## Tremors and email alerts
+
+A "tremor" is anything that could give users a head start before a big event. Triggers:
+- Big score jump: 15+ points in one update (configurable)
+- Critical single event: main goal changed, enrollment cut, trial stopped, key executive leaves
+- Head start signals: new FDA advisory meeting, insider selling cluster, results date pushed back, results overdue, rival same-mechanism trial failing, layoff notice
+
+Who gets what: each user gets tremors for trials on their watchlist, plus any "huge" tremor across all tracked trials (the score turns red or a critical event happens).
+
+Timing: big tremors are emailed right away, in the run that finds them. Smaller changes go into one daily digest email.
+
+- Bundle all of a user's tremors from one run into a single email.
+- Users sign in once with Google and never need to log in again. Everything runs on its own after that.
+- One-click unsubscribe link in every email, plus settings to turn off the digest or instant alerts.
+- Send email through Resend's free plan: 100 emails a day, 3,000 a month. Track the count and never go over. If we get close, skip digests before skipping instant alerts.
+- Each email includes what changed, the score before and after, why it matters in plain English, the upside/downside breakdown, and a "what to check next" list (links to the exact trial record changes, the SEC filing, and the company's next expected event). Never "buy" or "sell."
+- Text messages are a later feature. Design the alert code so another channel can be added.
+
+Example alert (fake company, fake numbers). This is the tone and level I want:
+
+> 🔴 Tremor: Example Bio
+> What happened: Example Bio quietly changed its big cancer drug study to make it easier to call a success, and cut the number of patients by 20%.
+> Why that's a red flag: companies don't usually lower the bar unless they're worried about clearing it.
+> When this happened before: 14 companies made similar changes. For 9 of them the results disappointed, and the stock typically lost about half its value the day the news came out. For the other 5 the results were fine, and the stock typically went up about 20%.
+> How big a deal is this for them: huge. This is basically the company's only big drug.
+> Money left: about 8 months. If the drug fails, they'll likely need to sell more shares to raise cash, which usually makes each share worth less.
+> How sure are we: medium. 14 past examples is a decent number, but not a lot.
+> When we'll find out: results are expected early next year.
+
+## Upside/downside breakdown
+
+Code computes it from past cases, and Claude explains it:
+- Similar past cases: past trials with the same kind of signal. How many were followed by bad news (trial failed, stopped, or rejected by the FDA) versus fine results.
+- The typical stock move when the news came out, for both outcomes. Measure from the close the day before the news to the close the day after.
+- How much rides on it: is this the company's main drug, or one of many?
+- Money left: months of cash, from SEC financial data (cash divided by the recent spending rate).
+- Confidence: low under 10 cases, medium for 10 to 29, high for 30 or more. Always show the count.
+- Next expected event: the results date or FDA decision date, if known.
+- Show the past cases as a row of dots (red = went badly, green = fine).
+
+## Pages
+
+Public, no login:
+1. Home feed: latest tremors and biggest score moves, newest first
+2. Trial page: score, score history chart, every change with a plain-English explanation, the upside/downside breakdown, and links to the sources. A "Show details" button expands the technical version.
+3. Company page: all its tracked trials, insider trades, filings, job and layoff signals, and cash left
+4. Track record page: every past flag and what happened next, hits and misses. This is what proves Tremor works.
+5. How the score works: every rule and weight, written simply
+6. How biotech stocks move: a 2-minute explainer for beginners
+
+Logged in (Google sign-in):
+7. Watchlist: star trials or companies
+8. Alert settings
+9. AI chat: ask about any tracked trial or company. Answers come from Tremor's own data (pass the relevant records to Claude) and follow the same hard rules. Limit: 10 questions per user per day.
+
+Also:
+- Tap-to-learn: any unavoidable term (Phase 3, insider, FDA advisory committee, enrollment) gets a small popup explanation.
+- "Tremor Weekly": a weekly roundup Claude writes from that week's data, shown on the home page. Lower priority (Week 5).
+
+## Look and feel
+
+Modern startup: clean, bold, and confident, like a real product. Light or dark is your call, but it has to look great on a phone, since most people will open it from an email. Score badges are the visual center. Not cluttered.
+
+## Tech stack (all free tiers)
+
+- Website: Next.js (App Router, TypeScript) and Tailwind, hosted on Vercel's free plan. I'll buy a domain.
+- Database and Google login: Supabase free plan (Postgres plus Supabase Auth with Google).
+- Data pipeline: Python, in a /pipeline folder, run by GitHub Actions every 4 hours. Vercel's free plan only allows once-a-day scheduled jobs, so the schedule lives on GitHub. The repo will be public, so Actions minutes are free. GitHub disables scheduled workflows in public repos after 60 days with no repo activity, so remind me about that.
+- Email: Resend free plan.
+- AI: the Claude API with my key. Use the cheapest model that does the job well (claude-haiku-5-5) for explanations, alert text, and chat. Check Anthropic's docs for current model names and prices before coding.
+- Each pipeline run: fetch new data, save snapshots, find differences, update signals and scores, call Claude only for things that actually changed, send instant alerts, and (once a day) send digests.
+
+## Keeping costs down
+
+- Only call Claude when something actually changed. Cache every explanation.
+- Log the tokens and estimated cost of every Claude call in a table. Add a monthly budget cap (an env var, default $15). When it's reached, stop non-essential AI calls (chat, weekly roundup) and keep alerts working with shorter text.
+- Chat limit: 10 questions per user per day.
+
+## Data sources
+
+All free. Send a User-Agent header with "Tremor" plus a contact email (from a CONTACT_EMAIL env var) to the SEC and the job boards. Cache everything and keep request rates polite.
+
+Week 1 sources (core):
+- ClinicalTrials.gov API v2: https://clinicaltrials.gov/api/v2/studies. No key. No published rate limit, so cache and back off on errors. Up to 1,000 studies per page, paged with pageToken. Check /api/v2/version to see if new data has posted. Tremor catches edits by saving its own snapshot of each tracked trial every run and diffing it against the last one.
+- SEC EDGAR (no key, max 10 requests per second, User-Agent required):
+  - Ticker lookup: https://www.sec.gov/files/company_tickers.json
+  - Filings list: https://data.sec.gov/submissions/CIK##########.json. 8-Ks come tagged with item codes, like 5.02 for executive changes.
+  - Insider trades: Form 4 XML from the EDGAR archives. Read each filing's index first, since filenames vary. Since April 2023, Form 4 has a checkbox for pre-planned 10b5-1 trades.
+  - Financials: https://data.sec.gov/api/xbrl/companyfacts/CIK##########.json (cash, spending, shares outstanding)
+  - Full-text search: https://efts.sec.gov/LATEST/search-index?q= (find filings that mention a drug code)
+  - EDGAR posts filings on business days from 6 a.m. to 10 p.m. Eastern.
+- Federal Register API: https://www.federalregister.gov/api/v1/documents.json with conditions[agencies][]=food-and-drug-administration, conditions[type][]=NOTICE, and conditions[term]=advisory committee. No key. The FDA must post these at least 15 days before the meeting.
+
+Week 3 sources (more signals):
+- Job boards (public JSON, no key): Greenhouse https://boards-api.greenhouse.io/v1/boards/{board}/jobs, Lever https://api.lever.co/v0/postings/{site}?mode=json, Ashby https://api.ashbyhq.com/posting-api/job-board/{board}. Find board names from company careers pages. Check once or twice a day. Use Greenhouse's first_published date, not updated_at.
+- Layoff notices: the warn-scraper Python package (covers 39 states, but not Massachusetts, North Carolina, or Pennsylvania), plus the Massachusetts weekly WARN CSV from mass.gov.
+
+Week 4 sources (prices, backtest, rivals):
+- openFDA (a free key raises the daily cap from 1,000 to 120,000 requests): Drugs@FDA https://api.fda.gov/drug/drugsfda.json for approval history, and rejection letters https://api.fda.gov/transparency/crl.json. The rejection letters aren't a live signal; use them to learn what problems lead to rejections.
+- Financial Modeling Prep (free key): up to 5 years of daily prices, 250 calls a day. Pull history once, store it, and never re-pull it.
+- Massive, formerly Polygon.io (free key): daily closing prices, 5 calls a minute.
+- Avoid yfinance. It's unofficial and breaks without warning.
+- Trial version history for the backtest: ClinicalTrials.gov has no official history API. The site's Record History tab and tools like the cthist R package can get past versions. Use these only for the backtest, never for live alerts.
+- AACT (free account): all of ClinicalTrials.gov as a Postgres database, handy for bulk historical queries.
+- "When did the news break": combine the 8-K date, the date results posted, and the day of the biggest stock move.
+- Rival drugs: ChEMBL mechanism API https://www.ebi.ac.uk/chembl/api/data/mechanism, Open Targets GraphQL https://api.platform.opentargets.org/api/v4/graphql (known drugs for a disease), and the NCI Thesaurus API https://api-evsrest.nci.nih.gov/api/v1 (cancer drug names and definitions). If a new drug isn't in any database, Claude labels its mechanism from the trial description, and the site marks it "unconfirmed."
+
+Known gaps: there's no free source for FDA decision dates (have Claude pull them from company SEC filings), big cancer conference dates (I'll enter these by hand), or press release wires (use 8-Ks instead).
+
+## Build plan
+
+- Week 1, foundation: repo, Supabase project and database schema, the pipeline for ClinicalTrials.gov (fetch, snapshot, diff), SEC, and Federal Register, running on GitHub Actions every 4 hours. A basic site that lists tracked trials. Checkpoint: I can see real trials and real detected changes.
+- Week 2, brains and pages: scoring engine, Claude explanations, home feed, trial pages, company pages, Google sign-in, watchlist. Checkpoint: a classmate can sign in and star a trial.
+- Week 3, alerts and launch: instant alerts and daily digest through Resend, unsubscribe, alert settings, AI chat with limits, job boards and layoff notices, cash runway. Deploy to Vercel on my domain. Checkpoint: real emails arrive on their own. This is the "fully working" milestone.
+- Week 4, proof: price data, backtest, track record page, upside/downside breakdown with the dot visuals, rival drugs.
+- Week 5, polish: design pass, tap-to-learn glossary, explainer pages, Tremor Weekly, mobile testing, and fixing bugs my classmates find.
+
+If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats a half-finished one with every feature.
+
+## Progress
+
+- [x] Project folder created and spec saved to CLAUDE.md (Nov 5, 2026)
+- [ ] Week 1 plan approved
