@@ -86,7 +86,7 @@ export async function getRecentChanges(limit = 20, includePaperwork = false) {
   cacheLife("minutes");
   const params: Record<string, string> = {
     select: "*,trials(title,ticker,sponsor_name)",
-    order: "detected_at.desc",
+    order: "detected_at.desc,id.desc",
     limit: String(limit),
   };
   if (!includePaperwork) params.is_paperwork = "eq.false";

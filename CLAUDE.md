@@ -172,7 +172,9 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Step 6: SEC filings, insider trades, FDA meetings (Nov 6: 4,218 filings, 3,719 insider trade lines, 174 exec-change 8-Ks; FDA search verified on 3 years of history)
 - [x] Step 7: GitHub Actions every 4 hours (first run green Nov 6; secrets SUPABASE_URL, SUPABASE_SECRET_KEY, CONTACT_EMAIL)
 - [x] Step 8: Basic website listing trials and changes (Next.js 16 in /web: home, /trials search, /trials/[nct]; runs locally, deploys to Vercel in Week 3)
-- [ ] Week 1 checkpoint: first REAL change detected by the scheduled pipeline
+- [x] Week 1 checkpoint: real changes detected Nov 6 (47 changes in 40 trials, incl. Novartis JDQ443 trial terminated, Amgen tarlatamab delayed 33 months)
+- [x] Site live at https://tremor-ecru.vercel.app (Vercel project root = web/, env vars NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY as Config). Custom domain later: Vercel → Settings → Domains.
+- [ ] Week 2 plan approved
 
 ## Notes for later weeks
 

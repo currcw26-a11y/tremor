@@ -24,7 +24,7 @@ async function Stats() {
 }
 
 async function LatestChanges() {
-  const changes = await getRecentChanges(20);
+  const changes = await getRecentChanges(50) // TODO Week 2: rank by worry score instead;
   if (!changes.length)
     return (
       <Empty>
