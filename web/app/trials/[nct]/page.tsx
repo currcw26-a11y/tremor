@@ -7,6 +7,7 @@ import { BANDS } from "@/lib/score";
 import { ChangeRow, Empty, StatusPill, Ticker } from "../../components";
 import { Reasons, ScoreBadge } from "../../score";
 import { ScoreChart } from "../../score-chart";
+import { StarButton } from "../../star-button";
 
 async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["params"] }) {
   const { nct } = await params;
@@ -33,6 +34,9 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
       </div>
       <h1 className="mt-3 text-2xl font-black leading-tight tracking-tight sm:text-3xl">{t.title}</h1>
       <p className="mt-2 text-sm text-muted">{t.conditions.join(" · ")}</p>
+      <div className="mt-4">
+        <StarButton kind="trial" id={t.nct_id} />
+      </div>
 
       <section className="mt-6">
         <ScoreBadge score={t.score} label={t.score_label} size="lg" />

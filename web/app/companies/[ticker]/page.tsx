@@ -4,6 +4,7 @@ import { getCompany, type InsiderTrade } from "@/lib/db";
 import { FORM_HELP, FORM_NAMES, filingSummary } from "@/lib/filings";
 import { niceDate } from "@/lib/words";
 import { Empty, Ticker, TrialRow } from "../../components";
+import { StarButton } from "../../star-button";
 
 const COMPANY_SIGNALS = new Set(["insider_selling_cluster", "key_exec_departure", "layoffs"]);
 const BIG_COMPANY = 15; // matches big_company_trial_count in config/tremor.yaml
@@ -37,6 +38,9 @@ async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticke
       <header>
         <Ticker symbol={company.ticker} />
         <h1 className="mt-2 text-3xl font-black tracking-tight">{company.name}</h1>
+        <div className="mt-3">
+          <StarButton kind="company" id={company.ticker} />
+        </div>
         <p className="mt-2 text-muted">
           Tremor tracks {trials.length} of its cancer trials.
           {trials.length >= BIG_COMPANY &&

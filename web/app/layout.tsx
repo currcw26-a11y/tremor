@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { UserMenu } from "./user-menu";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -25,13 +26,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </span>
               Tremor
             </Link>
-            <div className="flex gap-4 text-sm font-semibold text-muted">
+            <div className="flex items-center gap-4 text-sm font-semibold text-muted">
               <Link href="/trials" className="hover:text-foreground">
                 Trials
               </Link>
               <Link href="/companies" className="hover:text-foreground">
                 Companies
               </Link>
+              <UserMenu />
             </div>
           </nav>
         </header>
