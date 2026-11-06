@@ -2,13 +2,28 @@
 // block writes), so the public "publishable" key is safe to use here.
 import { cacheLife } from "next/cache";
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
+const KEY = (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "").trim();
 
 async function query<T>(table: string, params: Record<string, string>, withCount = false) {
+  if (!URL || !KEY) {
+    throw new Error(
+      "Missing settings: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY must both be set " +
+        "(in web/.env.local on your computer, or in Vercel → Project → Settings → Environment Variables).",
+    );
+  }
+  if (!URL.startsWith("https://") || URL.includes("/rest/")) {
+    throw new Error(`NEXT_PUBLIC_SUPABASE_URL looks wrong: "${URL}". It should look like https://abcd.supabase.co`);
+  }
   const res = await fetch(`${URL}/rest/v1/${table}?${new URLSearchParams(params)}`, {
     headers: { apikey: KEY, ...(withCount ? { Prefer: "count=exact" } : {}) },
   });
+  if (res.status === 401 || res.status === 403) {
+    throw new Error(
+      `Supabase rejected the key (${res.status}). Check NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: it should be the ` +
+        "sb_publishable_ key from Supabase → Project Settings → API Keys, with no spaces.",
+    );
+  }
   if (!res.ok) throw new Error(`Database error ${res.status}: ${await res.text()}`);
   const total = Number(res.headers.get("content-range")?.split("/")[1] ?? 0);
   return { rows: (await res.json()) as T[], total };
