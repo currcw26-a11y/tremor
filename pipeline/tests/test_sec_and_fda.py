@@ -72,3 +72,7 @@ def test_messy_drug_entries_are_split_and_cleaned():
 
 def test_search_terms_never_contain_symbols():
     assert safe_term('Bad "name" / with + symbols^2') == "Bad name with symbols 2"
+
+
+def test_everyday_words_are_not_drug_names():
+    assert useful_names(["Background", "Treatment", "Study Drug", "Experimental Arm", "Lifileucel"]) == ["Lifileucel"]

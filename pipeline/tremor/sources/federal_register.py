@@ -30,6 +30,22 @@ GENERIC_DRUGS = {
 }
 
 
+# Everyday words. A "drug name" made only of these (e.g. "Background", "Treatment",
+# "Study Drug") would match nearly every FDA notice, so we skip it.
+EVERYDAY_WORDS = set("""
+background treatment therapy therapies control controls arm arms cohort part phase study drug drugs
+investigational product products experimental active comparator regimen regimens agent agents
+standard care best supportive physician physicians choice investigator investigators treatment
+dose doses dosing level levels low high medium escalation expansion maintenance induction
+consolidation adjuvant neoadjuvant first second third line lines early late new other usual
+procedure procedures device devices imaging scan biopsy blood sample samples test testing
+radiation surgical surgery observation monitoring questionnaire survey visit follow up
+group groups patient patients participants subject subjects period periods week weeks day days
+oral intravenous subcutaneous single multiple combination combined monotherapy alone only
+matching matched vehicle sham none no not applicable intervention interventions
+""".split())
+
+
 def _norm(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", name.lower()).strip()
 
@@ -68,7 +84,8 @@ def useful_names(entries: list[str]) -> list[str]:
     out = set()
     for entry in entries:
         for name in split_drug_names(entry):
-            if len(name) >= 5 and _norm(name) not in GENERIC_DRUGS:
+            words = _norm(name).split()
+            if len(name) >= 5 and _norm(name) not in GENERIC_DRUGS and not all(w in EVERYDAY_WORDS for w in words):
                 out.add(name)
     return sorted(out)
 
@@ -113,7 +130,7 @@ def find_meetings(names_to_tickers: dict[str, set[str]], today: date | None = No
                     "document_number": doc["document_number"],
                     "title": doc["title"],
                     "publication_date": doc["publication_date"],
-                    "meeting_date": parse_meeting_date(doc.get("dates")),
+                    "meeting_date": parse_meeting_date(doc.get("dates")) or parse_meeting_date(doc.get("abstract")),
                     "abstract": doc.get("abstract"),
                     "url": doc["html_url"],
                     "matched_drugs": [], "matched_tickers": [],
