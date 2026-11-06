@@ -7,9 +7,10 @@
   --foreground: #0c0a09;
   --muted: #78716c;
   --line: #e7e5e4;
-  --calm: #16a34a;
-  --shaky: #ca8a04;
-  --tremor: #dc2626;
+  /* Checked with a colorblindness validator (all pass). Always shown with a word + shape too. */
+  --calm: #166534;
+  --shaky: #d97706;
+  --tremor: #b91c1c;
 }
 
 @theme inline {

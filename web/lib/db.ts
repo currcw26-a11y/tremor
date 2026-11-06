@@ -47,7 +47,25 @@ export type Trial = {
   results_first_posted: string | null;
   last_update_posted: string | null;
   last_checked_at: string;
+  score: number;
+  score_label: ScoreLabel;
+  score_breakdown: Reason[] | null;
 };
+
+export type ScoreLabel = "calm" | "shaky" | "tremor";
+
+/** One reason behind a score, written by the pipeline's scoring engine. */
+export type Reason = {
+  type: string;
+  label: string;
+  occurred: string;
+  base_points: number;
+  points: number;
+  fades: boolean;
+  source: Record<string, unknown>;
+};
+
+export type ScorePoint = { computed_at: string; new_score: number; new_label: ScoreLabel };
 
 export type Change = {
   id: number;
@@ -60,11 +78,22 @@ export type Change = {
   is_paperwork: boolean;
   details: Record<string, unknown> | null;
   explanation: string | null;
-  trials?: { title: string; ticker: string; sponsor_name: string };
+  trials?: { title: string; ticker: string; sponsor_name: string; score: number; score_label: ScoreLabel };
 };
 
 const LIST_COLUMNS =
-  "nct_id,title,sponsor_name,ticker,phases,overall_status,enrollment,primary_completion_date,last_update_posted";
+  "nct_id,title,sponsor_name,ticker,phases,overall_status,enrollment,primary_completion_date,last_update_posted,score,score_label";
+
+// Changes that are usually routine. Hidden on the home feed unless you ask to see them.
+export const MINOR_TYPES = [
+  "status_changed",
+  "date_small_change",
+  "date_moved_earlier",
+  "enrollment_small_cut",
+  "enrollment_increased",
+  "primary_outcome_reworded",
+  "paperwork",
+];
 
 export async function getStats() {
   "use cache";
@@ -82,16 +111,30 @@ export async function getStats() {
   return { trials: trials.total, companies: companies.total, lastRun: runs.rows[0]?.finished_at ?? null };
 }
 
-export async function getRecentChanges(limit = 20, includePaperwork = false) {
+export async function getRecentChanges(limit = 30, includeMinor = false) {
   "use cache";
   cacheLife("minutes");
   const params: Record<string, string> = {
-    select: "*,trials(title,ticker,sponsor_name)",
+    select: "*,trials(title,ticker,sponsor_name,score,score_label)",
     order: "detected_at.desc,id.desc",
     limit: String(limit),
   };
-  if (!includePaperwork) params.is_paperwork = "eq.false";
+  if (!includeMinor) params.change_type = `not.in.(${MINOR_TYPES.join(",")})`;
   return (await query<Change>("trial_changes", params)).rows;
+}
+
+export async function getTopWorries(limit = 8) {
+  "use cache";
+  cacheLife("minutes");
+  return (
+    await query<Trial>("trials", {
+      select: "nct_id,title,sponsor_name,ticker,score,score_label,score_breakdown",
+      tracked: "eq.true",
+      score: "gt.0",
+      order: "score.desc,nct_id",
+      limit: String(limit),
+    })
+  ).rows;
 }
 
 export const PAGE_SIZE = 25;
@@ -114,9 +157,14 @@ export async function searchTrials(q: string, page: number) {
 export async function getTrial(nct: string) {
   "use cache";
   cacheLife("minutes");
-  const [trial, changes] = await Promise.all([
+  const [trial, changes, history] = await Promise.all([
     query<Trial>("trials", { select: "*", nct_id: `eq.${nct}` }),
-    query<Change>("trial_changes", { select: "*", nct_id: `eq.${nct}`, order: "detected_at.desc" }),
+    query<Change>("trial_changes", { select: "*", nct_id: `eq.${nct}`, order: "detected_at.desc,id.desc" }),
+    query<ScorePoint>("score_history", {
+      select: "computed_at,new_score,new_label",
+      nct_id: `eq.${nct}`,
+      order: "computed_at",
+    }),
   ]);
-  return { trial: trial.rows[0] ?? null, changes: changes.rows };
+  return { trial: trial.rows[0] ?? null, changes: changes.rows, history: history.rows };
 }

@@ -177,8 +177,8 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Week 2 plan approved (Nov 6)
 - [x] Week 2 step 1: worry score engine (config/tremor.yaml, pipeline/tremor/scoring.py, score_job.py; 8-K 5.02 reader). Day-one result: 1 red (NVS stopped trial), 0 yellow, rest calm.
 - [x] Week 2 step 2: Claude explanations (claude-haiku-5-5, effort low; ai_calls cost log; $15/mo cap via AI_MONTHLY_BUDGET_USD; number check rejects any digit not in the facts). Key is workspace-scoped, lives only in GitHub secrets (and Vercel later for chat). ~$0.0001-0.0003 per explanation.
-- [ ] Week 2 step 3: home feed ranked by worry
-- [ ] Week 2 step 4: full trial pages (badge, history chart, show details)
+- [x] Week 2 step 3: home feed (biggest worries + latest important changes, minor hidden behind ?minor=1)
+- [x] Week 2 step 4: trial pages (big badge, 'Why this score' reasons summing to total, step chart with table view, Show details)
 - [ ] Week 2 step 5: company pages
 - [ ] Week 2 step 6: Google sign-in + watchlist (checkpoint: a classmate can sign in and star a trial)
 
@@ -190,4 +190,5 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - Enrollment changes from ESTIMATED to ACTUAL at the end of a trial are common; details store old_type/new_type so scoring can treat them more gently.
 - Cloud session: the "tremor" environment allows clinicaltrials.gov, www.sec.gov, data.sec.gov, efts.sec.gov, www.federalregister.gov, plus the Supabase host via a saved credential. Run local scripts with SUPABASE_SECRET_KEY=sb_secret_proxy-injected (the proxy swaps in the real key).
 - Website (web/): Next.js 16 with Cache Components. Data functions use 'use cache' + cacheLife; anything reading searchParams/params sits inside <Suspense>; Date.now() only in client components (app/time-ago.tsx). Read web/node_modules/next/dist/docs before using new APIs. On this cloud machine run builds with NODE_USE_ENV_PROXY=1.
+- Score colors validated with the dataviz palette checker: calm #166534, shaky #d97706, tremor #b91c1c (all pass). Always pair color with word + shape (circle/triangle/diamond). Chart band edges 40/70 are duplicated in web/app/score-chart.tsx; keep in sync with config/tremor.yaml.
 - The Federal Register's full-text pages block bots; use the API's search (conditions[term]) instead.
