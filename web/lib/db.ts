@@ -59,6 +59,7 @@ export type Change = {
   new_value: unknown;
   is_paperwork: boolean;
   details: Record<string, unknown> | null;
+  explanation: string | null;
   trials?: { title: string; ticker: string; sponsor_name: string };
 };
 

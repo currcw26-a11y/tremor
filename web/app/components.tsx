@@ -56,7 +56,13 @@ export function ChangeRow({ c, showTrial = true }: { c: Change; showTrial?: bool
             <span className="truncate text-sm font-semibold">{c.trials.title}</span>
           </Link>
         )}
-        <p className={showTrial ? "mt-1.5" : ""}>{text}</p>
+        <p className={`font-medium ${showTrial ? "mt-1.5" : ""}`}>{text}</p>
+        {c.explanation && (
+          <p className="mt-1.5 text-sm leading-relaxed text-muted">
+            {c.explanation}
+            <span className="ml-1 whitespace-nowrap text-xs opacity-70">· AI-written from the facts above</span>
+          </p>
+        )}
         <p className="mt-1 text-xs text-muted">
           Spotted <TimeAgo iso={c.detected_at} />
         </p>
