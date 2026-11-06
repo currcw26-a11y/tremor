@@ -169,6 +169,14 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Step 3: Fetch cancer trials from ClinicalTrials.gov (4,535 trials, 1,234 sponsors on Nov 6)
 - [x] Step 4: Sponsor → ticker matching (215 sponsors confirmed Nov 6; Roche, Daiichi, Bayer, Astellas excluded as OTC-only)
 - [x] Step 5: Snapshot + diff (with tests) — first real run Nov 6: 1,669 trials snapshotted; end-to-end test caught a staged edit
-- [ ] Step 6: SEC filings, insider trades, FDA meetings
-- [ ] Step 7: GitHub Actions every 4 hours
+- [x] Step 6: SEC filings, insider trades, FDA meetings (Nov 6: 4,218 filings, 3,719 insider trade lines, 174 exec-change 8-Ks; FDA search verified on 3 years of history)
+- [x] Step 7: GitHub Actions every 4 hours (first run green Nov 6; secrets SUPABASE_URL, SUPABASE_SECRET_KEY, CONTACT_EMAIL)
 - [ ] Step 8: Basic website listing trials and changes
+
+## Notes for later weeks
+
+- Week 2 scoring: an FDA meeting that matches only a company NAME (e.g. Novartis at a heart-drug panel) must not raise a cancer trial's score. Only count matches on the trial's own drug names.
+- Week 2 scoring: most insider sales are pre-planned 10b5-1 trades (1,251 of 1,707 open-market sales on Nov 6). Only count the rest, per the spec.
+- Enrollment changes from ESTIMATED to ACTUAL at the end of a trial are common; details store old_type/new_type so scoring can treat them more gently.
+- Cloud session: the "tremor" environment allows clinicaltrials.gov, www.sec.gov, data.sec.gov, efts.sec.gov, www.federalregister.gov, plus the Supabase host via a saved credential. Run local scripts with SUPABASE_SECRET_KEY=sb_secret_proxy-injected (the proxy swaps in the real key).
+- The Federal Register's full-text pages block bots; use the API's search (conditions[term]) instead.

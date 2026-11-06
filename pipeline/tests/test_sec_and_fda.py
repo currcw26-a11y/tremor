@@ -54,3 +54,10 @@ def test_meeting_date_is_read_from_text():
 
 def test_generic_drugs_are_not_searched():
     assert useful_names(["Placebo", "Pembrolizumab", "EXB-101", "Lifileucel (LN-145)", "IL-2"]) == ["EXB-101", "Lifileucel"]
+
+
+def test_company_names_cleaned_for_search():
+    from tremor.sec_job import _short_company_name
+    assert _short_company_name("ELI LILLY & Co") == "Eli Lilly"
+    assert _short_company_name("VERTEX PHARMACEUTICALS INC / MA") == "Vertex Pharmaceuticals"
+    assert _short_company_name("Revolution Medicines, Inc.") == "Revolution Medicines"

@@ -58,4 +58,5 @@ def _short_company_name(name: str) -> str:
     import re
     name = re.sub(r"\s*/\s*[A-Za-z]{2}\s*/?\s*$", "", name)
     name = re.sub(r",?\s+(inc|corp|corporation|co|ltd|plc|sa|ag|se|nv|a/s|holdings|limited)\.?$", "", name, flags=re.I)
+    name = name.rstrip(" &,")  # 'ELI LILLY & Co' -> 'ELI LILLY'
     return name.title() if name.isupper() else name
