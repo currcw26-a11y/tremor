@@ -34,14 +34,48 @@ def _norm(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", name.lower()).strip()
 
 
-def useful_names(names: list[str]) -> list[str]:
-    """Drop generic drugs and very short names, which would match everything."""
+# A number followed by a dose unit
+DOSE = r"\b\d+(\.\d+)?\s*(mg|mcg|ug|g|kg|ml|m\^?2|iu|units?|%)(?![A-Za-z])"
+
+# Words that describe HOW a drug is given, not WHICH drug. Removed before searching.
+DESCRIPTOR_WORDS = r"\b(coformulated|coformulation|combination product|chemotherapy|standard of care|" \
+                   r"tablets?|capsules?|injection|infusion|oral|iv|sc|bd|bid|qd|tid|q\d+w|mg|kg|m2|ml|dose)\b"
+
+
+def split_drug_names(entry: str) -> list[str]:
+    """'Cisplatin 75mg/m2 + Pemetrexed' -> ['Cisplatin', 'Pemetrexed']
+
+    Trials often cram several drugs and doses into one entry. We split them apart and
+    keep only letters, digits and spaces, because symbols like / + : ^ are search
+    commands to the Federal Register and would break the whole search.
+    """
+    entry = re.sub(r"\(.*?\)", " ", entry or "")                 # drop "(LN-145)" style asides
+    pieces = re.split(r"\s*(?:\+|/|;|,|:|\bor\b|\band\b|\bwith\b|\bplus\b)\s*", entry, flags=re.I)
+    out = []
+    for piece in pieces:
+        piece = re.sub(DOSE, " ", piece, flags=re.I)                # "75mg", "200 mg", "10 mg/kg"
+        piece = re.sub(DESCRIPTOR_WORDS, " ", piece, flags=re.I)
+        piece = re.sub(r"[^A-Za-z0-9 ]+", " ", piece)              # symbols -> spaces ("EXB-101" -> "EXB 101")
+        piece = " ".join(piece.split())
+        if piece:
+            out.append(piece)
+    return out
+
+
+def useful_names(entries: list[str]) -> list[str]:
+    """Distinct, specific drug names from a trial's intervention list.
+    Drops generic drugs and very short names, which would match everything."""
     out = set()
-    for n in names:
-        n = re.sub(r"\(.*?\)", "", n or "").strip()  # "Drug X (EXB-101)" -> "Drug X"
-        if len(n) >= 5 and _norm(n) not in GENERIC_DRUGS and '"' not in n:
-            out.add(n)
+    for entry in entries:
+        for name in split_drug_names(entry):
+            if len(name) >= 5 and _norm(name) not in GENERIC_DRUGS:
+                out.add(name)
     return sorted(out)
+
+
+def safe_term(name: str) -> str:
+    """Last line of defense: only letters, digits and spaces ever reach the search."""
+    return " ".join(re.sub(r"[^A-Za-z0-9 ]+", " ", name).split())
 
 
 def _search(term: str, since: str) -> list[dict]:
@@ -66,15 +100,15 @@ def parse_meeting_date(dates_text: str | None) -> str | None:
 def find_meetings(names_to_tickers: dict[str, set[str]], today: date | None = None) -> list[dict]:
     """Advisory meeting notices that mention any of our names. One row per notice."""
     since = ((today or date.today()) - timedelta(days=LOOKBACK_DAYS)).isoformat()
-    names = list(names_to_tickers)
+    names = sorted(n for n in names_to_tickers if safe_term(n))
     found: dict[str, dict] = {}
     for i in range(0, len(names), CHUNK):
         chunk = names[i:i + CHUNK]
-        term = f'{MEETING_PHRASE} ({" | ".join(f"""\"{n}\"""" for n in chunk)})'
+        term = f'{MEETING_PHRASE} ({" | ".join(chr(34) + safe_term(n) + chr(34) for n in chunk)})'
         if not _search(term, since):
             continue
         for name in chunk:  # something matched: find out which name(s)
-            for doc in _search(f'{MEETING_PHRASE} "{name}"', since):
+            for doc in _search(f'{MEETING_PHRASE} "{safe_term(name)}"', since):
                 row = found.setdefault(doc["document_number"], {
                     "document_number": doc["document_number"],
                     "title": doc["title"],

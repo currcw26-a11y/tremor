@@ -1,4 +1,4 @@
-from tremor.sources.federal_register import parse_meeting_date, useful_names
+from tremor.sources.federal_register import parse_meeting_date, safe_term, split_drug_names, useful_names
 from tremor.sources.sec import parse_form4
 
 FORM4 = """<?xml version="1.0"?>
@@ -53,7 +53,7 @@ def test_meeting_date_is_read_from_text():
 
 
 def test_generic_drugs_are_not_searched():
-    assert useful_names(["Placebo", "Pembrolizumab", "EXB-101", "Lifileucel (LN-145)", "IL-2"]) == ["EXB-101", "Lifileucel"]
+    assert useful_names(["Placebo", "Pembrolizumab", "EXB-101", "Lifileucel (LN-145)", "IL-2"]) == ["EXB 101", "Lifileucel"]  # "-" is a search command, so it becomes a space
 
 
 def test_company_names_cleaned_for_search():
@@ -61,3 +61,14 @@ def test_company_names_cleaned_for_search():
     assert _short_company_name("ELI LILLY & Co") == "Eli Lilly"
     assert _short_company_name("VERTEX PHARMACEUTICALS INC / MA") == "Vertex Pharmaceuticals"
     assert _short_company_name("Revolution Medicines, Inc.") == "Revolution Medicines"
+
+
+def test_messy_drug_entries_are_split_and_cleaned():
+    assert split_drug_names("Cisplatin 75mg/m2 + Pemetrexed") == ["Cisplatin", "Pemetrexed"]
+    assert split_drug_names("Coformulated favezelimab/pembrolizumab") == ["favezelimab", "pembrolizumab"]
+    assert split_drug_names("Adavosertib 150 mg BD + olaparib 200 mg BD .") == ["Adavosertib", "olaparib"]
+    assert useful_names(["Chemotherapy: Carboplatin", "Belrestotug."]) == ["Belrestotug"]
+
+
+def test_search_terms_never_contain_symbols():
+    assert safe_term('Bad "name" / with + symbols^2') == "Bad name with symbols 2"
