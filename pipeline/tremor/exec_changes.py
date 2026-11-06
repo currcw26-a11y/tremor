@@ -14,6 +14,9 @@ from . import config
 LEAVING = re.compile(
     r"\b(resign\w*|retire\w*|retirement|depart\w*|step(?:s|ped|ping)? down|terminat\w*|"
     r"separat\w*|will leave|no longer serv\w*|ceas\w* to serve|transition\w* out)\b", re.I)
+# Words right before a title that mean the person is KEEPING or TAKING that role
+KEEPING = re.compile(r"\b(appoint\w*|retain\w*|remain\w*|continu\w*|named|elect\w*|promot\w*|hired|join\w*)\b"
+                     r"[^.;]{0,45}$", re.I)
 HEADER = re.compile(r"departure of directors or (certain )?officers[^.]*\.", re.I)
 
 
@@ -34,8 +37,12 @@ def item_502_section(text: str) -> str:
 
 
 def _title_at_this_company(sentence: str, title: str) -> bool:
-    """False for things like 'appointed Chief Executive Officer at Align Technology'."""
+    """Is someone LEAVING this title at THIS company? False for 'CEO at Align Technology',
+    'retained his position as CEO', or 'appointed Chief Medical Officer'."""
     for m in re.finditer(re.escape(title), sentence, re.I):
+        before = sentence[max(0, m.start() - 60): m.start()]
+        if KEEPING.search(before):
+            continue  # "retained his position as CEO", "appointed Chief Medical Officer": not leaving
         after = sentence[m.end(): m.end() + 40]
         if re.match(r"\s+(at|of)\s+(?!the company|the registrant|our|its)[A-Z]", after):
             continue  # a title at some other company

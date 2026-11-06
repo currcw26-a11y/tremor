@@ -53,8 +53,11 @@ def score(signals: list[Signal], overall_status: str | None, today: date, cfg: d
         if sig.points >= 0.5:
             kept.append(sig)
     total = sum(sig.points for sig in kept)
-    if overall_status in STOPPED_STATUSES:
-        total = max(total, s["stopped_floor"])
+    if overall_status in STOPPED_STATUSES and total < s["stopped_floor"]:
+        # Show the jump as its own line, so every score's reasons add up to the total
+        kept.append(Signal("trial_stopped", "The trial was stopped early, so it goes straight to red", today,
+                           s["stopped_floor"] - total, fades=False, points=round(s["stopped_floor"] - total, 1)))
+        total = s["stopped_floor"]
     value = int(round(min(100, total)))
     kept.sort(key=lambda x: -x.points)
     return value, label_for(value, cfg), kept
@@ -132,7 +135,8 @@ def company_signals(filings: list[dict], sales: list[dict], trial_count: int, cf
     w, s = cfg["score"]["weights"], cfg["score"]
     factor = s["big_company_factor"] if trial_count >= s["big_company_trial_count"] else 1.0
     signals = []
-    for c in insider_clusters(sales, cfg):
+    # Insider sales are common, so only the most recent selling group counts (it fades over time)
+    for c in insider_clusters(sales, cfg)[-1:]:
         signals.append(Signal("insider_selling_cluster", f"{len(c['insiders'])} insiders sold shares within a month",
                               c["end"], w["insider_selling_cluster"] * factor,
                               source={"insiders": c["insiders"], "accessions": c["accessions"]}))

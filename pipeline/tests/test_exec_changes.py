@@ -34,3 +34,23 @@ def test_director_leaving_to_be_ceo_elsewhere_is_not_flagged():
 def test_new_chief_medical_officer_hired_is_not_flagged():
     text = HEAD + "The Board appointed Dr. Sam Lee as Chief Medical Officer, effective December 1, 2026."
     assert find_key_departure(text) is None
+
+
+def test_keeping_the_key_role_is_not_flagged():
+    text = HEAD + "Mr. Mazzo resigned solely from the office of President, but he retained his position as Chief Executive Officer of the Company."
+    assert find_key_departure(text) is None
+
+
+def test_director_resigning_to_take_a_new_role_is_not_flagged():
+    text = HEAD + "Diego Miralles resigned as a member of the Board, in connection with his appointment as Chief Medical Officer of Another Bio."
+    assert find_key_departure(text) is None
+
+
+def test_cmo_terminated_is_flagged():
+    text = HEAD + "On August 1, 2026, Dr. Buck, the Company's Executive Vice President of R&D and Chief Medical Officer was terminated."
+    assert find_key_departure(text)
+
+
+def test_ceo_retiring_is_flagged():
+    text = HEAD + "Mr. Paterson notified the Board of his decision to retire as President and Chief Executive Officer of the Company."
+    assert find_key_departure(text)

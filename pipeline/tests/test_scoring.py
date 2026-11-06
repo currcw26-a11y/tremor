@@ -46,9 +46,11 @@ def test_score_never_goes_above_100():
     assert score(sigs, "RECRUITING", TODAY)[0] == 100
 
 
-def test_stopped_trial_jumps_straight_to_red():
-    value, label, _ = score([], "TERMINATED", TODAY)
+def test_stopped_trial_jumps_straight_to_red_and_says_why():
+    value, label, reasons = score([Signal("date_delayed", "x", TODAY, 10)], "TERMINATED", TODAY)
     assert value == config.load()["score"]["stopped_floor"] and label == "tremor"
+    assert reasons[0].type == "trial_stopped"
+    assert sum(r.points for r in reasons) == value  # the reasons add up to the score
 
 
 def test_two_dates_delayed_in_one_edit_count_once():
@@ -105,3 +107,11 @@ def test_fda_meeting_counts_only_for_matching_drug_and_until_30_days_after():
     assert len(scoring.fda_signals({"lifileucel"}, [m], TODAY)) == 1
     assert scoring.fda_signals({"other drug"}, [m], TODAY) == []              # company-name match only
     assert scoring.fda_signals({"lifileucel"}, [m], date(2026, 12, 15)) == []  # meeting long over
+
+
+def test_only_most_recent_insider_cluster_counts():
+    sales = [sale("Ann", 1), sale("Bob", 2), {**sale("Cat", 1), "transaction_date": "2026-06-01"},
+             {**sale("Dan", 1), "transaction_date": "2026-06-03"}]
+    assert len(insider_clusters(sales)) == 2
+    [sig] = company_signals([], sales, trial_count=3)
+    assert sig.occurred == date(2026, 10, 2)

@@ -174,10 +174,17 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Step 8: Basic website listing trials and changes (Next.js 16 in /web: home, /trials search, /trials/[nct]; runs locally, deploys to Vercel in Week 3)
 - [x] Week 1 checkpoint: real changes detected Nov 6 (47 changes in 40 trials, incl. Novartis JDQ443 trial terminated, Amgen tarlatamab delayed 33 months)
 - [x] Site live at https://tremor-ecru.vercel.app (Vercel project root = web/, env vars NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY as Config). Custom domain later: Vercel → Settings → Domains.
-- [ ] Week 2 plan approved
+- [x] Week 2 plan approved (Nov 6)
+- [x] Week 2 step 1: worry score engine (config/tremor.yaml, pipeline/tremor/scoring.py, score_job.py; 8-K 5.02 reader). Day-one result: 1 red (NVS stopped trial), 0 yellow, rest calm.
+- [ ] Week 2 step 2: Claude explanations (needs Anthropic API key; budget cap)
+- [ ] Week 2 step 3: home feed ranked by worry
+- [ ] Week 2 step 4: full trial pages (badge, history chart, show details)
+- [ ] Week 2 step 5: company pages
+- [ ] Week 2 step 6: Google sign-in + watchlist (checkpoint: a classmate can sign in and star a trial)
 
 ## Notes for later weeks
 
+- Choices beyond spec (in config, user OK'd by not objecting, Nov 6): big companies (15+ trials) get x0.5 on company-wide signals; final-count enrollment cuts get x0.5; 8-K item 2.05 counts as layoffs; only the most recent insider cluster per company counts.
 - Week 2 scoring: an FDA meeting that matches only a company NAME (e.g. Novartis at a heart-drug panel) must not raise a cancer trial's score. Only count matches on the trial's own drug names.
 - Week 2 scoring: most insider sales are pre-planned 10b5-1 trades (1,251 of 1,707 open-market sales on Nov 6). Only count the rest, per the spec.
 - Enrollment changes from ESTIMATED to ACTUAL at the end of a trial are common; details store old_type/new_type so scoring can treat them more gently.
