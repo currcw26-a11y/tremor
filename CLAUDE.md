@@ -165,8 +165,8 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Project folder created and spec saved to CLAUDE.md (Nov 5, 2026)
 - [x] Week 1 plan approved (Nov 6, 2026)
 - [x] Step 1: GitHub repo created and first push
-- [ ] Step 2: Supabase project + database schema
-- [ ] Step 3: Fetch cancer trials from ClinicalTrials.gov
+- [x] Step 2: Supabase project + database schema
+- [x] Step 3: Fetch cancer trials from ClinicalTrials.gov (4,535 trials, 1,234 sponsors on Nov 6)
 - [ ] Step 4: Sponsor → ticker matching (CSV confirmed)
 - [ ] Step 5: Snapshot + diff (with tests)
 - [ ] Step 6: SEC filings, insider trades, FDA meetings
