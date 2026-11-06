@@ -2,3 +2,4 @@
 requests==2.32.3      # downloads data from websites
 python-dotenv==1.0.1  # reads secret settings from .env.local
 pytest==8.3.4         # runs our automatic tests
+rapidfuzz==3.10.1   # compares company names that are spelled a bit differently

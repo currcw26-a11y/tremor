@@ -4,7 +4,10 @@
 - Waits between requests to the same website (so we never hammer anyone).
 - If a site is busy or errors, waits longer and tries again ("backing off").
 """
+import hashlib
+import json
 import time
+from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
@@ -21,11 +24,25 @@ MIN_GAP_SECONDS = {
 DEFAULT_GAP = 0.5
 RETRY_STATUS = {429, 500, 502, 503, 504}
 
+CACHE_DIR = Path(__file__).resolve().parents[1] / ".cache"  # gitignored
+
 _session = requests.Session()
 _last_request_at: dict[str, float] = {}
 
 
-def get_json(url: str, params: dict | None = None, retries: int = 5, timeout: int = 60):
+def get_json(url: str, params: dict | None = None, retries: int = 5, timeout: int = 60,
+             cache_hours: float = 0):
+    """Download JSON. With cache_hours > 0, reuse a saved copy younger than that."""
+    if cache_hours:
+        key = hashlib.sha1(json.dumps([url, params], sort_keys=True).encode()).hexdigest()
+        path = CACHE_DIR / f"{key}.json"
+        if path.exists() and time.time() - path.stat().st_mtime < cache_hours * 3600:
+            return json.loads(path.read_text())
+        data = get_json(url, params, retries, timeout)
+        CACHE_DIR.mkdir(exist_ok=True)
+        path.write_text(json.dumps(data))
+        return data
+
     host = urlparse(url).netloc
     for attempt in range(retries):
         # Wait if we asked this site something very recently
