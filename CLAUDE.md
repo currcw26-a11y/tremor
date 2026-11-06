@@ -171,7 +171,8 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Step 5: Snapshot + diff (with tests) — first real run Nov 6: 1,669 trials snapshotted; end-to-end test caught a staged edit
 - [x] Step 6: SEC filings, insider trades, FDA meetings (Nov 6: 4,218 filings, 3,719 insider trade lines, 174 exec-change 8-Ks; FDA search verified on 3 years of history)
 - [x] Step 7: GitHub Actions every 4 hours (first run green Nov 6; secrets SUPABASE_URL, SUPABASE_SECRET_KEY, CONTACT_EMAIL)
-- [ ] Step 8: Basic website listing trials and changes
+- [x] Step 8: Basic website listing trials and changes (Next.js 16 in /web: home, /trials search, /trials/[nct]; runs locally, deploys to Vercel in Week 3)
+- [ ] Week 1 checkpoint: first REAL change detected by the scheduled pipeline
 
 ## Notes for later weeks
 
@@ -179,4 +180,5 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - Week 2 scoring: most insider sales are pre-planned 10b5-1 trades (1,251 of 1,707 open-market sales on Nov 6). Only count the rest, per the spec.
 - Enrollment changes from ESTIMATED to ACTUAL at the end of a trial are common; details store old_type/new_type so scoring can treat them more gently.
 - Cloud session: the "tremor" environment allows clinicaltrials.gov, www.sec.gov, data.sec.gov, efts.sec.gov, www.federalregister.gov, plus the Supabase host via a saved credential. Run local scripts with SUPABASE_SECRET_KEY=sb_secret_proxy-injected (the proxy swaps in the real key).
+- Website (web/): Next.js 16 with Cache Components. Data functions use 'use cache' + cacheLife; anything reading searchParams/params sits inside <Suspense>; Date.now() only in client components (app/time-ago.tsx). Read web/node_modules/next/dist/docs before using new APIs. On this cloud machine run builds with NODE_USE_ENV_PROXY=1.
 - The Federal Register's full-text pages block bots; use the API's search (conditions[term]) instead.

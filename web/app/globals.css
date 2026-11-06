@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* Tremor's colors in one place. Calm = green, Shaky = yellow, Tremor = red. */
+:root {
+  --background: #fafaf9;
+  --surface: #ffffff;
+  --foreground: #0c0a09;
+  --muted: #78716c;
+  --line: #e7e5e4;
+  --calm: #16a34a;
+  --shaky: #ca8a04;
+  --tremor: #dc2626;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-calm: var(--calm);
+  --color-shaky: var(--shaky);
+  --color-tremor: var(--tremor);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
