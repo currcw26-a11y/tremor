@@ -8,13 +8,14 @@ import sys
 import traceback
 from datetime import datetime, timezone
 
-from tremor import db, trials_job
+from tremor import db, sec_job, trials_job
 
 
 def main() -> int:
     run_id = db.insert("pipeline_runs", [{"status": "running"}], returning="id")[0]["id"]
     stats, errors = {}, []
-    for name, job in [("trials", trials_job.run)]:  # SEC + FDA jobs get added in Step 6
+    jobs = [("trials", trials_job.run), ("sec", sec_job.run_sec), ("fda", sec_job.run_fda)]
+    for name, job in jobs:
         print(f"--- {name} ---")
         try:
             stats[name] = job()

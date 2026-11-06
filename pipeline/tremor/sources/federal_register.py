@@ -1,0 +1,89 @@
+"""FDA advisory committee meetings, from the Federal Register API (no key needed).
+
+When the FDA wants outside experts to weigh in on a drug, it holds an advisory
+committee meeting, and it must announce it here at least 15 days ahead.
+
+The meeting summaries don't name the drug, but the API's search looks through the
+full text. So we search for our companies' names and drug names:
+  1. Search 40 names at once ("A | B | C ...").
+  2. Only if something comes back, check those 40 one at a time to see which matched.
+"""
+import re
+from datetime import date, datetime, timedelta
+
+from ..http import get_json
+
+API = "https://www.federalregister.gov/api/v1/documents.json"
+MEETING_PHRASE = '"Notice of Meeting" "Advisory Committee"'
+LOOKBACK_DAYS = 120
+CHUNK = 40
+
+# Drug names too common to mean anything (they show up in almost every cancer trial).
+GENERIC_DRUGS = {
+    "placebo", "chemotherapy", "standard of care", "best supportive care", "investigator s choice",
+    "carboplatin", "cisplatin", "paclitaxel", "docetaxel", "gemcitabine", "pemetrexed", "oxaliplatin",
+    "fluorouracil", "5 fu", "capecitabine", "irinotecan", "leucovorin", "cyclophosphamide",
+    "doxorubicin", "etoposide", "dexamethasone", "prednisone", "saline", "radiation", "radiotherapy",
+    "surgery", "pembrolizumab", "nivolumab", "atezolizumab", "durvalumab", "bevacizumab",
+    "trastuzumab", "rituximab", "lenalidomide", "bortezomib", "azacitidine", "fulvestrant",
+    "letrozole", "anastrozole", "tamoxifen", "enzalutamide", "abiraterone", "observation",
+}
+
+
+def _norm(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", name.lower()).strip()
+
+
+def useful_names(names: list[str]) -> list[str]:
+    """Drop generic drugs and very short names, which would match everything."""
+    out = set()
+    for n in names:
+        n = re.sub(r"\(.*?\)", "", n or "").strip()  # "Drug X (EXB-101)" -> "Drug X"
+        if len(n) >= 5 and _norm(n) not in GENERIC_DRUGS and '"' not in n:
+            out.add(n)
+    return sorted(out)
+
+
+def _search(term: str, since: str) -> list[dict]:
+    data = get_json(API, {
+        "conditions[agencies][]": "food-and-drug-administration",
+        "conditions[type][]": "NOTICE",
+        "conditions[term]": term,
+        "conditions[publication_date][gte]": since,
+        "per_page": 100,
+        "fields[]": ["document_number", "title", "abstract", "dates", "publication_date", "html_url"],
+    })
+    return data.get("results") or []
+
+
+def parse_meeting_date(dates_text: str | None) -> str | None:
+    """'The meeting will be held on April 30, 2026, from 8 a.m...' -> '2026-04-30'"""
+    m = re.search(r"(January|February|March|April|May|June|July|August|September|October|November|December)"
+                  r"\s+(\d{1,2}),\s+(\d{4})", dates_text or "")
+    return datetime.strptime(" ".join(m.groups()), "%B %d %Y").date().isoformat() if m else None
+
+
+def find_meetings(names_to_tickers: dict[str, set[str]], today: date | None = None) -> list[dict]:
+    """Advisory meeting notices that mention any of our names. One row per notice."""
+    since = ((today or date.today()) - timedelta(days=LOOKBACK_DAYS)).isoformat()
+    names = list(names_to_tickers)
+    found: dict[str, dict] = {}
+    for i in range(0, len(names), CHUNK):
+        chunk = names[i:i + CHUNK]
+        term = f'{MEETING_PHRASE} ({" | ".join(f"""\"{n}\"""" for n in chunk)})'
+        if not _search(term, since):
+            continue
+        for name in chunk:  # something matched: find out which name(s)
+            for doc in _search(f'{MEETING_PHRASE} "{name}"', since):
+                row = found.setdefault(doc["document_number"], {
+                    "document_number": doc["document_number"],
+                    "title": doc["title"],
+                    "publication_date": doc["publication_date"],
+                    "meeting_date": parse_meeting_date(doc.get("dates")),
+                    "abstract": doc.get("abstract"),
+                    "url": doc["html_url"],
+                    "matched_drugs": [], "matched_tickers": [],
+                })
+                row["matched_drugs"] = sorted(set(row["matched_drugs"]) | {name})
+                row["matched_tickers"] = sorted(set(row["matched_tickers"]) | names_to_tickers[name])
+    return list(found.values())

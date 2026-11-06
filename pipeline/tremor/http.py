@@ -30,6 +30,10 @@ _session = requests.Session()
 _last_request_at: dict[str, float] = {}
 
 
+def get_text(url: str, params: dict | None = None, retries: int = 5, timeout: int = 60) -> str:
+    return _get(url, params, retries, timeout).text
+
+
 def get_json(url: str, params: dict | None = None, retries: int = 5, timeout: int = 60,
              cache_hours: float = 0):
     """Download JSON. With cache_hours > 0, reuse a saved copy younger than that."""
@@ -42,7 +46,10 @@ def get_json(url: str, params: dict | None = None, retries: int = 5, timeout: in
         CACHE_DIR.mkdir(exist_ok=True)
         path.write_text(json.dumps(data))
         return data
+    return _get(url, params, retries, timeout).json()
 
+
+def _get(url: str, params: dict | None, retries: int, timeout: int) -> requests.Response:
     host = urlparse(url).netloc
     for attempt in range(retries):
         # Wait if we asked this site something very recently
@@ -55,13 +62,13 @@ def get_json(url: str, params: dict | None = None, retries: int = 5, timeout: in
         try:
             resp = _session.get(
                 url, params=params, timeout=timeout,
-                headers={"User-Agent": settings.user_agent(), "Accept": "application/json"},
+                headers={"User-Agent": settings.user_agent()},
             )
         except requests.RequestException as err:
             error = err
         else:
             if resp.status_code == 200:
-                return resp.json()
+                return resp
             if resp.status_code not in RETRY_STATUS:
                 resp.raise_for_status()
             error = RuntimeError(f"{host} answered {resp.status_code}")
