@@ -1,0 +1,55 @@
+"""A polite way to download data.
+
+- Sends our User-Agent label on every request.
+- Waits between requests to the same website (so we never hammer anyone).
+- If a site is busy or errors, waits longer and tries again ("backing off").
+"""
+import time
+from urllib.parse import urlparse
+
+import requests
+
+from . import settings
+
+# Minimum seconds between two requests to the same website.
+MIN_GAP_SECONDS = {
+    "clinicaltrials.gov": 0.5,
+    "www.sec.gov": 0.15,   # SEC allows 10/second; we stay well under
+    "data.sec.gov": 0.15,
+    "efts.sec.gov": 0.15,
+}
+DEFAULT_GAP = 0.5
+RETRY_STATUS = {429, 500, 502, 503, 504}
+
+_session = requests.Session()
+_last_request_at: dict[str, float] = {}
+
+
+def get_json(url: str, params: dict | None = None, retries: int = 5, timeout: int = 60):
+    host = urlparse(url).netloc
+    for attempt in range(retries):
+        # Wait if we asked this site something very recently
+        gap = MIN_GAP_SECONDS.get(host, DEFAULT_GAP)
+        wait = _last_request_at.get(host, 0) + gap - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
+        _last_request_at[host] = time.monotonic()
+
+        try:
+            resp = _session.get(
+                url, params=params, timeout=timeout,
+                headers={"User-Agent": settings.user_agent(), "Accept": "application/json"},
+            )
+        except requests.RequestException as err:
+            error = err
+        else:
+            if resp.status_code == 200:
+                return resp.json()
+            if resp.status_code not in RETRY_STATUS:
+                resp.raise_for_status()
+            error = RuntimeError(f"{host} answered {resp.status_code}")
+
+        delay = 2 ** attempt  # 1, 2, 4, 8, 16 seconds
+        print(f"  ...{error}; retrying in {delay}s")
+        time.sleep(delay)
+    raise RuntimeError(f"Gave up on {url} after {retries} tries: {error}")

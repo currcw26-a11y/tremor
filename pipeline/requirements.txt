@@ -1,0 +1,4 @@
+# Python packages the pipeline needs. Install with:  pip install -r requirements.txt
+requests==2.32.3      # downloads data from websites
+python-dotenv==1.0.1  # reads secret settings from .env.local
+pytest==8.3.4         # runs our automatic tests
