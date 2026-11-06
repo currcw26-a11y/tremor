@@ -29,6 +29,16 @@ async function query<T>(table: string, params: Record<string, string>, withCount
   return { rows: (await res.json()) as T[], total };
 }
 
+/** Like query(), but follows pages: the database returns at most 1,000 rows per request. */
+async function queryAll<T>(table: string, params: Record<string, string>) {
+  const rows: T[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const page = await query<T>(table, { ...params, limit: "1000", offset: String(offset) });
+    rows.push(...page.rows);
+    if (page.rows.length < 1000) return rows;
+  }
+}
+
 export type Trial = {
   nct_id: string;
   title: string;
@@ -167,4 +177,92 @@ export async function getTrial(nct: string) {
     }),
   ]);
   return { trial: trial.rows[0] ?? null, changes: changes.rows, history: history.rows };
+}
+
+export type Company = { ticker: string; name: string; cik: string };
+export type Filing = {
+  accession_number: string;
+  form: string;
+  filed_at: string;
+  items: string[];
+  url: string;
+  description: string | null;
+  key_exec_departure: boolean | null;
+  departure_details: string | null;
+};
+export type InsiderTrade = {
+  accession_number: string;
+  line_number: number;
+  insider_name: string | null;
+  insider_title: string | null;
+  is_officer: boolean | null;
+  is_director: boolean | null;
+  transaction_date: string | null;
+  transaction_code: string;
+  shares: number | null;
+  price: number | null;
+  is_10b5_1: boolean | null;
+  url: string;
+};
+
+function daysAgo(n: number) {
+  // Used only inside cached functions, so it is fixed per cache entry (fine for "last 6 months")
+  return new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+}
+
+export async function getCompanies() {
+  "use cache";
+  cacheLife("hours");
+  const [companies, trials] = await Promise.all([
+    query<Company>("companies", { select: "ticker,name,cik", order: "ticker" }),
+    queryAll<{ ticker: string; score: number; score_label: ScoreLabel }>("trials", {
+      select: "ticker,score,score_label",
+      tracked: "eq.true",
+      order: "nct_id",
+    }),
+  ]);
+  const stats = new Map<string, { count: number; top: number; label: ScoreLabel }>();
+  for (const t of trials) {
+    const s = stats.get(t.ticker) ?? { count: 0, top: -1, label: "calm" as ScoreLabel };
+    s.count += 1;
+    if (t.score > s.top) Object.assign(s, { top: t.score, label: t.score_label });
+    stats.set(t.ticker, s);
+  }
+  return companies.rows
+    .map((c) => ({ ...c, ...(stats.get(c.ticker) ?? { count: 0, top: 0, label: "calm" as ScoreLabel }) }))
+    .filter((c) => c.count > 0)
+    .sort((a, b) => b.top - a.top || b.count - a.count);
+}
+
+export async function getCompany(ticker: string) {
+  "use cache";
+  cacheLife("minutes");
+  const t = ticker.toUpperCase().replace(/[^A-Z.]/g, "");
+  const [company, trials, filings, trades] = await Promise.all([
+    query<Company>("companies", { select: "ticker,name,cik", ticker: `eq.${t}` }),
+    query<Trial>("trials", {
+      select: LIST_COLUMNS + ",score_breakdown",
+      ticker: `eq.${t}`,
+      tracked: "eq.true",
+      order: "score.desc,last_update_posted.desc.nullslast",
+    }),
+    query<Filing>("sec_filings", {
+      select: "accession_number,form,filed_at,items,url,description,key_exec_departure,departure_details",
+      ticker: `eq.${t}`,
+      filed_at: `gte.${daysAgo(365)}`,
+      form: "not.in.(4,4/A)", // insider trade forms are shown separately
+      order: "filed_at.desc",
+      limit: "40",
+    }),
+    query<InsiderTrade>("insider_trades", {
+      select:
+        "accession_number,line_number,insider_name,insider_title,is_officer,is_director,transaction_date,transaction_code,shares,price,is_10b5_1,url",
+      ticker: `eq.${t}`,
+      transaction_code: "in.(S,P)",
+      transaction_date: `gte.${daysAgo(183)}`,
+      order: "transaction_date.desc",
+      limit: "200",
+    }),
+  ]);
+  return { company: company.rows[0] ?? null, trials: trials.rows, filings: filings.rows, trades: trades.rows };
 }

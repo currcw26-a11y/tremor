@@ -179,7 +179,7 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Week 2 step 2: Claude explanations (claude-haiku-5-5, effort low; ai_calls cost log; $15/mo cap via AI_MONTHLY_BUDGET_USD; number check rejects any digit not in the facts). Key is workspace-scoped, lives only in GitHub secrets (and Vercel later for chat). ~$0.0001-0.0003 per explanation.
 - [x] Week 2 step 3: home feed (biggest worries + latest important changes, minor hidden behind ?minor=1)
 - [x] Week 2 step 4: trial pages (big badge, 'Why this score' reasons summing to total, step chart with table view, Show details)
-- [ ] Week 2 step 5: company pages
+- [x] Week 2 step 5: company pages (/companies list + /companies/[ticker]: company-wide signals, trials, exec departures, insider trades w/ pre-planned flag, filings; cash runway placeholder until Week 3)
 - [ ] Week 2 step 6: Google sign-in + watchlist (checkpoint: a classmate can sign in and star a trial)
 
 ## Notes for later weeks

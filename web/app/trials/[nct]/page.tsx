@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getTrial } from "@/lib/db";
@@ -24,8 +25,10 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
   return (
     <article>
       <div className="flex flex-wrap items-center gap-2">
-        <Ticker symbol={t.ticker} />
-        <span className="text-sm font-medium text-muted">{t.sponsor_name}</span>
+        <Link href={`/companies/${t.ticker}`} className="flex items-center gap-2 hover:underline">
+          <Ticker symbol={t.ticker} />
+          <span className="text-sm font-medium text-muted">{t.sponsor_name}</span>
+        </Link>
         <StatusPill status={t.overall_status} />
       </div>
       <h1 className="mt-3 text-2xl font-black leading-tight tracking-tight sm:text-3xl">{t.title}</h1>

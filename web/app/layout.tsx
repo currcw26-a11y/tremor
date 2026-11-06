@@ -25,9 +25,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </span>
               Tremor
             </Link>
-            <Link href="/trials" className="text-sm font-semibold text-muted hover:text-foreground">
-              All trials
-            </Link>
+            <div className="flex gap-4 text-sm font-semibold text-muted">
+              <Link href="/trials" className="hover:text-foreground">
+                Trials
+              </Link>
+              <Link href="/companies" className="hover:text-foreground">
+                Companies
+              </Link>
+            </div>
           </nav>
         </header>
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">{children}</main>
