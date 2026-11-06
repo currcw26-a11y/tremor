@@ -1,0 +1,74 @@
+# =====================================================================
+# Tremor settings: every score weight and cutoff lives here.
+# These are STARTING GUESSES from the project spec. Week 4's backtest will tune them.
+# Change a number, push to GitHub, and the next pipeline run uses it.
+# =====================================================================
+
+score:
+  # Color bands for the 0-100 worry score
+  labels:
+    calm:   {min: 0,  color: green,  name: Calm}
+    shaky:  {min: 40, color: yellow, name: Shaky}
+    tremor: {min: 70, color: red,    name: Tremor}
+
+  # Points fade over time. After this many days a signal is worth half its points,
+  # after twice as many a quarter, and so on.
+  half_life_days: 60
+  # Signals older than this are ignored entirely.
+  max_age_days: 365
+
+  # A stopped trial (suspended, terminated, withdrawn) jumps straight to at least this score.
+  stopped_floor: 85
+
+  # Company-wide signals (insider sales, executives leaving, layoffs) matter much less for giant
+  # companies with many drugs. Companies with at least this many tracked trials get the
+  # company-wide points multiplied by big_company_factor. Set the factor to 1.0 to turn this off.
+  big_company_trial_count: 15
+  big_company_factor: 0.5
+
+  # Points for each kind of signal
+  weights:
+    # From changes to the trial's official record
+    primary_outcome_changed: 25   # main goal changed or removed
+    enrollment_cut: 15            # patients cut by 15% or more
+    date_delayed: 10              # results or finish date pushed back 3+ months
+    results_overdue: 10           # main results date passed 12+ months ago, no results posted
+    # From SEC filings (apply to all of the company's trials)
+    insider_selling_cluster: 10   # 2+ insiders selling within 30 days, not pre-planned
+    key_exec_departure: 15        # e.g. chief medical officer or head of R&D leaves
+    layoffs: 15                   # restructuring/layoffs (8-K item 2.05 now; state notices in Week 3)
+    # From the FDA
+    fda_advisory_meeting: 10      # FDA scheduled an outside-expert meeting about this trial's drug
+    # Coming in later weeks (no data yet)
+    job_postings_drop: 5
+    rival_trial_failed: 10
+
+  # Enrollment is often trimmed to the final real count when sign-up ends ("estimated" -> "actual").
+  # That's usually less worrying than cutting a trial mid-way, so those cuts get this fraction of the points.
+  enrollment_final_count_factor: 0.5
+
+detection:
+  enrollment_cut_percent: 15
+  date_delay_months: 3
+  results_overdue_months: 12
+  insider_cluster_days: 30
+  insider_cluster_min_people: 2
+  # An FDA meeting counts from when it's announced until this many days after the meeting
+  fda_meeting_days_after: 30
+
+# Job titles that count as "key executives" for the departure signal
+key_exec_titles:
+  - chief medical officer
+  - chief scientific officer
+  - chief development officer
+  - chief research officer
+  - chief executive officer
+  - head of research and development
+  - head of r&d
+  - president of research and development
+  - president, research and development
+  - head of clinical development
+
+alerts:
+  # Used in Week 3
+  big_jump_points: 15

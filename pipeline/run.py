@@ -8,13 +8,14 @@ import sys
 import traceback
 from datetime import datetime, timezone
 
-from tremor import db, sec_job, trials_job
+from tremor import db, score_job, sec_job, trials_job
 
 
 def main() -> int:
     run_id = db.insert("pipeline_runs", [{"status": "running"}], returning="id")[0]["id"]
     stats, errors = {}, []
-    jobs = [("trials", trials_job.run), ("sec", sec_job.run_sec), ("fda", sec_job.run_fda)]
+    jobs = [("trials", trials_job.run), ("sec", sec_job.run_sec), ("fda", sec_job.run_fda),
+            ("scores", score_job.run)]  # scores last: they use everything above
     for name, job in jobs:
         print(f"--- {name} ---")
         try:
