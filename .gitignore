@@ -1,0 +1,27 @@
+# --- Secrets: NEVER commit these ---
+.env
+.env.local
+.env.*.local
+*.pem
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+pipeline/.cache/
+
+# --- Node / Next.js (website) ---
+node_modules/
+web/.next/
+web/out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Computer junk ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
