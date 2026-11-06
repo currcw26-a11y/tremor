@@ -168,7 +168,7 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Step 2: Supabase project + database schema
 - [x] Step 3: Fetch cancer trials from ClinicalTrials.gov (4,535 trials, 1,234 sponsors on Nov 6)
 - [x] Step 4: Sponsor → ticker matching (215 sponsors confirmed Nov 6; Roche, Daiichi, Bayer, Astellas excluded as OTC-only)
-- [ ] Step 5: Snapshot + diff (with tests)
+- [x] Step 5: Snapshot + diff (with tests) — first real run Nov 6: 1,669 trials snapshotted; end-to-end test caught a staged edit
 - [ ] Step 6: SEC filings, insider trades, FDA meetings
 - [ ] Step 7: GitHub Actions every 4 hours
 - [ ] Step 8: Basic website listing trials and changes

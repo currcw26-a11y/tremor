@@ -33,6 +33,28 @@ def sync_companies(confirmed: dict[str, str]) -> int:
     return len(tickers)
 
 
+def save_snapshots(snapshots: list[dict]) -> dict[str, int]:
+    """Save new snapshots and return {nct_id: snapshot_id}.
+
+    If a trial was edited and then changed BACK, we already have that exact version saved.
+    Reuse the old copy instead of saving a duplicate.
+    """
+    if not snapshots:
+        return {}
+    existing = {}
+    for i in range(0, len(snapshots), 100):
+        chunk = snapshots[i:i + 100]
+        rows = db.select("trial_snapshots", "id,nct_id,content_hash",
+                         nct_id=f"in.({','.join(s['nct_id'] for s in chunk)})")
+        existing.update({(r["nct_id"], r["content_hash"]): r["id"] for r in rows})
+    ids = {s["nct_id"]: existing[(s["nct_id"], s["content_hash"])]
+           for s in snapshots if (s["nct_id"], s["content_hash"]) in existing}
+    to_insert = [s for s in snapshots if s["nct_id"] not in ids]
+    if to_insert:
+        ids.update({r["nct_id"]: r["id"] for r in db.insert("trial_snapshots", to_insert, returning="id,nct_id")})
+    return ids
+
+
 def run() -> dict:
     now = datetime.now(timezone.utc).isoformat()
     confirmed = matching.confirmed_matches()
@@ -65,8 +87,7 @@ def run() -> dict:
             pending_changes[nct] = (prev["latest_snapshot_id"], compare(prev, summary, sections))
 
     db.upsert("trials", trial_rows, on_conflict="nct_id")
-    saved = db.insert("trial_snapshots", new_snapshots, returning="id,nct_id") if new_snapshots else []
-    snapshot_ids = {r["nct_id"]: r["id"] for r in saved}
+    snapshot_ids = save_snapshots(new_snapshots)
     if snapshot_ids:
         db.upsert("trials", [{"nct_id": n, "latest_snapshot_id": i} for n, i in snapshot_ids.items()],
                   on_conflict="nct_id")
