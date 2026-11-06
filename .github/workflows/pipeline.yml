@@ -42,5 +42,6 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}  # only needed for keys made outside a workspace
           AI_MONTHLY_BUDGET_USD: "15"
         run: python run.py

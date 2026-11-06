@@ -31,7 +31,11 @@ def _get_client():
     global _client
     if _client is None:
         import anthropic
-        _client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from the environment
+        # Reads ANTHROPIC_API_KEY from the environment. Keys made outside a workspace also
+        # need the workspace's ID (ANTHROPIC_WORKSPACE_ID) sent with every request.
+        workspace = os.getenv("ANTHROPIC_WORKSPACE_ID", "").strip()
+        headers = {"anthropic-workspace-id": workspace} if workspace else None
+        _client = anthropic.Anthropic(default_headers=headers)
     return _client
 
 
