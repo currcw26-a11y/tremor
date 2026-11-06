@@ -176,7 +176,7 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Site live at https://tremor-ecru.vercel.app (Vercel project root = web/, env vars NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY as Config). Custom domain later: Vercel → Settings → Domains.
 - [x] Week 2 plan approved (Nov 6)
 - [x] Week 2 step 1: worry score engine (config/tremor.yaml, pipeline/tremor/scoring.py, score_job.py; 8-K 5.02 reader). Day-one result: 1 red (NVS stopped trial), 0 yellow, rest calm.
-- [ ] Week 2 step 2: Claude explanations (needs Anthropic API key; budget cap)
+- [x] Week 2 step 2: Claude explanations (claude-haiku-5-5, effort low; ai_calls cost log; $15/mo cap via AI_MONTHLY_BUDGET_USD; number check rejects any digit not in the facts). Key is workspace-scoped, lives only in GitHub secrets (and Vercel later for chat). ~$0.0001-0.0003 per explanation.
 - [ ] Week 2 step 3: home feed ranked by worry
 - [ ] Week 2 step 4: full trial pages (badge, history chart, show details)
 - [ ] Week 2 step 5: company pages
