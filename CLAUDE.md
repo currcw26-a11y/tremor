@@ -189,7 +189,7 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Domain live: https://www.tremoralerts.com (Vercel primary; apex redirects to www). Porkbun DNS: A @ 216.198.79.1, CNAME www, Resend records (resend._domainkey, send, rsend, _dmarc p=none); parking ALIAS/CNAME + URL forward deleted; Porkbun MX forwarding kept.
 - [x] Google OAuth branding VERIFIED (Nov 9) via Search Console domain property for tremoralerts.com; consent screen shows "Tremor". Authorized domains: tremoralerts.com, qlzylutucbzuwhirodys.supabase.co (+ vercel.app).
 - [x] Week 3: new domain wired into Supabase, Google sign-in, RESEND_API_KEY secret added. Nov 9: first REAL instant alert delivered (CLLS UCART22 main goal changed) + test preview, but FROM onboarding@resend.dev because Resend says tremoralerts.com is NOT verified yet. Code defaults to alerts@tremoralerts.com and falls back to the test sender while unverified (only reaches the Resend account owner).
-- [ ] Resend domain verification for tremoralerts.com (needed before classmates can get emails)
+- [x] Resend domain verified (Nov 9); test email sent from alerts@tremoralerts.com with no fallback. Emails can now reach anyone.
 - [ ] Week 3: money left on company pages, AI chat, job boards, layoff notices
 
 ## Notes for later weeks
@@ -204,4 +204,5 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - Domain: tremoralerts.com bought at Porkbun on Nov 9, 2026 (WHOIS privacy on, AUTO-RENEW OFF: expires Nov 9, 2027, renewal ~$11.81). Remind the owner before then.
 - Week 5 to-do: Google Search visibility (sitemap.xml, robots.txt, page metadata/descriptions, submit sitemap in Search Console, which is already verified for tremoralerts.com).
 - Privacy page promises account deletion within 7 days of an email request to clivebeto222@gmail.com (contact email in web/lib/site.ts).
+- GitHub Actions sometimes fails to start a run ("Internal server error", 0 jobs). That's GitHub's side; the next run works. Not a Tremor bug.
 - The Federal Register's full-text pages block bots; use the API's search (conditions[term]) instead.
