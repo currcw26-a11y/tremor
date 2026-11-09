@@ -180,7 +180,9 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Week 2 step 3: home feed (biggest worries + latest important changes, minor hidden behind ?minor=1)
 - [x] Week 2 step 4: trial pages (big badge, 'Why this score' reasons summing to total, step chart with table view, Show details)
 - [x] Week 2 step 5: company pages (/companies list + /companies/[ticker]: company-wide signals, trials, exec departures, insider trades w/ pre-planned flag, filings; cash runway placeholder until Week 3)
-- [ ] Week 2 step 6: Google sign-in + watchlist (checkpoint: a classmate can sign in and star a trial)
+- [x] Week 2 step 6: Google sign-in + watchlist (Nov 9: works on phone; Google Cloud project owned by personal Gmail clivebeto222@gmail.com, published; /privacy and /terms pages added). Auth is client-side (lib/supabase-browser.ts) so public pages stay cached; /auth/callback route swaps the code for a session cookie.
+- [ ] Week 2 checkpoint: a classmate signs in and stars a trial
+- [ ] Week 3 plan approved
 
 ## Notes for later weeks
 
@@ -191,4 +193,5 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - Cloud session: the "tremor" environment allows clinicaltrials.gov, www.sec.gov, data.sec.gov, efts.sec.gov, www.federalregister.gov, plus the Supabase host via a saved credential. Run local scripts with SUPABASE_SECRET_KEY=sb_secret_proxy-injected (the proxy swaps in the real key).
 - Website (web/): Next.js 16 with Cache Components. Data functions use 'use cache' + cacheLife; anything reading searchParams/params sits inside <Suspense>; Date.now() only in client components (app/time-ago.tsx). Read web/node_modules/next/dist/docs before using new APIs. On this cloud machine run builds with NODE_USE_ENV_PROXY=1.
 - Score colors validated with the dataviz palette checker: calm #166534, shaky #d97706, tremor #b91c1c (all pass). Always pair color with word + shape (circle/triangle/diamond). Chart band edges 40/70 are duplicated in web/app/score-chart.tsx; keep in sync with config/tremor.yaml.
+- Privacy page promises account deletion within 7 days of an email request to clivebeto222@gmail.com (contact email in web/lib/site.ts).
 - The Federal Register's full-text pages block bots; use the API's search (conditions[term]) instead.
