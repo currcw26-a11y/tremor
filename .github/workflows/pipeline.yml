@@ -14,6 +14,10 @@ on:
         description: "Also send a test alert email to the first signed-up person"
         type: boolean
         default: false
+      force_daily:
+        description: "Also run the once-a-day steps now (money left, job postings, layoff notices)"
+        type: boolean
+        default: false
 
 concurrency:
   group: pipeline             # never run two at once
@@ -53,4 +57,5 @@ jobs:
           EMAIL_FROM: ${{ vars.EMAIL_FROM }}          # set once your domain is verified; empty = Resend's test sender
           SITE_URL: ${{ vars.SITE_URL }}
           SEND_TEST_EMAIL: ${{ inputs.send_test_email && '1' || '0' }}
+          FORCE_DAILY: ${{ inputs.force_daily && '1' || '0' }}
         run: python run.py
