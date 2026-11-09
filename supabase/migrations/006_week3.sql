@@ -45,13 +45,27 @@ insert into profiles (user_id, email, name)
 select id, email, coalesce(raw_user_meta_data->>'full_name', raw_user_meta_data->>'name') from auth.users
 on conflict (user_id) do nothing;
 
+-- One-click unsubscribe: anyone holding the secret token from an email can turn that person's emails off.
+-- (security definer = runs with the database's rights, but it can ONLY do this one thing)
+create or replace function public.unsubscribe_by_token(token uuid) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare changed int;
+begin
+  update profiles set unsubscribed = true where unsubscribe_token = token;
+  get diagnostics changed = row_count;
+  return changed > 0;
+end $$;
+revoke all on function public.unsubscribe_by_token(uuid) from public;
+grant execute on function public.unsubscribe_by_token(uuid) to anon, authenticated;
+
 -- ---------- Tremors (alert-worthy events). Public: the site can show them. ----------
 create table if not exists alerts (
   id           bigint generated always as identity primary key,
-  nct_id       text not null references trials(nct_id) on delete cascade,
-  ticker       text,
+  nct_id       text references trials(nct_id) on delete cascade,  -- empty for company-wide alerts
+  ticker       text references companies(ticker) on delete cascade,
   detected_at  timestamptz not null default now(),
   kind         text not null,              -- 'critical', 'big_jump', 'head_start'
+  signal_type  text,                       -- e.g. 'trial_stopped', 'insider_selling_cluster'
   is_huge      boolean not null default false,  -- goes to everyone, not just watchers
   instant      boolean not null default false,  -- email right away vs. daily digest
   headline     text not null,              -- code-written fact sentence
@@ -59,7 +73,8 @@ create table if not exists alerts (
   old_score    integer,
   new_score    integer,
   details      jsonb,                      -- links and facts for the email
-  dedupe_key   text not null unique        -- so the same event is never alerted twice
+  dedupe_key   text not null unique,       -- so the same event is never alerted twice
+  baseline     boolean not null default false  -- existed before alerts started: recorded, never emailed
 );
 create index if not exists alerts_recent_idx on alerts(detected_at desc);
 alter table alerts enable row level security;

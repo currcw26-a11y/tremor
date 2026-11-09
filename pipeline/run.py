@@ -9,13 +9,22 @@ import sys
 import traceback
 from datetime import datetime, timezone
 
-from tremor import db, explain_job, score_job, sec_job, trials_job
+from tremor import alert_job, db, explain_job, score_job, sec_job, trials_job
 
 
 def first_run_of_day() -> bool:
     """True if no successful run has finished yet today (UTC). Daily jobs run only then."""
     today = datetime.now(timezone.utc).date().isoformat()
     return not db.select("pipeline_runs", "id", status="eq.success", finished_at=f"gte.{today}", limit="1")
+
+
+def digest_due() -> bool:
+    """True if today's digest hasn't gone out yet."""
+    today = datetime.now(timezone.utc).date().isoformat()
+    try:
+        return not db.select("email_log", "id", kind="eq.digest", sent_at=f"gte.{today}", limit="1")
+    except RuntimeError:
+        return False
 
 
 def main() -> int:
@@ -25,8 +34,12 @@ def main() -> int:
     jobs = [("trials", trials_job.run), ("sec", sec_job.run_sec), ("fda", sec_job.run_fda),
             ("scores", score_job.run),  # scores use everything above
             ("explanations", explain_job.run)]
-    if daily:  # once a day: big downloads and the digest email
+    if daily:  # once a day: big downloads
         jobs.append(("runway", sec_job.run_runway))
+    # Alerts go last: they use the newest scores and explanations
+    jobs.append(("alerts", lambda: alert_job.run(daily=digest_due())))
+    if os.getenv("SEND_TEST_EMAIL") == "1":
+        jobs.append(("test_email", lambda: alert_job.send_test(os.getenv("TEST_EMAIL_TO") or None)))
     for name, job in jobs:
         print(f"--- {name} ---")
         try:

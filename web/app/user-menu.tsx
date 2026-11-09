@@ -16,6 +16,9 @@ export function UserMenu() {
       <Link href="/watchlist" className="text-sm font-semibold text-foreground">
         ★ Watchlist
       </Link>
+      <Link href="/settings" aria-label="Alert settings" className="text-sm text-muted hover:text-foreground">
+        ⚙︎
+      </Link>
       <button onClick={() => supabase().auth.signOut()} className="text-xs text-muted hover:text-foreground">
         Sign out
       </button>

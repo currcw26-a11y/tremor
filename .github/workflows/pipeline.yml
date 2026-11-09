@@ -8,7 +8,12 @@ name: Tremor pipeline
 on:
   schedule:
     - cron: "17 */4 * * *"   # minute 17 of every 4th hour (UTC). Off the :00 rush hour.
-  workflow_dispatch: {}       # adds a "Run workflow" button
+  workflow_dispatch:          # adds a "Run workflow" button
+    inputs:
+      send_test_email:
+        description: "Also send a test alert email to the first signed-up person"
+        type: boolean
+        default: false
 
 concurrency:
   group: pipeline             # never run two at once
@@ -44,4 +49,8 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}  # only needed for keys made outside a workspace
           AI_MONTHLY_BUDGET_USD: "15"
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ vars.EMAIL_FROM }}          # set once your domain is verified; empty = Resend's test sender
+          SITE_URL: ${{ vars.SITE_URL }}
+          SEND_TEST_EMAIL: ${{ inputs.send_test_email && '1' || '0' }}
         run: python run.py

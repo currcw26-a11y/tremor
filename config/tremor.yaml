@@ -70,5 +70,18 @@ key_exec_titles:
   - head of clinical development
 
 alerts:
-  # Used in Week 3
+  # A score rising this many points in one update is a "big jump" tremor
   big_jump_points: 15
+  # Emailed right away (in the run that finds them). Also sent to EVERYONE, not just watchers ("huge").
+  critical: [primary_outcome_changed, enrollment_cut, trial_stopped, key_exec_departure]
+  # "Head start" signals: go into the daily digest for people watching that trial or company
+  head_start: [fda_advisory_meeting, insider_selling_cluster, date_delayed, results_overdue, layoffs, rival_trial_failed]
+
+email:
+  # Resend free plan limits. We never go over; digests are skipped first.
+  daily_limit: 100
+  monthly_limit: 3000
+  # Keep this many emails per day for instant alerts: digests stop once fewer than this remain
+  reserve_for_instant: 25
+  # Hour (UTC) of the day after which the daily digest goes out (first run at/after this hour)
+  digest_hour_utc: 13
