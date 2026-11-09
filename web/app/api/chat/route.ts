@@ -25,6 +25,21 @@ function json(body: object, status = 200) {
 }
 
 export async function POST(request: NextRequest) {
+  try {
+    return await handle(request);
+  } catch (err) {
+    // Explain setup problems clearly (never includes the key itself)
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Chat error:", msg);
+    if (msg.includes("SUPABASE_SECRET_KEY is not set"))
+      return json({ error: "Setup problem: SUPABASE_SECRET_KEY isn't set in Vercel (or the site wasn't redeployed after adding it)." }, 500);
+    if (/Database error 40[13]/.test(msg))
+      return json({ error: "Setup problem: the database didn't accept SUPABASE_SECRET_KEY in Vercel. Check it's the sb_secret_ key." }, 500);
+    return json({ error: "Something went wrong on our side. Please try again later." }, 500);
+  }
+}
+
+async function handle(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? null;
   const userId = await userFromToken(token);
   if (!userId) return json({ error: "Please sign in to ask questions." }, 401);
@@ -52,7 +67,10 @@ export async function POST(request: NextRequest) {
     answer = await ask(SYSTEM, facts, question);
   } catch (err) {
     console.error("Chat failed:", err);
-    return json({ error: "The AI chat isn't available right now. Please try again later." }, 502);
+    const status = (err as { status?: number }).status;
+    const detail = status === 401 ? " (Anthropic didn't accept ANTHROPIC_API_KEY in Vercel)"
+      : status === 400 ? " (Anthropic setup: the key may need ANTHROPIC_WORKSPACE_ID in Vercel)" : "";
+    return json({ error: `The AI chat isn't available right now${detail}. Please try again later.` }, 502);
   }
   const reply = answer ?? "Sorry, I couldn't answer that reliably from Tremor's data. Try asking it a different way.";
   await insert("chat_questions", [{ user_id: userId, question, answer: reply, nct_id: nct, ticker: ctx?.ticker ?? ticker }]);
