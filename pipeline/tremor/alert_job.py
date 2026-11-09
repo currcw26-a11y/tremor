@@ -118,6 +118,7 @@ def run(daily: bool = False) -> dict:
     first_time = not seen
     new = [a for k, a in found.items() if k not in seen]
 
+    new = alerts.drop_redundant_jumps(new)
     if first_time:
         db.insert("alerts", [{**a, "baseline": True} for a in new])
         return {"baseline_recorded": len(new), "note": "first run: existing signals recorded, nothing emailed"}

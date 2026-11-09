@@ -102,3 +102,12 @@ def test_digest_bundles_several_alerts_in_one_email():
     msg = emails.render([a, b], "digest", {}, {}, {}, "t")
     assert msg["subject"] == "Tremor daily digest: 2 updates (EXMP, OTHR)"
     assert msg["text"].count("What happened:") == 2
+
+
+def test_score_jump_explained_by_another_alert_is_dropped():
+    exec_leaves = {"nct_id": None, "ticker": "GOVX", "kind": "critical", "is_huge": True}
+    jump_same_company = {"nct_id": "NCT9", "ticker": "GOVX", "kind": "big_jump", "is_huge": False}
+    jump_turned_red = {"nct_id": "NCT8", "ticker": "GOVX", "kind": "big_jump", "is_huge": True}
+    jump_other = {"nct_id": "NCT7", "ticker": "OTHR", "kind": "big_jump", "is_huge": False}
+    kept = alerts.drop_redundant_jumps([exec_leaves, jump_same_company, jump_turned_red, jump_other])
+    assert kept == [exec_leaves, jump_turned_red, jump_other]   # turning red is always worth its own line

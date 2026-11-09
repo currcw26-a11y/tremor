@@ -84,6 +84,15 @@ def detect(trials: list[dict], history: list[dict], cfg: dict | None = None) -> 
     return found
 
 
+def drop_redundant_jumps(new_alerts: list[dict]) -> list[dict]:
+    """Skip a 'score jumped' alert when another new alert in the same run already explains it
+    (e.g. a key executive leaving makes every one of that company's trials jump). Same news once, not 3 times."""
+    explained_trials = {a["nct_id"] for a in new_alerts if a["kind"] != "big_jump" and a.get("nct_id")}
+    explained_companies = {a["ticker"] for a in new_alerts if a["kind"] != "big_jump" and not a.get("nct_id")}
+    return [a for a in new_alerts if a["kind"] != "big_jump" or a.get("is_huge")
+            or not (a["nct_id"] in explained_trials or a["ticker"] in explained_companies)]
+
+
 def interested_users(alert: dict, profiles: list[dict], watch_trials: dict[str, set], watch_companies: dict[str, set],
                      trial_ticker: dict[str, str]) -> list[tuple[str, str]]:
     """[(user_id, 'instant' | 'digest')] for one alert.

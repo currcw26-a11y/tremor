@@ -185,7 +185,9 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Week 3 plan approved (Nov 9). Email "when this happened before" section omitted until Week 4 backtest. Domain purchase postponed to the end; until then Resend only delivers to the Resend account owner's email.
 - [x] Week 3: cash runway (pipeline/tremor/runway.py, daily) + migration 006 written (profiles, alerts, deliveries, email_log, chat, jobs, layoffs, unsubscribe_by_token RPC)
 - [x] Week 3: alert engine (alerts.py rules, emails.py render + Resend channel, alert_job.py; first run records 'baseline' alerts without emailing; test email via workflow input send_test_email) + /settings, /unsubscribe, /api/unsubscribe (one-click)
-- [ ] Week 3: user runs migration 006, adds RESEND_API_KEY secret; first test email
+- [x] Week 3: migration 006 run (Nov 9); first alert run recorded 167 baseline tremors, emailed nobody
+- [x] Domain live: https://www.tremoralerts.com (Vercel primary; apex redirects to www). Porkbun DNS: A @ 216.198.79.1, CNAME www, Resend records (resend._domainkey, send, rsend, _dmarc p=none); parking ALIAS/CNAME + URL forward deleted; Porkbun MX forwarding kept.
+- [ ] Week 3: Supabase/Google sign-in updated for new domain; GitHub vars EMAIL_FROM + SITE_URL; Resend verified + RESEND_API_KEY; first test email
 - [ ] Week 3: money left on company pages, AI chat, job boards, layoff notices
 
 ## Notes for later weeks

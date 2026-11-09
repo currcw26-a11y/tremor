@@ -10,7 +10,7 @@ import requests
 
 from .words import money_left, nice_date
 
-SITE_URL = (os.getenv("SITE_URL") or "https://tremor-ecru.vercel.app").rstrip("/")
+SITE_URL = (os.getenv("SITE_URL") or "https://www.tremoralerts.com").rstrip("/")
 EMAIL_FROM = os.getenv("EMAIL_FROM") or "Tremor <onboarding@resend.dev>"  # switch to your domain once verified
 
 COLORS = {"calm": "#166534", "shaky": "#d97706", "tremor": "#b91c1c"}
