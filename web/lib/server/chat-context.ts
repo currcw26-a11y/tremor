@@ -15,6 +15,33 @@ const STATUS: Record<string, string> = {
   ENROLLING_BY_INVITATION: "signing up invited patients",
 };
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** "2026-11-06" -> "Nov 6, 2026", "2027-06" -> "Jun 2027" */
+function niceDate(d: unknown) {
+  if (!d) return "unknown";
+  const [y, m, day] = String(d).slice(0, 10).split("-");
+  if (!m) return y;
+  return day ? `${MONTHS[+m - 1]} ${+day}, ${y}` : `${MONTHS[+m - 1]} ${y}`;
+}
+
+// Plain-English names for the kinds of changes Tremor spots
+const CHANGE_WORDS: Record<string, string> = {
+  primary_outcome_changed: "the main goal (what counts as success) was changed",
+  primary_outcome_added: "a new main goal was added",
+  primary_outcome_reworded: "the main goal was reworded",
+  enrollment_cut: "the number of patients was cut",
+  enrollment_small_cut: "the number of patients was lowered slightly",
+  enrollment_increased: "the number of patients was raised",
+  date_delayed: "a key date was pushed back",
+  date_small_change: "a date moved slightly",
+  date_moved_earlier: "a date moved earlier",
+  trial_stopped: "the trial was stopped",
+  status_changed: "the trial's status changed (usually normal progress)",
+  results_posted: "results were posted",
+  interventions_changed: "the drugs in the trial changed",
+  phase_changed: "the trial's phase changed",
+};
+
 function money(n: number | null | undefined) {
   if (n == null) return "unknown";
   const a = Math.abs(n);
@@ -28,7 +55,7 @@ async function companyFacts(ticker: string): Promise<string[]> {
   if (!c) return [];
   const lines = [`Company: ${c["name"]} (stock ticker ${ticker})`];
   if (c["finances_as_of"]) {
-    lines.push(`Cash and short-term investments: ${money(c["cash_usd"])} as of ${c["finances_as_of"]}`);
+    lines.push(`Cash and short-term investments: ${money(c["cash_usd"])} as of ${niceDate(c["finances_as_of"])}`);
     if (c["runway_months"] != null) {
       lines.push(`Spending on running the business: about ${money(c["monthly_burn_usd"])} a month`);
       lines.push(`Money left at that rate: about ${Math.round(c["runway_months"])} months`);
@@ -60,11 +87,11 @@ export async function trialContext(nct: string): Promise<{ text: string; ticker:
     `Status: ${STATUS[t["overall_status"]] ?? t["overall_status"]}`,
     `Patients: ${t["enrollment"]} (${t["enrollment_type"] === "ACTUAL" ? "final count" : "planned"})`,
     `Main goals (what counts as success): ${((t["primary_outcomes"] as { measure: string }[]) ?? []).map((o) => o.measure).join("; ")}`,
-    `Started: ${t["start_date"]}; main results expected: ${t["primary_completion_date"]}; fully finished: ${t["completion_date"]}`,
-    `Results posted: ${t["results_first_posted"] ?? "not yet"}`,
+    `Started: ${niceDate(t["start_date"])}; main results expected: ${niceDate(t["primary_completion_date"])}; fully finished: ${niceDate(t["completion_date"])}`,
+    `Results posted: ${t["results_first_posted"] ? niceDate(t["results_first_posted"]) : "not yet"}`,
     `Tremor worry score: ${t["score"]} out of 100 (${t["score_label"]})`,
     `Reasons behind the score: ${reasons.length ? reasons.map((r) => `${r.label} (+${Math.round(r.points)})`).join("; ") : "none, no warning signs right now"}`,
-    ...changes.map((c) => `Change spotted on ${c.detected_at.slice(0, 10)}: ${c.change_type.replaceAll("_", " ")}${c.explanation ? `. Explanation: ${c.explanation}` : ""}`),
+    ...changes.map((c) => `Change spotted on ${niceDate(c.detected_at)}: ${CHANGE_WORDS[c.change_type] ?? c.change_type.replaceAll("_", " ")}${c.explanation ? `. Explanation: ${c.explanation}` : ""}`),
   ];
   return { text: lines.join("\n"), ticker: t["ticker"] };
 }

@@ -191,7 +191,8 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Week 3: new domain wired into Supabase, Google sign-in, RESEND_API_KEY secret added. Nov 9: first REAL instant alert delivered (CLLS UCART22 main goal changed) + test preview, but FROM onboarding@resend.dev because Resend says tremoralerts.com is NOT verified yet. Code defaults to alerts@tremoralerts.com and falls back to the test sender while unverified (only reaches the Resend account owner).
 - [x] Resend domain verified (Nov 9); test email sent from alerts@tremoralerts.com with no fallback. Emails can now reach anyone.
 - [x] Week 3: money left on company pages (Nov 9). runway.py reads every cash label on the newest date and takes the largest (MAIA reported $0 under the usual label); site notes later S-1/S-3/424B5 filings ('may have more cash now'). 182/196 companies have data; 55 under 12 months (real: many small caps).
-- [ ] Week 3: AI chat, job boards, layoff notices
+- [x] Week 3: AI chat (Nov 10): /api/chat route + AskBox on trial & company pages; signed-in only, 10/day (chat_questions), monthly budget via ai_calls, Tremor-data-only context (lib/server/chat-context.ts), number check + advice regex, one retry. Vercel env: ANTHROPIC_API_KEY + SUPABASE_SECRET_KEY as Secret.
+- [ ] Week 3: job boards, layoff notices
 
 ## Notes for later weeks
 
