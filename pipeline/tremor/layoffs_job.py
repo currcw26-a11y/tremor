@@ -19,11 +19,18 @@ def run() -> dict:
     rows, errors = layoffs.scrape_states(cfg["layoff_states"], WORK_DIR)
     since = date.today() - timedelta(days=cfg["layoff_lookback_days"])
     found = layoffs.match(rows, cores, since)
-    db.upsert("layoff_notices", [{
-        "ticker": r["ticker"], "state": r["state"], "company_name": r["company_name"],
-        "notice_date": r["notice_date"].isoformat() if r["notice_date"] else None,
-        "employees": r["employees"], "location": r["location"], "source": "warn-scraper",
-        "dedupe_key": f"{r['state']}|{r['company_name']}|{r['notice_date']}|{r['employees']}",
-    } for r in found], on_conflict="dedupe_key")
+    # States sometimes list the same notice twice; keep one copy of each
+    unique = {}
+    for r in found:
+        key = f"{r['state']}|{r['company_name']}|{r['notice_date']}|{r['employees']}"
+        unique[key] = {
+            "ticker": r["ticker"], "state": r["state"], "company_name": r["company_name"],
+            "notice_date": r["notice_date"].isoformat() if r["notice_date"] else None,
+            "employees": r["employees"], "location": r["location"], "source": "warn-scraper", "dedupe_key": key,
+        }
+    if unique:
+        db.upsert("layoff_notices", list(unique.values()), on_conflict="dedupe_key")
+    found = list(unique.values())
     return {"notices_read": len(rows), "tracked_company_notices": len(found),
-            "states_ok": len(cfg["layoff_states"]) - len(errors), "states_failed": errors}
+            "states_ok": len(cfg["layoff_states"]) - len(errors), "states_failed": errors,
+            "matches": sorted({f"{r['ticker']} ({r['state']})" for r in found})}
