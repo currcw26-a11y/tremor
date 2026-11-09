@@ -61,8 +61,7 @@ def find_board(company_name: str, core: str) -> dict | None:
     for slug in slug_candidates(company_name, core):
         gh = _get(f"https://boards-api.greenhouse.io/v1/boards/{slug}")
         if gh:
-            name_core = re.sub(r"[^a-z0-9]", "", (gh.get("name") or "").lower())
-            auto = core_slug_in(core, name_core)
+            auto = auto_confirm(company_name, slug, gh.get("name") or "")
             return {"provider": "greenhouse", "board": slug, "board_name": gh.get("name"), "auto_ok": auto}
         lv = _get(f"https://api.lever.co/v0/postings/{slug}?mode=json")
         if lv:
@@ -73,6 +72,12 @@ def find_board(company_name: str, core: str) -> dict | None:
     return None
 
 
-def core_slug_in(core: str, name_slug: str) -> bool:
-    c = re.sub(r"[^a-z0-9]", "", core)
-    return bool(c) and (c in name_slug or name_slug in c)
+BIOTECH_WORDS = re.compile(r"therapeutic|bio|pharma|medicine|oncology|science|immuno|genetic|thera", re.I)
+
+
+def auto_confirm(company_name: str, slug: str, board_name: str) -> bool:
+    """Only trust a match without a human check if the board uses the company's FULL name, or the board's
+    own name sounds like a biotech. Short names like "Aura" or "Kodiak" belong to many companies
+    (a tech startup and a self-driving truck company, in Tremor's first search)."""
+    full = slug_candidates(company_name, "")[0] if slug_candidates(company_name, "") else ""
+    return slug == full or bool(BIOTECH_WORDS.search(board_name))

@@ -1,0 +1,37 @@
+ticker,company,provider,board,board_name,confirmed
+ARVN,"ARVINAS, INC.",greenhouse,arvinas,Arvinas,yes
+AURA,"Aura Biosciences, Inc.",greenhouse,aura,Aura,no
+AVLN,Avalyn Pharma Inc.,greenhouse,avalynpharma,Avalyn Pharma,yes
+BEAM,Beam Therapeutics Inc.,greenhouse,beamtherapeutics,Beam Therapeutics,yes
+BOLT,"Bolt Biotherapeutics, Inc.",ashby,bolt,,no
+CBIO,"CRESCENT BIOPHARMA, INC.",greenhouse,crescent,Crescent,no
+CMPX,"Compass Therapeutics, Inc.",greenhouse,compasstherapeutics,Compass Therapeutics,yes
+COGT,"Cogent Biosciences, Inc.",greenhouse,cogentbiosciences,Cogent Biosciences,yes
+CORT,CORCEPT THERAPEUTICS INC,greenhouse,corcepttherapeutics,Corcept Therapeutics,yes
+DNTH,"Dianthus Therapeutics, Inc. /DE/",greenhouse,dianthustherapeutics,Dianthus Therapeutics,yes
+EIKN,"Eikon Therapeutics, Inc.",greenhouse,eikontherapeutics,Eikon Therapeutics,yes
+ENGN,enGene Therapeutics Inc.,lever,engene,,yes
+ERAS,"Erasca, Inc.",greenhouse,erasca,Erasca,yes
+FDMT,"4D Molecular Therapeutics, Inc.",greenhouse,4dmoleculartherapeutics,4D Molecular Therapeutics,yes
+FTH,"Faeth Therapeutics, Inc.",greenhouse,faeththerapeutics,Faeth Therapeutics,yes
+IOVA,"IOVANCE BIOTHERAPEUTICS, INC.",greenhouse,iovancebiotherapeutics,Iovance Biotherapeutics,yes
+IPHA,Innate Pharma SA,ashby,innate,,no
+IRON,"Disc Medicine, Inc.",greenhouse,discmedicine,Disc Medicine,yes
+KOD,Kodiak Sciences Inc.,greenhouse,kodiak,Kodiak,no
+KURA,"Kura Oncology, Inc.",greenhouse,kuraoncology,Kura Oncology,yes
+LYEL,"Lyell Immunopharma, Inc.",greenhouse,lyellimmunopharma,Lyell Immunopharma,yes
+NRIX,"Nurix Therapeutics, Inc.",greenhouse,nurix,Nurix,yes
+OBX,"Obsidian Therapeutics, Inc.",greenhouse,obsidiantherapeutics,Obsidian Therapeutics,yes
+OLMA,"Olema Pharmaceuticals, Inc.",greenhouse,olema,Olema Oncology,yes
+PTGX,"Protagonist Therapeutics, Inc",greenhouse,protagonist,Protagonist,no
+REPL,"Replimune Group, Inc.",lever,replimune,,yes
+RLAY,"Relay Therapeutics, Inc.",greenhouse,relaytherapeutics,Relay Therapeutics,yes
+RVMD,"Revolution Medicines, Inc.",greenhouse,revolutionmedicines,Revolution Medicines,yes
+RXRX,"RECURSION PHARMACEUTICALS, INC.",greenhouse,recursionpharmaceuticals,Recursion,yes
+SMMT,Summit Therapeutics Inc.,greenhouse,summittherapeutics,Summit Therapeutics,yes
+SNDX,Syndax Pharmaceuticals Inc,greenhouse,syndaxpharmaceuticals,Syndax Pharmaceuticals,yes
+TARA,"Protara Therapeutics, Inc.",greenhouse,protaratherapeutics,"Protara Therapeutics, Inc.",yes
+TNGX,"Tango Therapeutics, Inc.",greenhouse,tangotherapeutics,Tango Therapeutics,yes
+TYRA,"Tyra Biosciences, Inc.",ashby,tyrabiosciences,,yes
+VOR,Vor Biopharma Inc.,greenhouse,vorbiopharma,Vor Bio,yes
+XLO,"Xilio Therapeutics, Inc.",greenhouse,xiliotherapeutics,Xilio Therapeutics,yes

@@ -39,3 +39,12 @@ def test_clinical_jobs_are_counted():
 
 def test_board_name_guesses():
     assert jobs.slug_candidates("Iovance Biotherapeutics, Inc.", "iovance")[:2] == ["iovancebiotherapeutics", "iovance"]
+
+
+def test_generic_board_names_are_not_trusted_automatically():
+    assert jobs.auto_confirm("ARVINAS, INC.", "arvinas", "Arvinas")                        # full name used
+    assert jobs.auto_confirm("Kura Oncology, Inc.", "kuraoncology", "Kura Oncology")
+    assert jobs.auto_confirm("Olema Pharmaceuticals, Inc.", "olema", "Olema Oncology")     # board name sounds like biotech
+    assert not jobs.auto_confirm("Aura Biosciences, Inc.", "aura", "Aura")                 # a tech company
+    assert not jobs.auto_confirm("Kodiak Sciences Inc.", "kodiak", "Kodiak")               # self-driving trucks
+    assert not jobs.auto_confirm("Protagonist Therapeutics, Inc", "protagonist", "Protagonist")

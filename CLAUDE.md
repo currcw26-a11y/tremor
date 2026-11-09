@@ -192,7 +192,8 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Resend domain verified (Nov 9); test email sent from alerts@tremoralerts.com with no fallback. Emails can now reach anyone.
 - [x] Week 3: money left on company pages (Nov 9). runway.py reads every cash label on the newest date and takes the largest (MAIA reported $0 under the usual label); site notes later S-1/S-3/424B5 filings ('may have more cash now'). 182/196 companies have data; 55 under 12 months (real: many small caps).
 - [x] Week 3: AI chat (Nov 10): /api/chat route + AskBox on trial & company pages; signed-in only, 10/day (chat_questions), monthly budget via ai_calls, Tremor-data-only context (lib/server/chat-context.ts), number check + advice regex, one retry. Vercel env: ANTHROPIC_API_KEY + SUPABASE_SECRET_KEY as Secret.
-- [ ] Week 3: job boards, layoff notices
+- [x] Week 3: job boards (pipeline/data/job_boards.csv: 31 confirmed after checking job titles; 6 rejected as different companies: Aura, Crescent, Kodiak, Protagonist, Bolt, Innate) + state layoff notices (warn-scraper, 10 states, daily; Massachusetts blocks bots so it's excluded) + company page Hiring/Layoff sections. Job-drop signal needs ~2 weeks of daily counts before it can fire.
+- [ ] Week 3: verify layoff scraping in a real GitHub daily run; classmates sign up (Week 2 + 3 checkpoints)
 
 ## Notes for later weeks
 
