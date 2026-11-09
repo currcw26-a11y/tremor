@@ -8,6 +8,7 @@ import { ChangeRow, Empty, StatusPill, Ticker } from "../../components";
 import { Reasons, ScoreBadge } from "../../score";
 import { ScoreChart } from "../../score-chart";
 import { StarButton } from "../../star-button";
+import { AskBox } from "../../ask-box";
 
 async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["params"] }) {
   const { nct } = await params;
@@ -87,6 +88,10 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
           )}
         </div>
       </section>
+
+      <div className="mt-8">
+        <AskBox nctId={t.nct_id} ticker={t.ticker} kind="trial" />
+      </div>
 
       <details className="mt-8 rounded-xl border border-line bg-surface p-4">
         <summary className="cursor-pointer font-semibold">Show details (technical version)</summary>

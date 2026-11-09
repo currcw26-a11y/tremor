@@ -6,6 +6,7 @@ import { niceDate } from "@/lib/words";
 import { Empty, Ticker, TrialRow } from "../../components";
 import { StarButton } from "../../star-button";
 import { MoneyLeft } from "./money-left";
+import { AskBox } from "../../ask-box";
 
 const COMPANY_SIGNALS = new Set(["insider_selling_cluster", "key_exec_departure", "layoffs"]);
 const BIG_COMPANY = 15; // matches big_company_trial_count in config/tremor.yaml
@@ -75,6 +76,8 @@ async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticke
           )}
         </div>
       </section>
+
+      <AskBox ticker={company.ticker} kind="company" />
 
       <section>
         <h2 className="text-xl font-bold">Trials</h2>
