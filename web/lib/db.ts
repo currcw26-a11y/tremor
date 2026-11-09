@@ -215,6 +215,9 @@ export type InsiderTrade = {
   url: string;
 };
 
+export type JobCount = { day: string; total_jobs: number; clinical_jobs: number };
+export type LayoffNotice = { state: string; company_name: string; notice_date: string | null; employees: number | null; location: string | null };
+
 function daysAgo(n: number) {
   // Used only inside cached functions, so it is fixed per cache entry (fine for "last 6 months")
   return new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
@@ -274,5 +277,23 @@ export async function getCompany(ticker: string) {
       limit: "200",
     }),
   ]);
-  return { company: company.rows[0] ?? null, trials: trials.rows, filings: filings.rows, trades: trades.rows };
+  const [jobs, layoffs, board] = await Promise.all([
+    query<JobCount>("job_counts", { select: "day,total_jobs,clinical_jobs", ticker: `eq.${t}`, order: "day.desc", limit: "60" }),
+    query<LayoffNotice>("layoff_notices", {
+      select: "state,company_name,notice_date,employees,location",
+      ticker: `eq.${t}`,
+      order: "notice_date.desc.nullslast",
+      limit: "20",
+    }),
+    query<{ provider: string }>("job_boards", { select: "provider", ticker: `eq.${t}`, confirmed: "eq.true" }),
+  ]);
+  return {
+    company: company.rows[0] ?? null,
+    trials: trials.rows,
+    filings: filings.rows,
+    trades: trades.rows,
+    jobs: jobs.rows,
+    layoffs: layoffs.rows,
+    jobBoard: board.rows[0]?.provider ?? null,
+  };
 }

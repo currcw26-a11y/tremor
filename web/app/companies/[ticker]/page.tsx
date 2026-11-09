@@ -6,6 +6,7 @@ import { niceDate } from "@/lib/words";
 import { Empty, Ticker, TrialRow } from "../../components";
 import { StarButton } from "../../star-button";
 import { MoneyLeft } from "./money-left";
+import { Hiring, Layoffs } from "./hiring";
 import { AskBox } from "../../ask-box";
 
 const COMPANY_SIGNALS = new Set(["insider_selling_cluster", "key_exec_departure", "layoffs"]);
@@ -26,7 +27,7 @@ function role(t: InsiderTrade) {
 
 async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticker]">["params"] }) {
   const { ticker } = await params;
-  const { company, trials, filings, trades } = await getCompany(ticker);
+  const { company, trials, filings, trades, jobs, layoffs, jobBoard } = await getCompany(ticker);
   if (!company) notFound();
 
   const signals = (trials[0]?.score_breakdown ?? []).filter((r) => COMPANY_SIGNALS.has(r.type));
@@ -149,6 +150,16 @@ async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticke
           )}
           {trades.length > 30 && <p className="mt-2 text-sm text-muted">Showing the 30 most recent.</p>}
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-xl font-bold">Hiring</h2>
+        <Hiring jobs={jobs} board={jobBoard} />
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-xl font-bold">Layoff notices</h2>
+        <Layoffs notices={layoffs} />
       </section>
 
       <section>
