@@ -125,3 +125,20 @@ def test_past_results_date_is_described_as_passed():
 def test_subject_for_company_names_with_suffixes():
     a = {"ticker": "CLLS", "kind": "critical", "headline": "Changed the trial's main goal in “Long title”", "details": {}}
     assert emails.short_subject(a, {"CLLS": {"name": "Cellectis S.A."}}) == "Cellectis (CLLS): changed the trial's main goal"
+
+
+def test_falls_back_to_test_sender_when_domain_not_verified(monkeypatch):
+    from types import SimpleNamespace
+    senders = []
+
+    def fake_post(url, headers, json, timeout):
+        senders.append(json["from"])
+        if "tremoralerts.com" in json["from"]:
+            return SimpleNamespace(status_code=403, text='{"message":"The tremoralerts.com domain is not verified."}')
+        return SimpleNamespace(status_code=200, text="", json=lambda: {"id": "abc"})
+
+    monkeypatch.setattr(emails.requests, "post", fake_post)
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    msg = {"subject": "s", "html": "h", "text": "t", "unsubscribe_url": "u"}
+    assert emails.EmailChannel().send("me@example.com", msg) == "abc"
+    assert senders == ["Tremor <alerts@tremoralerts.com>", "Tremor <onboarding@resend.dev>"]

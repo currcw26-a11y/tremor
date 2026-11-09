@@ -116,6 +116,10 @@ def render(alerts: list[dict], mode: str, trials: dict, companies: dict, trial_c
     return {"subject": subject, "html": body_html, "text": body_text, "unsubscribe_url": one_click}
 
 
+class DomainNotVerified(Exception):
+    pass
+
+
 class EmailChannel:
     """Sends through Resend. Another channel (like text messages) would offer the same send() method."""
     name = "email"
@@ -126,12 +130,22 @@ class EmailChannel:
     def available(self) -> bool:
         return bool(self.key)
 
+    FALLBACK_FROM = "Tremor <onboarding@resend.dev>"  # Resend's test sender (only reaches the account owner)
+
     def send(self, to: str, message: dict) -> str:
+        try:
+            return self._send(to, message, EMAIL_FROM)
+        except DomainNotVerified:
+            # Our domain isn't verified in Resend (yet): use the test sender so alerts to the owner still arrive
+            print("    tremoralerts.com not verified in Resend yet; sending from the test address")
+            return self._send(to, message, self.FALLBACK_FROM)
+
+    def _send(self, to: str, message: dict, sender: str) -> str:
         resp = requests.post(
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {self.key}", "Content-Type": "application/json"},
             json={
-                "from": EMAIL_FROM, "to": [to], "subject": message["subject"],
+                "from": sender, "to": [to], "subject": message["subject"],
                 "html": message["html"], "text": message["text"],
                 # Lets Gmail/Apple Mail show their own one-click "Unsubscribe" button
                 "headers": {"List-Unsubscribe": f"<{message['unsubscribe_url']}>",
@@ -139,6 +153,8 @@ class EmailChannel:
             },
             timeout=30,
         )
+        if resp.status_code == 403 and "not verified" in resp.text and sender != self.FALLBACK_FROM:
+            raise DomainNotVerified(resp.text[:300])
         if resp.status_code >= 300:
             raise RuntimeError(f"Resend {resp.status_code}: {resp.text[:300]}")
         return resp.json().get("id", "")
