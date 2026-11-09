@@ -62,7 +62,7 @@ def detect(trials: list[dict], history: list[dict], cfg: dict | None = None) -> 
                 "headline": f"{t['sponsor_name']}: {r['label']}" if company_wide
                             else f"{r['label']} in “{t['title']}”",
                 "old_score": None, "new_score": None if company_wide else t["score"],
-                "details": {"source": r.get("source") or {}, "occurred": r["occurred"]},
+                "details": {"source": r.get("source") or {}, "occurred": r["occurred"], "short": r["label"]},
                 "dedupe_key": key,
             }
     jump = cfg["alerts"]["big_jump_points"]
@@ -79,7 +79,8 @@ def detect(trials: list[dict], history: list[dict], cfg: dict | None = None) -> 
             "instant": True, "is_huge": turned_red,
             "headline": f"Worry score jumped from {h['old_score']} to {h['new_score']} for “{t['title']}”",
             "old_score": h["old_score"], "new_score": h["new_score"],
-            "details": {"history_id": h["id"]}, "dedupe_key": key,
+            "details": {"history_id": h["id"], "short": f"worry score jumped from {h['old_score']} to {h['new_score']}"},
+            "dedupe_key": key,
         }
     return found
 

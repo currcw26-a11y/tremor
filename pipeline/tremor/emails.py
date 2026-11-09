@@ -5,13 +5,14 @@ when we'll find out, links to check, "Not investment advice", and a one-click un
 """
 import html
 import os
+from datetime import date
 
 import requests
 
 from .words import money_left, nice_date
 
 SITE_URL = (os.getenv("SITE_URL") or "https://www.tremoralerts.com").rstrip("/")
-EMAIL_FROM = os.getenv("EMAIL_FROM") or "Tremor <onboarding@resend.dev>"  # switch to your domain once verified
+EMAIL_FROM = os.getenv("EMAIL_FROM") or "Tremor <alerts@tremoralerts.com>"  # domain verified in Resend on Nov 9, 2026
 
 COLORS = {"calm": "#166534", "shaky": "#d97706", "tremor": "#b91c1c"}
 LABELS = {"calm": "● Calm", "shaky": "▲ Shaky", "tremor": "◆ Tremor"}
@@ -22,7 +23,8 @@ def _e(s) -> str:
     return html.escape(str(s or ""))
 
 
-def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: int) -> tuple[str, str]:
+def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: int,
+                today: date | None = None) -> tuple[str, str]:
     """(html, text) for one tremor."""
     rows: list[tuple[str, str]] = [("What happened", a["headline"])]
     if a.get("old_score") is not None:
@@ -38,7 +40,12 @@ def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: 
         if ml:
             rows.append(("Money left", ml))
     if trial and trial.get("primary_completion_date"):
-        rows.append(("When we'll find out", f"Main results are expected around {nice_date(trial['primary_completion_date'])}."))
+        due = trial["primary_completion_date"]
+        if str(due)[:10] < (today or date.today()).isoformat()[: len(str(due)[:10])]:
+            rows.append(("When we'll find out", f"Main results were due around {nice_date(due)}. That date has passed "
+                         "and no results are posted yet."))
+        else:
+            rows.append(("When we'll find out", f"Main results are expected around {nice_date(due)}."))
     rows.append(("Past cases", "We're still collecting what happened in similar past cases, so we can't say yet how often this led to bad news."))
 
     links = []
@@ -64,6 +71,15 @@ def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: 
     return "".join(h), "\n".join(t)
 
 
+def short_subject(a: dict, companies: dict) -> str:
+    """'Cellectis (CLLS): changed the trial's main goal' — short enough for a phone's inbox."""
+    name = (companies.get(a.get("ticker")) or {}).get("name") or a.get("ticker") or "Tremor"
+    name = name.split(",")[0].replace(" S.A.", "").replace(" Inc.", "").replace(" Inc", "").strip()
+    event = (a.get("details") or {}).get("short") or a["headline"].split(" in “")[0]
+    event = event[0].lower() + event[1:] if event[:2] != event[:2].upper() else event
+    return f"{name} ({a.get('ticker')}): {event}"[:90] if a.get("ticker") else event[:90]
+
+
 def render(alerts: list[dict], mode: str, trials: dict, companies: dict, trial_counts: dict,
            unsubscribe_token: str) -> dict:
     """Subject, HTML and plain text for one person's bundle."""
@@ -73,7 +89,7 @@ def render(alerts: list[dict], mode: str, trials: dict, companies: dict, trial_c
         subject = f"Tremor daily digest: {n} update{'s' if n != 1 else ''} ({tickers})"
         intro = "Here's what changed on the trials and companies you follow."
     elif n == 1:
-        subject = f"{KIND_ICON.get(alerts[0]['kind'], '🔴')} Tremor: {alerts[0]['headline']}"[:120]
+        subject = f"{KIND_ICON.get(alerts[0]['kind'], '🔴')} {short_subject(alerts[0], companies)}"
         intro = "Tremor just spotted this."
     else:
         subject = f"🔴 {n} new tremors: {tickers}"

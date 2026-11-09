@@ -81,7 +81,7 @@ def test_email_limits_reserve_room_for_instant_alerts():
 
 
 def test_email_has_required_parts_and_never_says_buy_or_sell():
-    a = {"nct_id": "NCT1", "ticker": "EXMP", "kind": "critical", "is_huge": True, "headline": "The trial was stopped early",
+    a = {"nct_id": "NCT1", "ticker": "EXMP", "kind": "critical", "is_huge": True, "headline": "The trial was stopped early in “Drug X”",
          "old_score": 30, "new_score": 85, "explanation": "An early stop can signal trouble, but it can also be routine.",
          "details": {"source": {"url": "https://www.sec.gov/x"}}}
     company = {"name": "Example Bio", "runway_months": 8.2, "monthly_burn_usd": 10_000_000,
@@ -93,7 +93,7 @@ def test_email_has_required_parts_and_never_says_buy_or_sell():
         assert must in msg["text"], must
     assert "Not investment advice" in msg["html"] and "tok-123" in msg["html"]
     assert not re.search(r"\b(buy|sell)\b", msg["text"].replace("never tells anyone to buy or sell", ""), re.I)
-    assert msg["subject"].startswith("🔴 Tremor:")
+    assert msg["subject"] == "🔴 Example Bio (EXMP): the trial was stopped early"   # short, no trial title
 
 
 def test_digest_bundles_several_alerts_in_one_email():
@@ -111,3 +111,17 @@ def test_score_jump_explained_by_another_alert_is_dropped():
     jump_other = {"nct_id": "NCT7", "ticker": "OTHR", "kind": "big_jump", "is_huge": False}
     kept = alerts.drop_redundant_jumps([exec_leaves, jump_same_company, jump_turned_red, jump_other])
     assert kept == [exec_leaves, jump_turned_red, jump_other]   # turning red is always worth its own line
+
+
+def test_past_results_date_is_described_as_passed():
+    from datetime import date
+    a = {"nct_id": "NCT1", "ticker": "EXMP", "kind": "critical", "headline": "x", "new_score": 40}
+    past = emails.alert_block(a, {"primary_completion_date": "2026-09-16"}, None, 1, today=date(2026, 11, 9))[1]
+    future = emails.alert_block(a, {"primary_completion_date": "2027-03"}, None, 1, today=date(2026, 11, 9))[1]
+    assert "were due around Sep 16, 2026. That date has passed" in past
+    assert "are expected around Mar 2027" in future
+
+
+def test_subject_for_company_names_with_suffixes():
+    a = {"ticker": "CLLS", "kind": "critical", "headline": "Changed the trial's main goal in “Long title”", "details": {}}
+    assert emails.short_subject(a, {"CLLS": {"name": "Cellectis S.A."}}) == "Cellectis (CLLS): changed the trial's main goal"
