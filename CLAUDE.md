@@ -187,6 +187,7 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Week 3: alert engine (alerts.py rules, emails.py render + Resend channel, alert_job.py; first run records 'baseline' alerts without emailing; test email via workflow input send_test_email) + /settings, /unsubscribe, /api/unsubscribe (one-click)
 - [x] Week 3: migration 006 run (Nov 9); first alert run recorded 167 baseline tremors, emailed nobody
 - [x] Domain live: https://www.tremoralerts.com (Vercel primary; apex redirects to www). Porkbun DNS: A @ 216.198.79.1, CNAME www, Resend records (resend._domainkey, send, rsend, _dmarc p=none); parking ALIAS/CNAME + URL forward deleted; Porkbun MX forwarding kept.
+- [x] Google OAuth branding VERIFIED (Nov 9) via Search Console domain property for tremoralerts.com; consent screen shows "Tremor". Authorized domains: tremoralerts.com, qlzylutucbzuwhirodys.supabase.co (+ vercel.app).
 - [ ] Week 3: Supabase/Google sign-in updated for new domain; GitHub vars EMAIL_FROM + SITE_URL; Resend verified + RESEND_API_KEY; first test email
 - [ ] Week 3: money left on company pages, AI chat, job boards, layoff notices
 
@@ -200,5 +201,6 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - Website (web/): Next.js 16 with Cache Components. Data functions use 'use cache' + cacheLife; anything reading searchParams/params sits inside <Suspense>; Date.now() only in client components (app/time-ago.tsx). Read web/node_modules/next/dist/docs before using new APIs. On this cloud machine run builds with NODE_USE_ENV_PROXY=1.
 - Score colors validated with the dataviz palette checker: calm #166534, shaky #d97706, tremor #b91c1c (all pass). Always pair color with word + shape (circle/triangle/diamond). Chart band edges 40/70 are duplicated in web/app/score-chart.tsx; keep in sync with config/tremor.yaml.
 - Domain: tremoralerts.com bought at Porkbun on Nov 9, 2026 (WHOIS privacy on, AUTO-RENEW OFF: expires Nov 9, 2027, renewal ~$11.81). Remind the owner before then.
+- Week 5 to-do: Google Search visibility (sitemap.xml, robots.txt, page metadata/descriptions, submit sitemap in Search Console, which is already verified for tremoralerts.com).
 - Privacy page promises account deletion within 7 days of an email request to clivebeto222@gmail.com (contact email in web/lib/site.ts).
 - The Federal Register's full-text pages block bots; use the API's search (conditions[term]) instead.
