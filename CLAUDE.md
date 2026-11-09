@@ -182,7 +182,7 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Week 2 step 5: company pages (/companies list + /companies/[ticker]: company-wide signals, trials, exec departures, insider trades w/ pre-planned flag, filings; cash runway placeholder until Week 3)
 - [x] Week 2 step 6: Google sign-in + watchlist (Nov 9: works on phone; Google Cloud project owned by personal Gmail clivebeto222@gmail.com, published; /privacy and /terms pages added). Auth is client-side (lib/supabase-browser.ts) so public pages stay cached; /auth/callback route swaps the code for a session cookie.
 - [x] Week 2 step 6 verified Nov 9: owner signed in on phone and starred a trial (row saved). Still to do: a classmate tries it.
-- [ ] Week 3 plan approved
+- [x] Week 3 plan approved (Nov 9). Email "when this happened before" section omitted until Week 4 backtest.
 
 ## Notes for later weeks
 

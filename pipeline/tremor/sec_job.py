@@ -82,3 +82,25 @@ def check_exec_changes() -> int:
         db.update("sec_filings", {k: v for k, v in r.items() if k != "accession_number"},
                   accession_number=f"eq.{r['accession_number']}")
     return found
+
+
+def run_runway() -> dict:
+    """Money left for every company, from its SEC financial reports (run once a day)."""
+    from . import runway
+    rows, missing, errors = [], 0, 0
+    for c in db.select("companies", "ticker,name,cik"):
+        try:
+            r = runway.fetch_and_compute(c["cik"])
+        except Exception as err:
+            errors += 1
+            print(f"    {c['ticker']}: {err}")
+            continue
+        if r is None:
+            missing += 1
+            continue
+        rows.append({"ticker": c["ticker"], "name": c["name"], "cik": c["cik"], **r})
+    db.upsert("companies", rows, on_conflict="ticker")
+    burning = [r for r in rows if r["runway_months"] is not None]
+    return {"companies_with_finances": len(rows), "burning_cash": len(burning),
+            "under_12_months": sum(r["runway_months"] < 12 for r in burning),
+            "no_recent_data": missing, "errors": errors}
