@@ -17,7 +17,7 @@ def test_only_recent_notices_from_tracked_companies_match():
     rows = [{"company_name": "Example Therapeutics, Inc.", "notice_date": date(2026, 10, 1)},
             {"company_name": "Example Therapeutics Inc", "notice_date": date(2024, 1, 1)},   # too old
             {"company_name": "Some Bakery LLC", "notice_date": date(2026, 10, 1)}]
-    found = layoffs.match(rows, {"example": "EXMP"}, since=date(2025, 11, 1))
+    found = layoffs.match(rows, {"example": {"ticker": "EXMP", "name": "Example Therapeutics Inc"}}, since=date(2025, 11, 1))
     assert [r["ticker"] for r in found] == ["EXMP"]
 
 
@@ -48,3 +48,16 @@ def test_generic_board_names_are_not_trusted_automatically():
     assert not jobs.auto_confirm("Aura Biosciences, Inc.", "aura", "Aura")                 # a tech company
     assert not jobs.auto_confirm("Kodiak Sciences Inc.", "kodiak", "Kodiak")               # self-driving trucks
     assert not jobs.auto_confirm("Protagonist Therapeutics, Inc", "protagonist", "Protagonist")
+
+
+def test_layoff_names_must_really_be_the_company():
+    cos = {"compass": {"ticker": "CMPX", "name": "Compass Therapeutics, Inc."},
+           "merck": {"ticker": "MRK", "name": "Merck & Co., Inc."},
+           "novartis": {"ticker": "NVS", "name": "NOVARTIS AG"},
+           "obsidian": {"ticker": "OBX", "name": "Obsidian Therapeutics, Inc."}}
+    d = date(2026, 10, 1)
+    names = ["Compass Group USA", "Compass Inc.", "Obsidian", "Merck & Co", "Novartis Group",
+             "Novartis Pharmaceuticals Corp.", "Compass Therapeutics"]
+    found = layoffs.match([{"company_name": n, "notice_date": d} for n in names], cos, since=date(2025, 11, 1))
+    assert [f["company_name"] for f in found] == ["Merck & Co", "Novartis Group", "Novartis Pharmaceuticals Corp.",
+                                                   "Compass Therapeutics"]

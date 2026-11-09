@@ -63,16 +63,34 @@ def read_state_csv(path: Path, state: str) -> list[dict]:
         return rows
 
 
-def match(rows: list[dict], cores: dict[str, str], since: date) -> list[dict]:
-    """Keep recent notices whose company matches a tracked company exactly (by core name)."""
+INDUSTRY_WORDS = re.compile(r"therapeutic|bio|pharma|science|medicine|oncology|immuno|genetic", re.I)
+
+
+def _plain(name: str) -> str:
+    """'Merck & Co., Inc.' -> 'merck' ; 'Novartis Group' -> 'novartis' (drops legal words like Inc, Co, Group)."""
+    from ..matching import LEGAL_WORDS
+    words = re.sub(r"[^a-z0-9 ]", " ", name.lower().replace("&", " ")).split()
+    return " ".join(w for w in words if w not in LEGAL_WORDS | {"group", "usa", "us", "and", "corp", "corporation"})
+
+
+def match(rows: list[dict], companies: dict[str, dict], since: date) -> list[dict]:
+    """Keep recent notices from tracked companies.
+
+    companies: {core_name: {"ticker": ..., "name": official SEC name}}
+    A notice counts only if its name matches the company's official name, or it shares the core name AND
+    sounds like a drug company. (Bare "Compass" or "Obsidian" turned out to be other companies.)
+    """
     from ..matching import core_name
     out = []
     for r in rows:
         if r["notice_date"] and r["notice_date"] < since:
             continue
-        ticker = cores.get(core_name(r["company_name"]))
-        if ticker:
-            out.append({**r, "ticker": ticker})
+        c = companies.get(core_name(r["company_name"]))
+        if not c:
+            continue
+        same_name = _plain(r["company_name"]) == _plain(c["name"])
+        if same_name or INDUSTRY_WORDS.search(r["company_name"]):
+            out.append({**r, "ticker": c["ticker"]})
     return out
 
 

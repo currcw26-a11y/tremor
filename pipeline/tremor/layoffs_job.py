@@ -15,7 +15,7 @@ def run() -> dict:
     for c in db.select("companies", "ticker,name"):
         core = core_name(c["name"])
         if len(core) >= 4:  # very short names would match unrelated employers
-            cores.setdefault(core, c["ticker"])
+            cores.setdefault(core, {"ticker": c["ticker"], "name": c["name"]})
     rows, errors = layoffs.scrape_states(cfg["layoff_states"], WORK_DIR)
     since = date.today() - timedelta(days=cfg["layoff_lookback_days"])
     found = layoffs.match(rows, cores, since)
