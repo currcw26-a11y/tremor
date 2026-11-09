@@ -158,6 +158,8 @@ def run(daily: bool = False) -> dict:
 
 def send_test(to_email: str | None = None) -> dict:
     """Email a preview built from the latest real tremors, to check how emails look."""
+    if not emails.EmailChannel().available():
+        return {"test": "skipped: no RESEND_API_KEY secret in GitHub"}
     trials_list, companies, counts = _load_context()
     trials = {t["nct_id"]: t for t in trials_list}
     profiles = db.select("profiles", "*", order="created_at", limit="1")
