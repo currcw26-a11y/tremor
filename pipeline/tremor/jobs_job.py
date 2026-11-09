@@ -25,24 +25,40 @@ def read_boards() -> list[dict]:
         return list(csv.DictReader(f))
 
 
-def find_all():
-    existing = {r["ticker"]: r for r in read_boards()}
-    rows = []
-    for c in db.select("companies", "ticker,name", order="ticker"):
-        if c["ticker"] in existing:
-            rows.append(existing[c["ticker"]])
-            continue
-        found = jobs.find_board(c["name"], core_name(c["name"]))
-        time.sleep(0.2)  # polite
-        if found:
-            rows.append({"ticker": c["ticker"], "company": c["name"], "provider": found["provider"],
-                         "board": found["board"], "board_name": found["board_name"],
-                         "confirmed": "yes" if found["auto_ok"] else ""})
-            print(f"  {c['ticker']:<6} {found['provider']:<10} {found['board']:<28} {found['board_name']}")
+def _write(rows: list[dict]):
     with open(BOARDS_CSV, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=COLUMNS)
         w.writeheader()
-        w.writerows(rows)
+        w.writerows(sorted(rows, key=lambda r: r["ticker"]))
+
+
+def find_all(workers: int = 8):
+    """Look for every company's job board, 8 companies at a time, saving after each find."""
+    from collections import Counter
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    existing = {r["ticker"]: r for r in read_boards()}
+    trial_counts = Counter(t["ticker"] for t in db.select("trials", "ticker", tracked="eq.true"))
+    todo = [c for c in db.select("companies", "ticker,name", order="ticker")
+            if c["ticker"] not in existing and trial_counts[c["ticker"]] < 15]  # giant companies use other hiring systems
+    rows = list(existing.values())
+
+    def look(c):
+        return c, jobs.find_board(c["name"], core_name(c["name"]))
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for fut in as_completed([pool.submit(look, c) for c in todo]):
+            try:
+                c, found = fut.result()
+            except Exception as err:
+                print(f"  error: {err}")
+                continue
+            if found:
+                rows.append({"ticker": c["ticker"], "company": c["name"], "provider": found["provider"],
+                             "board": found["board"], "board_name": found["board_name"],
+                             "confirmed": "yes" if found["auto_ok"] else ""})
+                print(f"  {c['ticker']:<6} {found['provider']:<10} {found['board']:<28} {found['board_name']}", flush=True)
+                _write(rows)
+    _write(rows)
     return rows
 
 

@@ -51,7 +51,7 @@ def slug_candidates(company_name: str, core: str) -> list[str]:
                    company_name.lower())
     full = re.sub(r"[^a-z0-9]", "", legal)
     core_slug = re.sub(r"[^a-z0-9]", "", core)
-    out = [full, core_slug] + [core_slug + s for s in ("therapeutics", "bio", "pharma", "inc", "oncology")]
+    out = [full, core_slug, core_slug + "therapeutics"]
     return list(dict.fromkeys(s for s in out if len(s) >= 4))
 
 
