@@ -30,6 +30,11 @@ def run(today: date | None = None) -> dict:
                        transaction_date=f"gte.{since}"):
         sales[s["ticker"]].append(s)
     meetings = db.select("fda_meetings", "*")
+    notices, job_counts = defaultdict(list), defaultdict(list)
+    for n in db.select("layoff_notices", "ticker,state,notice_date,employees,location", notice_date=f"gte.{since}"):
+        notices[n["ticker"]].append(n)
+    for j in db.select("job_counts", "ticker,day,clinical_jobs", day=f"gte.{(today - timedelta(days=60)).isoformat()}"):
+        job_counts[j["ticker"]].append(j)
 
     trials_per_company = defaultdict(int)
     for t in trials:
@@ -41,7 +46,8 @@ def run(today: date | None = None) -> dict:
     for t in trials:
         tk = t["ticker"]
         if tk not in company_cache:
-            company_cache[tk] = scoring.company_signals(filings[tk], sales[tk], trials_per_company[tk])
+            company_cache[tk] = scoring.company_signals(filings[tk], sales[tk], trials_per_company[tk],
+                                                        layoff_notices=notices[tk], job_counts=job_counts[tk])
         drugs = {safe_term(d).lower() for d in useful_names(t.get("interventions") or [])}
         signals = (scoring.trial_signals(t, changes[t["nct_id"]], today)
                    + [scoring.Signal(**{**vars(s)}) for s in company_cache[tk]]  # copies: points differ per call

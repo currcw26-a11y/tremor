@@ -13,7 +13,7 @@ Kinds (rules live in config/tremor.yaml under `alerts`):
 """
 from . import config
 
-COMPANY_WIDE = {"insider_selling_cluster", "key_exec_departure", "layoffs"}
+COMPANY_WIDE = {"insider_selling_cluster", "key_exec_departure", "layoffs", "job_postings_drop"}
 
 
 def classify(signal_type: str, reason_label: str = "", cfg: dict | None = None):

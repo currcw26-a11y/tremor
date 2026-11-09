@@ -69,6 +69,16 @@ key_exec_titles:
   - president, research and development
   - head of clinical development
 
+signals:
+  # Clinical job postings "drop sharply": today's count is at most this share of the average
+  # 2-6 weeks ago, and that average was at least min_before (so tiny boards don't trigger it)
+  job_drop_share: 0.5
+  job_drop_min_before: 4
+  # States whose public layoff ("WARN") notices we check daily. Massachusetts blocks automated
+  # access to its report, so it isn't here; 8-K item 2.05 filings still catch big public layoffs.
+  layoff_states: [ca, nj, ny, md, wa, tx, il, pa, ct, co]  # North Carolina is not covered by warn-scraper
+  layoff_lookback_days: 365
+
 alerts:
   # A score rising this many points in one update is a "big jump" tremor
   big_jump_points: 15

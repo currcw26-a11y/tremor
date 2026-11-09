@@ -5,3 +5,4 @@ pytest==8.3.4         # runs our automatic tests
 rapidfuzz==3.10.1   # compares company names that are spelled a bit differently
 PyYAML==6.0.2         # reads config/tremor.yaml
 anthropic==2.6.0      # the official Claude API library
+warn-scraper==1.2.143  # downloads state layoff (WARN) notices

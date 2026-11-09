@@ -115,3 +115,24 @@ def test_only_most_recent_insider_cluster_counts():
     assert len(insider_clusters(sales)) == 2
     [sig] = company_signals([], sales, trial_count=3)
     assert sig.occurred == date(2026, 10, 2)
+
+
+def jc(day_offset, n):
+    return {"day": (TODAY - timedelta(days=day_offset)).isoformat(), "clinical_jobs": n}
+
+
+def test_clinical_job_drop_needs_history_and_a_real_drop():
+    history = [jc(d, 10) for d in range(14, 43, 3)]          # about 10 clinical jobs a month ago
+    assert scoring.job_drop(history + [jc(0, 4)])["now"] == 4  # down to 4: a sharp drop
+    assert scoring.job_drop(history + [jc(0, 8)]) is None      # down to 8: normal wobble
+    assert scoring.job_drop([jc(0, 0)]) is None                # no history yet
+    tiny = [jc(d, 2) for d in range(14, 43, 3)]
+    assert scoring.job_drop(tiny + [jc(0, 0)]) is None         # too small a board to judge
+
+
+def test_one_layoff_counted_once_even_if_reported_twice():
+    filing = {"filed_at": "2026-10-20", "items": ["2.05"], "url": "u"}
+    notice = {"notice_date": "2026-10-25", "state": "CA", "employees": 52}
+    sigs = company_signals([filing], [], 3, layoff_notices=[notice])
+    layoffs = [s for s in sigs if s.type == "layoffs"]
+    assert len(layoffs) == 1 and "CA" in layoffs[0].label and "52 people" in layoffs[0].label

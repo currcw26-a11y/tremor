@@ -129,7 +129,28 @@ def insider_clusters(sales: list[dict], cfg: dict | None = None) -> list[dict]:
     return clusters
 
 
-def company_signals(filings: list[dict], sales: list[dict], trial_count: int, cfg: dict | None = None) -> list[Signal]:
+def job_drop(counts: list[dict], cfg: dict | None = None) -> dict | None:
+    """Clinical job postings dropped sharply: today's count vs. the average 2-6 weeks ago.
+
+    counts: [{day, clinical_jobs}] for one company. Returns {day, before, now} or None.
+    """
+    cfg = cfg or config.load()
+    sig = cfg["signals"]
+    if not counts:
+        return None
+    latest = max(counts, key=lambda c: c["day"])
+    today = _d(latest["day"])
+    window = [c["clinical_jobs"] for c in counts if 14 <= (today - _d(c["day"])).days <= 42]
+    if len(window) < 5:
+        return None  # not enough history yet
+    before = sum(window) / len(window)
+    if before >= sig["job_drop_min_before"] and latest["clinical_jobs"] <= before * sig["job_drop_share"]:
+        return {"day": today, "before": round(before), "now": latest["clinical_jobs"]}
+    return None
+
+
+def company_signals(filings: list[dict], sales: list[dict], trial_count: int, cfg: dict | None = None,
+                    layoff_notices: list[dict] | None = None, job_counts: list[dict] | None = None) -> list[Signal]:
     """Company-wide signals (apply to every trial the company runs)."""
     cfg = cfg or config.load()
     w, s = cfg["score"]["weights"], cfg["score"]
@@ -140,6 +161,7 @@ def company_signals(filings: list[dict], sales: list[dict], trial_count: int, cf
         signals.append(Signal("insider_selling_cluster", f"{len(c['insiders'])} insiders sold shares within a month",
                               c["end"], w["insider_selling_cluster"] * factor,
                               source={"insiders": c["insiders"], "accessions": c["accessions"]}))
+    layoffs = []
     for f in filings:
         when = _d(f["filed_at"])
         if f.get("key_exec_departure"):
@@ -147,8 +169,21 @@ def company_signals(filings: list[dict], sales: list[dict], trial_count: int, cf
                                   w["key_exec_departure"] * factor,
                                   source={"url": f.get("url"), "text": f.get("departure_details")}))
         if "2.05" in (f.get("items") or []):
-            signals.append(Signal("layoffs", "Announced layoffs or restructuring", when, w["layoffs"] * factor,
+            layoffs.append(Signal("layoffs", "Announced layoffs or restructuring", when, w["layoffs"] * factor,
                                   source={"url": f.get("url")}))
+    for n in layoff_notices or []:
+        if n.get("notice_date"):
+            people = f" affecting {n['employees']} people" if n.get("employees") else ""
+            layoffs.append(Signal("layoffs", f"Filed a layoff notice in {n['state']}{people}", _d(n["notice_date"]),
+                                  w["layoffs"] * factor, source={"state": n["state"], "location": n.get("location")}))
+    # One layoff event often shows up in several places (an SEC report AND state notices): count only the newest
+    if layoffs:
+        signals.append(max(layoffs, key=lambda x: x.occurred))
+    drop = job_drop(job_counts or [], cfg)
+    if drop:
+        signals.append(Signal("job_postings_drop",
+                              f"Clinical job postings fell from about {drop['before']} to {drop['now']}",
+                              drop["day"], w["job_postings_drop"] * factor, source=drop | {"day": drop["day"].isoformat()}))
     return signals
 
 
