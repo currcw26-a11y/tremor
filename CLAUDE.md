@@ -188,7 +188,7 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Week 3: migration 006 run (Nov 9); first alert run recorded 167 baseline tremors, emailed nobody
 - [x] Domain live: https://www.tremoralerts.com (Vercel primary; apex redirects to www). Porkbun DNS: A @ 216.198.79.1, CNAME www, Resend records (resend._domainkey, send, rsend, _dmarc p=none); parking ALIAS/CNAME + URL forward deleted; Porkbun MX forwarding kept.
 - [x] Google OAuth branding VERIFIED (Nov 9) via Search Console domain property for tremoralerts.com; consent screen shows "Tremor". Authorized domains: tremoralerts.com, qlzylutucbzuwhirodys.supabase.co (+ vercel.app).
-- [ ] Week 3: Supabase/Google sign-in updated for new domain; GitHub vars EMAIL_FROM + SITE_URL; Resend verified + RESEND_API_KEY; first test email
+- [x] Week 3: new domain wired into Supabase, Google sign-in, GitHub vars (SITE_URL, EMAIL_FROM); Resend verified; RESEND_API_KEY secret added. Nov 9: first REAL instant alert sent from alerts@tremoralerts.com (CLLS UCART22 main goal changed) + test preview.
 - [ ] Week 3: money left on company pages, AI chat, job boards, layoff notices
 
 ## Notes for later weeks
