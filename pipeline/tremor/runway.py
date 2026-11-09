@@ -12,13 +12,19 @@ from .http import get_json
 
 # Different companies report the same thing under different names. US companies use "us-gaap",
 # foreign companies (like AstraZeneca) use "ifrs-full". We try each in order.
+# Companies use different labels for the same thing, and some leave a label at $0 while reporting the
+# real number under another one. So we read EVERY cash label on the newest date and take the largest.
 CASH = [("us-gaap", "CashAndCashEquivalentsAtCarryingValue"),
+        ("us-gaap", "Cash"),
         ("us-gaap", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"),
+        ("us-gaap", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations"),
         ("ifrs-full", "CashAndCashEquivalents")]
 SHORT_TERM = [("us-gaap", "ShortTermInvestments"),
               ("us-gaap", "AvailableForSaleSecuritiesDebtSecuritiesCurrent"),
               ("us-gaap", "MarketableSecuritiesCurrent"),
               ("ifrs-full", "CurrentInvestments")]
+# Some companies report "cash + short-term investments" as one number
+CASH_AND_SHORT_TERM = [("us-gaap", "CashCashEquivalentsAndShortTermInvestments")]
 OPERATING_CASH_FLOW = [("us-gaap", "NetCashProvidedByUsedInOperatingActivities"),
                        ("ifrs-full", "CashFlowsFromUsedInOperatingActivities")]
 MAX_AGE_DAYS = 460  # ignore numbers older than ~15 months
@@ -48,15 +54,25 @@ def _recent_spending(values: list[dict]) -> dict | None:
     return max(periods, key=lambda v: (v["end"], _months(v["start"], v["end"]), v.get("filed", ""))) if periods else None
 
 
+def _balances_on(facts: dict, options: list, day: str) -> list[float]:
+    return [v["val"] for opt in options for v in _values(facts, [opt]) if "start" not in v and v["end"] == day]
+
+
 def compute(facts: dict, today: date) -> dict | None:
     """Returns the numbers to store on the company, or None if the data is missing or too old."""
-    cash = _latest_point(_values(facts, CASH))
-    if not cash or (today - date.fromisoformat(cash["end"])).days > MAX_AGE_DAYS:
+    latest = [_latest_point(_values(facts, [opt])) for opt in CASH]
+    latest = [p for p in latest if p]
+    if not latest:
         return None
-    # Short-term investments on the SAME date. Several names can hold the same number, so take the largest, never add.
-    same_day = [v["val"] for opt in SHORT_TERM for v in _values(facts, [opt])
-                if "start" not in v and v["end"] == cash["end"]]
-    total_cash = cash["val"] + (max(same_day) if same_day else 0)
+    day = max(p["end"] for p in latest)
+    if (today - date.fromisoformat(day)).days > MAX_AGE_DAYS:
+        return None
+    form = next(p.get("form") for p in latest if p["end"] == day)
+    cash_now = max(_balances_on(facts, CASH, day))
+    short_term = max(_balances_on(facts, SHORT_TERM, day) or [0])
+    combined = max(_balances_on(facts, CASH_AND_SHORT_TERM, day) or [0])
+    total_cash = max(cash_now + short_term, combined)
+    cash = {"end": day, "form": form}
 
     spending = _recent_spending(_values(facts, OPERATING_CASH_FLOW))
     if not spending or (today - date.fromisoformat(spending["end"])).days > MAX_AGE_DAYS:

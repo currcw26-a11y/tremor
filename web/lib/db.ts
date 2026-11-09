@@ -179,7 +179,17 @@ export async function getTrial(nct: string) {
   return { trial: trial.rows[0] ?? null, changes: changes.rows, history: history.rows };
 }
 
-export type Company = { ticker: string; name: string; cik: string };
+export type Company = {
+  ticker: string;
+  name: string;
+  cik: string;
+  cash_usd: number | null;
+  monthly_burn_usd: number | null;
+  runway_months: number | null;
+  finances_as_of: string | null;
+  burn_period_months: number | null;
+  finances_form: string | null;
+};
 export type Filing = {
   accession_number: string;
   form: string;
@@ -239,7 +249,7 @@ export async function getCompany(ticker: string) {
   cacheLife("minutes");
   const t = ticker.toUpperCase().replace(/[^A-Z.]/g, "");
   const [company, trials, filings, trades] = await Promise.all([
-    query<Company>("companies", { select: "ticker,name,cik", ticker: `eq.${t}` }),
+    query<Company>("companies", { select: "*", ticker: `eq.${t}` }),
     query<Trial>("trials", {
       select: LIST_COLUMNS + ",score_breakdown",
       ticker: `eq.${t}`,

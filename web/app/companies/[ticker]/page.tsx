@@ -5,6 +5,7 @@ import { FORM_HELP, FORM_NAMES, filingSummary } from "@/lib/filings";
 import { niceDate } from "@/lib/words";
 import { Empty, Ticker, TrialRow } from "../../components";
 import { StarButton } from "../../star-button";
+import { MoneyLeft } from "./money-left";
 
 const COMPANY_SIGNALS = new Set(["insider_selling_cluster", "key_exec_departure", "layoffs"]);
 const BIG_COMPANY = 15; // matches big_company_trial_count in config/tremor.yaml
@@ -47,6 +48,11 @@ async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticke
             " This is a large company with many drugs, so one trial matters less to it, and company-wide signals count for half."}
         </p>
       </header>
+
+      <section>
+        <h2 className="mb-3 text-xl font-bold">Money left</h2>
+        <MoneyLeft company={company} filings={filings} />
+      </section>
 
       <section>
         <h2 className="text-xl font-bold">Company-wide warning signs</h2>
@@ -166,10 +172,7 @@ async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticke
         </ul>
       </section>
 
-      <section>
-        <h2 className="text-xl font-bold">Money left</h2>
-        <Empty>Coming soon: how many months of cash the company has, from its quarterly reports.</Empty>
-      </section>
+
     </article>
   );
 }

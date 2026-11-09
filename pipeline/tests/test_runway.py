@@ -42,3 +42,17 @@ def test_foreign_company_reporting_format():
 
 def test_old_data_is_ignored():
     assert compute(facts(1, None, -1, start="2024-01-01", end="2024-09-30"), TODAY) is None
+
+
+def test_cash_reported_under_a_different_label_is_found():
+    # MAIA-like: $0 under the usual label, the real $27.6M under plain "Cash"
+    f = facts(0, None, -12_000_000, start="2026-01-01", end="2026-06-30")
+    f["us-gaap"]["Cash"] = {"units": {"USD": [{"end": "2026-06-30", "val": 27_600_000, "form": "10-Q"}]}}
+    r = compute(f, TODAY)
+    assert r["cash_usd"] == 27_600_000 and 13 <= r["runway_months"] <= 14
+
+
+def test_combined_cash_and_investments_number_is_used():
+    f = facts(5_000_000, None, -12_000_000, start="2026-01-01", end="2026-06-30")
+    f["us-gaap"]["CashCashEquivalentsAndShortTermInvestments"] = {"units": {"USD": [{"end": "2026-06-30", "val": 40_000_000}]}}
+    assert compute(f, TODAY)["cash_usd"] == 40_000_000
