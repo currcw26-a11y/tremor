@@ -15,13 +15,17 @@ def fda_decisions(companies: dict[str, str], today: date) -> tuple[list[dict], i
     hits = fda_dates.search(list(companies), today - timedelta(days=200), today)
     # Each company's NEWEST filing that names an upcoming date wins, so a date the company later
     # moved (the FDA can extend a review by 3 months) doesn't linger from an older filing.
-    rows, done = {}, set()
+    # Newer filings that say the FDA already decided ("approved ahead of the January 4 date") also cancel
+    # that date in older filings.
+    rows, done, decided = {}, set(), {}
     for h in sorted(hits, key=lambda h: h["filed"], reverse=True):
         ticker = companies.get(h["cik"].zfill(10))
         if not ticker or ticker in done:
             continue
         try:
-            found = fda_dates.extract_dates(_cached_text(h["url"]), today)
+            text = _cached_text(h["url"])
+            found = fda_dates.extract_dates(text, today, also_decided=decided.get(ticker))
+            decided[ticker] = decided.get(ticker, set()) | fda_dates.decided_dates(text)
         except Exception as err:
             print(f"    {ticker}: {err}", flush=True)
             continue

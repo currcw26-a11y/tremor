@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getUpcoming, type UpcomingEvent } from "@/lib/db";
-import { niceDate } from "@/lib/words";
+import { companyName, niceDate } from "@/lib/words";
 import { Ticker } from "../components";
 import { ScoreBadge } from "../score";
 
@@ -33,7 +33,7 @@ function DateBox({ e }: { e: UpcomingEvent }) {
 }
 
 function shortName(e: UpcomingEvent) {
-  return (e.companies?.name ?? e.ticker).split(",")[0];
+  return companyName(e.companies?.name, e.ticker);
 }
 
 function FdaDecision({ e }: { e: UpcomingEvent }) {
@@ -83,9 +83,13 @@ function FdaMeeting({ e }: { e: UpcomingEvent }) {
 function ResultsRow({ e }: { e: UpcomingEvent }) {
   return (
     <li className="flex items-start gap-3 border-t border-line py-2.5 first:border-t-0">
-      <span className="w-14 shrink-0 pt-0.5 text-sm font-semibold tabular-nums">
-        {e.date_precision === "day" ? niceDate(e.event_date).split(",")[0] : "Sometime"}
-      </span>
+      {e.date_precision === "day" ? (
+        <span className="w-16 shrink-0 pt-0.5 text-sm font-semibold tabular-nums">
+          {niceDate(e.event_date).split(",")[0]}
+        </span>
+      ) : (
+        <span className="w-16 shrink-0 pt-0.5 text-xs leading-tight text-muted">No exact day</span>
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Ticker symbol={e.ticker} />
@@ -105,7 +109,14 @@ export default async function UpcomingPage() {
   const meetings = events.filter((e) => e.kind === "fda_meeting");
   const results = events.filter((e) => e.kind === "results_due");
   const byMonth = new Map<string, UpcomingEvent[]>();
-  for (const e of results) {
+  // Exact days first, then the trials that only gave a month
+  const ordered = [...results].sort(
+    (a, b) =>
+      a.event_date.slice(0, 7).localeCompare(b.event_date.slice(0, 7)) ||
+      Number(a.date_precision === "month") - Number(b.date_precision === "month") ||
+      a.event_date.localeCompare(b.event_date),
+  );
+  for (const e of ordered) {
     const key = e.event_date.slice(0, 7);
     byMonth.set(key, [...(byMonth.get(key) ?? []), e]);
   }

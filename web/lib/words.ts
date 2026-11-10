@@ -86,3 +86,17 @@ export function describeChange(c: Change): { text: string; severity: "high" | "m
       return { severity: "low", text: c.change_type.replaceAll("_", " ") };
   }
 }
+
+const KEEP_UPPER = new Set(["AG", "SA", "NV", "PLC", "AB", "AS", "SE", "BV", "LLC", "II", "III", "US", "USA"]);
+/** "VERTEX PHARMACEUTICALS INC / MA" -> "Vertex Pharmaceuticals"; mixed-case names keep their own style. */
+export function companyName(name: string | null | undefined, ticker = "") {
+  let n = (name ?? ticker).replace(/\s*\/\s*[a-z]{2}\s*\/?\s*$/i, "").trim();
+  if (n === n.toUpperCase()) {
+    n = n
+      .toLowerCase()
+      .split(/\s+/)
+      .map((w) => (KEEP_UPPER.has(w.toUpperCase()) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)))
+      .join(" ");
+  }
+  return n.replace(/,?\s+(Inc|Corp|Corporation|Co|Ltd|Limited)\.?$/i, "").trim() || ticker;
+}

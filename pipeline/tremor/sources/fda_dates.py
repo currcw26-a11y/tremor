@@ -26,44 +26,79 @@ def sentences(text: str) -> list[str]:
     return re.split(r"(?<=[.;])\s+(?=[A-Z(])", text)
 
 
-def quote(s: str, start: int, end: int, before: int = 180, after: int = 80) -> str:
-    """The company's words around the date, cut at word edges (no filing headers or page junk)."""
+JUNK = re.compile(r"\bEX-\d+(\.\d+)?\b|\S+\.htm\b|\bExhibit \d+(\.\d+)?\b|^[\d.]+\s", re.I)
+EXACT_REACH = 150   # an exact date must start within this many characters after "PDUFA date"/"target action date"
+MONTH_REACH = 40    # a month-only date must be even closer ("target action date in March 2027")
+
+
+def quote(s: str, start: int, end: int, before: int = 120, after: int = 60) -> str:
+    """The company's words around the date, cut at word edges, with filing junk ("EX-99.1", file names) removed."""
     lo, hi = max(0, start - before), min(len(s), end + after)
-    while lo > 0 and s[lo - 1] != " ":
+    while lo > 0 and lo < start and s[lo - 1] != " ":
         lo += 1
-    while hi < len(s) and s[hi - 1] != " " and hi < len(s):
+    while hi < len(s) and hi > end and s[hi - 1] != " ":
         hi -= 1
-    text = s[lo:hi].strip(" ;,")
+    text = " ".join(JUNK.sub(" ", s[lo:hi]).split()).strip(" ;,•")
     return ("…" if lo > 0 else "") + text + ("…" if hi < len(s) else "")
 
 
-def extract_dates(text: str, today: date) -> list[dict]:
-    """[{'date': '2027-03-15', 'precision': 'day', 'sentence': ...}] for upcoming FDA decision dates."""
+def _date(m, precision: str) -> date | None:
+    month = MONTHS.index(m.group(1).lower()) + 1
+    year = int(m.group(3) if precision == "day" else m.group(2))
+    try:
+        return date(year, month, int(m.group(2)) if precision == "day" else 1)
+    except ValueError:
+        return None
+
+
+# "approved ..., four months ahead of the January 4, 2027, target action date". Lowercase "approved" only,
+# so headlines like "Could Become the First FDA-Approved Therapy" don't count.
+DECIDED = re.compile(r"\bapproved\b[^.]{0,200}?\b(?:ahead of|prior to|before)\b[^.]{0,40}?" + EXACT.pattern)
+
+
+def decided_dates(text: str) -> set[date]:
+    """Dates the filing says the FDA already acted on early."""
+    out = set()
+    for m in DECIDED.finditer(re.sub(r"\s+", " ", text)):
+        d = _date(EXACT.search(m.group(0)[m.group(0).rfind(m.group(1)):]), "day")
+        if d:
+            out.add(d)
+    return out
+
+
+def extract_dates(text: str, today: date, also_decided: set[date] | None = None) -> list[dict]:
+    """[{'date': '2027-03-15', 'precision': 'day', 'sentence': ...}] for upcoming FDA decision dates.
+
+    Strict on purpose: the date must come right AFTER the words, the way companies announce it
+    ("PDUFA target action date of March 15, 2027"). That skips dates of other things in the same
+    sentence (an FDA letter, a filing) and drugs approved early ("approved ahead of its January 4 date")."""
     out, seen = [], set()
-    for s in sentences(text):
-        if not TRIGGER.search(s) or len(s) > 2000:
+    parts = sentences(text)
+    # A date the filing says the FDA already acted on ("approved ... ahead of the January 4, 2027 date")
+    # is dropped everywhere in the filing, even where another sentence still lists it as upcoming.
+    decided = decided_dates(text) | (also_decided or set())
+    for s in parts:
+        if len(s) > 2000:
             continue
-        if PAST.search(s) and not re.search(r"target action date|PDUFA (goal|date)", s, re.I):
-            continue
-        found = [(m, "day") for m in EXACT.finditer(s)]
-        if not found:
-            found = [(m, "month") for m in MONTH_ONLY.finditer(s)]
-        for m, precision in found:
-            month = MONTHS.index(m.group(1).lower()) + 1
-            year = int(m.group(3) if precision == "day" else m.group(2))
-            day = int(m.group(2)) if precision == "day" else 1
-            try:
-                d = date(year, month, day)
-            except ValueError:
+        for t in TRIGGER.finditer(s):
+            if PAST.search(s[:t.start()]):
+                continue   # "...was approved, ahead of its PDUFA date of ..."
+            window = s[t.end():t.end() + EXACT_REACH]
+            m, precision = EXACT.search(window), "day"
+            if not m:
+                m, precision = MONTH_ONLY.search(window[:MONTH_REACH + 20]), "month"
+                if not m or m.start() > MONTH_REACH:
+                    continue
+            d = _date(m, precision)
+            if not d or d in decided:
                 continue
             # Upcoming only (a month-only date counts while that month isn't over); and not absurdly far out
             last_day = d if precision == "day" else (d.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
-            if last_day < today or d > today + timedelta(days=730):
+            if last_day < today or d > today + timedelta(days=730) or (d, precision) in seen:
                 continue
-            key = (d, precision)
-            if key not in seen:
-                seen.add(key)
-                out.append({"date": d.isoformat(), "precision": precision, "sentence": quote(s, m.start(), m.end())})
+            seen.add((d, precision))
+            out.append({"date": d.isoformat(), "precision": precision,
+                        "sentence": quote(s, t.start(), t.end() + m.end())})
     return out
 
 
