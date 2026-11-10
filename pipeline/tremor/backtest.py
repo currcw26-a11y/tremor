@@ -8,8 +8,10 @@ For each past warning sign at a (smaller) company, look 12 months ahead:
 For comparison, the same check from random dates ("baseline"): biotech is risky, so a warning sign only
 means something if bad news follows it MORE often than it follows any random day.
 
-Stock move on the news: close the day before -> close the day after the biggest one-day move near the
-event (official stop dates and public announcements can differ by weeks).
+Stock move on the news: official trial dates and public announcements can differ by weeks, so the news
+day comes from the company's own 8-K filings that mention the drug (found with SEC full-text search).
+Among those filing days, the one the stock reacted to most is the news day, and the move is measured
+from the close the day before to the close the day after. No matching filing -> move unknown (we don't guess).
 
 Everything here is plain math on data it's given, so it's easy to test.
 """
@@ -19,8 +21,10 @@ from bisect import bisect_left
 from datetime import date, timedelta
 
 WINDOW_DAYS = 365
-NEWS_BEFORE_DAYS = 14   # look for the news this long before the official date...
-NEWS_AFTER_DAYS = 90    # ...and this long after (announcements often come later)
+FILING_LAG_DAYS = 4
+# Where to look for the announcement, around the trial's official date (days before, days after)
+STOP_NEWS_WINDOW = (60, 120)        # stops are often announced before the record changes, sometimes after
+RESULTS_NEWS_WINDOW = (30, 365)     # results usually come out in the months after a trial finishes
 
 SAFETY_EFFICACY = re.compile(r"safety|toxicit|adverse|efficacy|futility|lack of (benefit|response|activity)|"
                              r"interim analysis|did not meet|unfavorable|insufficient (efficacy|activity)|risk", re.I)
@@ -29,9 +33,13 @@ BUSINESS = re.compile(r"business|strateg|portfolio|sponsor('s)? decision|priorit
 ENROLLMENT = re.compile(r"enrol|accrual|recruit|slow", re.I)
 
 
+# "not related to safety", "not due to any safety concerns": these say the OPPOSITE of a safety problem
+NOT_SAFETY = re.compile(r"\b(not|no|unrelated to|without)\b[^.;]{0,60}?\b(safety|efficacy|toxicit\w*|adverse)\w*", re.I)
+
+
 def stop_reason(why: str | None) -> str:
     """Sort the company's stated reason for stopping a trial into a plain bucket."""
-    why = why or ""
+    why = NOT_SAFETY.sub(" ", why or "")
     if SAFETY_EFFICACY.search(why):
         return "safety_or_efficacy"
     if BUSINESS.search(why):
@@ -59,10 +67,10 @@ class Prices:
             return None
         return round((self.closes[i + 1] / self.closes[i - 1] - 1) * 100, 1)
 
-    def biggest_move_near(self, day: date, before: int = NEWS_BEFORE_DAYS, after: int = NEWS_AFTER_DAYS):
-        """(news day, % move) for the biggest one-day move between `before` days before and `after` days after."""
+    def biggest_move_near(self, day: date, before: int, after: int):
+        """(trading day, % move) for the biggest one-day move from `before` days before to `after` days after."""
         lo = bisect_left(self.days, day - timedelta(days=before))
-        hi = bisect_left(self.days, day + timedelta(days=after))
+        hi = bisect_left(self.days, day + timedelta(days=after + 1))
         best = None
         for i in range(max(lo, 1), min(hi, len(self.days) - 1)):
             one_day = self.closes[i] / self.closes[i - 1] - 1 if self.closes[i - 1] > 0 else 0
@@ -71,6 +79,23 @@ class Prices:
         if best is None:
             return None, None
         return self.days[best[1]], self.move_around(best[1])
+
+    def move_on_filing(self, filed: date):
+        """A press release usually comes out the same day as its 8-K, or up to 4 days before it (8-Ks are
+        due within 4 business days), and after-hours news moves the stock the next morning."""
+        return self.biggest_move_near(filed, before=FILING_LAG_DAYS, after=1)
+
+
+def news_move(filing_days: list[date], prices: "Prices | None"):
+    """(news day, % move): of the company's filings about this drug, the one the stock reacted to most."""
+    if not prices or not filing_days:
+        return None, None
+    best = (None, None)
+    for f in sorted(set(filing_days)):
+        day, move = prices.move_on_filing(f)
+        if move is not None and (best[1] is None or abs(move) > abs(best[1])):
+            best = (day, move)
+    return best
 
 
 def outcome_after(day: date, stops: list[date], completions: list[date], today: date):
@@ -86,26 +111,30 @@ def outcome_after(day: date, stops: list[date], completions: list[date], today: 
 
 
 def build_cases(signal_type: str, signals: dict[str, list[date]], stops: dict[str, list[date]],
-                completions: dict[str, list[date]], prices: dict[str, Prices], today: date) -> list[dict]:
-    """One row per past warning sign, with what happened next."""
+                completions: dict[str, list[date]], news: dict[tuple[str, date], tuple], today: date) -> list[dict]:
+    """One row per past warning sign, with what happened next.
+    `news` maps (ticker, official trial date) -> (news day, % move) from news_move()."""
     cases = []
     for ticker, days in signals.items():
         for d in sorted(set(days)):
             outcome, event_day = outcome_after(d, stops.get(ticker, []), completions.get(ticker, []), today)
-            news_day = move = None
-            if event_day and ticker in prices:
-                news_day, move = prices[ticker].biggest_move_near(event_day)
+            news_day, move = news.get((ticker, event_day), (None, None)) if event_day else (None, None)
             cases.append({"signal_type": signal_type, "ticker": ticker, "signal_day": d.isoformat(),
                           "outcome": outcome, "news_day": news_day.isoformat() if news_day else None,
                           "move_pct": move})
     return cases
 
 
-def baseline_bad_share(tickers: list[str], stops: dict[str, list[date]], start: date, today: date) -> float | None:
-    """How often a trial stop follows a RANDOM day (the 1st of every month) within 12 months."""
+def baseline_bad_share(tickers: list[str], stops: dict[str, list[date]], starts: dict[str, date],
+                       today: date) -> float | None:
+    """How often a trial stop follows a RANDOM day (the 1st of every month) within 12 months.
+    Each company counts only from `starts[ticker]` (when it was trading), so years before a company
+    existed don't make random days look safer than they are."""
     bad = total = 0
     for t in tickers:
-        d = start
+        if t not in starts:
+            continue
+        d = (starts[t].replace(day=1) + timedelta(days=32)).replace(day=1) if starts[t].day > 1 else starts[t]
         while d + timedelta(days=WINDOW_DAYS) <= today:
             total += 1
             bad += any(d < s <= d + timedelta(days=WINDOW_DAYS) for s in stops.get(t, []))

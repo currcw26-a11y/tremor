@@ -4,7 +4,7 @@
 """
 import hashlib
 from collections import Counter, defaultdict
-from datetime import date
+from datetime import date, timedelta
 
 from . import backtest as bt
 from . import db, matching
@@ -12,6 +12,9 @@ from .exec_changes import find_key_departure, html_to_text
 from .http import CACHE_DIR, get_json, get_text
 from .sources import clinicaltrials as ct
 from .sources import sec
+from .sources.federal_register import safe_term, useful_names
+
+FULL_TEXT_SEARCH = "https://efts.sec.gov/LATEST/search-index"
 
 START = date(2016, 1, 1)
 SMALL_COMPANY_TRIALS = 15  # same cutoff as the score's big-company rule
@@ -32,19 +35,54 @@ def collect_trial_events(confirmed: dict[str, str]) -> list[dict]:
         if not ticker:
             continue
         st = s["protocolSection"]["statusModule"]
-        # Best guess at when it happened: the actual end date, else the last record update
+        # Best guess at when it happened: the actual end date, else the last record update.
+        # Some stopped trials still list a planned (future) end date; the last update is closer then.
         day = _iso(sm["primary_completion_date"]) or _iso(sm["last_update_posted"])
         if not day or len(day) < 7:
             continue
         day = day if len(day) == 10 else day + "-15"
+        last_update = _iso(sm["last_update_posted"])
+        if last_update and day > last_update:
+            day = last_update
         stopped = sm["overall_status"] != "COMPLETED"
         why = st.get("whyStopped")
         rows.append({"ticker": ticker, "kind": "trial_stopped" if stopped else "trial_completed", "day": day,
                      "nct_id": sm["nct_id"], "detail": (why or "")[:300] or None,
                      "stop_reason": bt.stop_reason(why) if stopped else None,
                      "source_url": f"https://clinicaltrials.gov/study/{sm['nct_id']}",
-                     "dedupe_key": f"trial:{sm['nct_id']}"})
+                     "dedupe_key": f"trial:{sm['nct_id']}",
+                     "drugs": useful_names(sm["interventions"])})   # used to find the news; not saved
     return rows
+
+
+def filing_days_about(cik: str, terms: list[str], day: date, window: tuple[int, int]) -> list[date]:
+    """Days this company filed an 8-K mentioning any of `terms`, from window[0] days before `day`
+    to window[1] days after (SEC full-text search, which covers 2001 onward)."""
+    terms = [t for t in (safe_term(t) for t in terms) if t][:8]
+    if not terms:
+        return []
+    start, end = day - timedelta(days=window[0]), min(day + timedelta(days=window[1]), date.today())
+    data = get_json(FULL_TEXT_SEARCH, params={
+        "q": " OR ".join(f'"{t}"' for t in terms), "forms": "8-K", "ciks": cik.zfill(10),
+        "dateRange": "custom", "startdt": start.isoformat(), "enddt": end.isoformat()}, cache_hours=24 * 30)
+    return sorted({date.fromisoformat(h["_source"]["file_date"]) for h in data.get("hits", {}).get("hits", [])})
+
+
+def find_news(trial_events: list[dict], ciks: dict[str, str], prices: dict[str, bt.Prices]) -> dict:
+    """(ticker, official date) -> (news day, % move) for each past trial stop or completion."""
+    news = {}
+    for e in trial_events:
+        key = (e["ticker"], date.fromisoformat(e["day"]))
+        if news.get(key, (None, None))[1] is not None or e["ticker"] not in ciks:
+            continue
+        window = bt.STOP_NEWS_WINDOW if e["kind"] == "trial_stopped" else bt.RESULTS_NEWS_WINDOW
+        try:
+            days = filing_days_about(ciks[e["ticker"]], e.get("drugs", []) + [e["nct_id"]], key[1], window)
+        except Exception as err:
+            print(f"    {e['nct_id']}: {err}", flush=True)
+            continue
+        news[key] = bt.news_move(days, prices.get(e["ticker"]))
+    return news
 
 
 def _all_filings(cik: str) -> list[tuple[str, str, str, str]]:
@@ -111,38 +149,57 @@ def run(today: date | None = None) -> dict:
     events += collect_sec_events(companies)
     print(f"  all events: {Counter(e['kind'] for e in events)}", flush=True)
     unique = {e["dedupe_key"]: {"nct_id": None, "detail": None, "stop_reason": None, "source_url": None, **e} for e in events}
-    db.upsert("past_events", list(unique.values()), on_conflict="dedupe_key")
+    db.upsert("past_events", [{k: v for k, v in e.items() if k != "drugs"} for e in unique.values()],
+              on_conflict="dedupe_key")
 
     by = defaultdict(lambda: defaultdict(list))
     for e in unique.values():
         by[e["kind"]][e["ticker"]].append(date.fromisoformat(e["day"]))
     stops, completions = by["trial_stopped"], by["trial_completed"]
-    tickers_needed = {t for kind in ("layoffs", "key_exec_departure", "trial_stopped") for t in by[kind]}
-    prices = {t: _prices_for(t) for t in sorted(tickers_needed)}
+    prices = {t: _prices_for(t) for t in sorted(small)}
 
-    baseline = bt.baseline_bad_share(sorted(small), stops, START, today)
+    # Random-day comparison starts when each company was trading (first price), else its first event
+    first_event = {}
+    for e in unique.values():
+        d = date.fromisoformat(e["day"])
+        first_event[e["ticker"]] = min(first_event.get(e["ticker"], d), d)
+    starts = {t: max(START, prices[t].days[0] if prices[t].days else first_event.get(t, START)) for t in small}
+    baseline = bt.baseline_bad_share(sorted(small), stops, starts, today)
+
+    trial_events = [e for e in unique.values() if e["kind"] in ("trial_stopped", "trial_completed")]
+    news = find_news(trial_events, {c["ticker"]: c["cik"] for c in companies}, prices)
+    found = sum(1 for v in news.values() if v[1] is not None)
+    print(f"  announcement day + stock move found for {found} of {len(trial_events)} trial events", flush=True)
+
     all_cases, summaries = [], []
     for kind in ("layoffs", "key_exec_departure"):
-        cases = bt.build_cases(kind, by[kind], stops, completions, prices, today)
+        cases = bt.build_cases(kind, by[kind], stops, completions, news, today)
         all_cases += cases
         summaries.append(bt.summarize(kind, cases, baseline))
     # A stopped trial is itself the bad news: its "past cases" are how the stock moved when earlier stops came out
-    stop_cases = []
-    for t, days in stops.items():
-        for d in sorted(set(days)):
-            news_day, move = prices[t].biggest_move_near(d) if t in prices else (None, None)
-            stop_cases.append({"signal_type": "trial_stopped", "ticker": t, "signal_day": d.isoformat(), "outcome": "bad",
-                               "news_day": news_day.isoformat() if news_day else None, "move_pct": move})
-    all_cases += stop_cases
-    summaries.append(bt.summarize("trial_stopped", stop_cases, None,
-                                  "Every case here is a stopped trial, so all count as bad news; the number that matters is the stock move."))
+    note = ("Every case here is a stopped trial, so all count as bad news; the number that matters is the stock move. "
+            "Move = close the day before to close the day after the company's announcement.")
+    for signal_type, keep in (("trial_stopped", lambda e: True),
+                              ("trial_stopped_safety", lambda e: e["stop_reason"] == "safety_or_efficacy")):
+        stop_cases = []
+        for e in trial_events:
+            if e["kind"] != "trial_stopped" or not keep(e):
+                continue
+            news_day, move = news.get((e["ticker"], date.fromisoformat(e["day"])), (None, None))
+            stop_cases.append({"signal_type": signal_type, "ticker": e["ticker"], "signal_day": e["day"],
+                               "outcome": "bad", "news_day": news_day.isoformat() if news_day else None,
+                               "move_pct": move})
+        all_cases += stop_cases
+        summaries.append(bt.summarize(signal_type, stop_cases, None, note))
 
     unique_cases = {(c["signal_type"], c["ticker"], c["signal_day"]): c for c in all_cases}
+    db.delete("backtest_cases", signal_type="not.is.null")   # start fresh: old rows used the old news-day method
     db.upsert("backtest_cases", list(unique_cases.values()), on_conflict="signal_type,ticker,signal_day")
     db.upsert("backtest_summary", summaries, on_conflict="signal_type")
     return {"events": len(unique), "cases": len(unique_cases), "baseline_bad_share": baseline,
             "summary": {s["signal_type"]: f"{s['bad']} bad / {s['fine']} fine (n={s['cases']}), "
-                                          f"typical bad move {s['typical_bad_move']}%" for s in summaries}}
+                                          f"typical bad move {s['typical_bad_move']}%, typical fine move {s['typical_fine_move']}%"
+                for s in summaries}}
 
 
 if __name__ == "__main__":

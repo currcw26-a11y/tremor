@@ -69,3 +69,11 @@ def upsert(table: str, rows: list[dict], on_conflict: str):
 def update(table: str, values: dict, **filters):
     _check(_session.patch(f"{URL}/rest/v1/{table}", params=filters, data=json.dumps(values),
                           headers=_headers({"Prefer": "return=minimal"}), timeout=60))
+
+
+def delete(table: str, **filters):
+    """Remove rows matching the filters. Refuses to run with no filters (that would empty the table)."""
+    if not filters:
+        raise ValueError("delete() needs at least one filter")
+    _check(_session.delete(f"{URL}/rest/v1/{table}", params=filters, headers=_headers({"Prefer": "return=minimal"}),
+                           timeout=60))
