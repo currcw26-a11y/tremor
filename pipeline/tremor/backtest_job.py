@@ -55,17 +55,42 @@ def collect_trial_events(confirmed: dict[str, str]) -> list[dict]:
     return rows
 
 
-def filing_days_about(cik: str, terms: list[str], day: date, window: tuple[int, int]) -> list[date]:
-    """Days this company filed an 8-K mentioning any of `terms`, from window[0] days before `day`
-    to window[1] days after (SEC full-text search, which covers 2001 onward)."""
-    terms = [t for t in (safe_term(t) for t in terms) if t][:8]
-    if not terms:
+# A filing only counts as "the news" if it mentions the drug AND talks about results or stopping.
+# (Share sales and quarterly reports mention drugs too, and they move the stock for other reasons.)
+RESULTS_WORDS = ["topline", "top-line", "primary endpoint", "primary efficacy endpoint", "data readout",
+                 "met its primary", "did not meet", "statistically significant"]
+STOP_WORDS = RESULTS_WORDS + ["discontinue", "discontinued", "discontinuation", "terminate", "terminated",
+                              "termination of", "futility", "halt", "halted", "deprioritize", "wind down", "clinical hold"]
+
+
+def _hits(cik: str, terms: list[str], start: date, end: date) -> dict[str, date]:
+    """accession number -> filing date, for this company's 8-Ks mentioning any of `terms`."""
+    out, offset = {}, 0
+    while offset < 500:
+        data = get_json(FULL_TEXT_SEARCH, params={
+            "q": " OR ".join(f'"{t}"' for t in terms), "forms": "8-K", "ciks": cik.zfill(10), "from": offset,
+            "dateRange": "custom", "startdt": start.isoformat(), "enddt": end.isoformat()}, cache_hours=24 * 30)
+        hits = data.get("hits", {}).get("hits", [])
+        for h in hits:
+            out[h["_id"].split(":")[0]] = date.fromisoformat(h["_source"]["file_date"])
+        if len(hits) < 100:
+            break
+        offset += 100
+    return out
+
+
+def filing_days_about(cik: str, drugs: list[str], day: date, window: tuple[int, int], words: list[str]) -> list[date]:
+    """Days this company filed an 8-K that mentions the drug (or trial ID) AND uses `words`,
+    from window[0] days before `day` to window[1] days after (SEC full-text search covers 2001 onward)."""
+    drugs = [t for t in (safe_term(t) for t in drugs) if t][:8]
+    if not drugs:
         return []
     start, end = day - timedelta(days=window[0]), min(day + timedelta(days=window[1]), date.today())
-    data = get_json(FULL_TEXT_SEARCH, params={
-        "q": " OR ".join(f'"{t}"' for t in terms), "forms": "8-K", "ciks": cik.zfill(10),
-        "dateRange": "custom", "startdt": start.isoformat(), "enddt": end.isoformat()}, cache_hours=24 * 30)
-    return sorted({date.fromisoformat(h["_source"]["file_date"]) for h in data.get("hits", {}).get("hits", [])})
+    about_drug = _hits(cik, drugs, start, end)
+    if not about_drug:
+        return []
+    with_words = _hits(cik, words, start, end)
+    return sorted({d for acc, d in about_drug.items() if acc in with_words})
 
 
 def find_news(trial_events: list[dict], ciks: dict[str, str], prices: dict[str, bt.Prices]) -> dict:
@@ -75,9 +100,10 @@ def find_news(trial_events: list[dict], ciks: dict[str, str], prices: dict[str, 
         key = (e["ticker"], date.fromisoformat(e["day"]))
         if news.get(key, (None, None))[1] is not None or e["ticker"] not in ciks:
             continue
-        window = bt.STOP_NEWS_WINDOW if e["kind"] == "trial_stopped" else bt.RESULTS_NEWS_WINDOW
+        stopped = e["kind"] == "trial_stopped"
+        window, words = (bt.STOP_NEWS_WINDOW, STOP_WORDS) if stopped else (bt.RESULTS_NEWS_WINDOW, RESULTS_WORDS)
         try:
-            days = filing_days_about(ciks[e["ticker"]], e.get("drugs", []) + [e["nct_id"]], key[1], window)
+            days = filing_days_about(ciks[e["ticker"]], e.get("drugs", []) + [e["nct_id"]], key[1], window, words)
         except Exception as err:
             print(f"    {e['nct_id']}: {err}", flush=True)
             continue
