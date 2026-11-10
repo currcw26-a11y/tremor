@@ -55,6 +55,7 @@ jobs:
           AI_MONTHLY_BUDGET_USD: "15"
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
+          TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
           EMAIL_FROM: ${{ vars.EMAIL_FROM }}          # set once your domain is verified; empty = Resend's test sender
           SITE_URL: ${{ vars.SITE_URL }}
           SEND_TEST_EMAIL: ${{ inputs.send_test_email && '1' || '0' }}

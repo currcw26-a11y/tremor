@@ -47,3 +47,27 @@ def one_day(day: str, tickers: set[str]) -> list[dict]:
     """Every tracked stock's close on one trading day, in a single request."""
     data = _get(f"/v2/aggs/grouped/locale/us/market/stocks/{day}", {"adjusted": "true"})
     return [{"ticker": r["T"], "day": day, "close": r["c"]} for r in data.get("results") or [] if r["T"] in tickers]
+
+
+# ---------------------------------------------------------------------------
+# Tiingo: long price history (free plan: ~50 requests an hour), used once per company.
+# ---------------------------------------------------------------------------
+TIINGO_GAP = 75  # seconds between requests: stays under 50 an hour
+_tiingo_last = 0.0
+
+
+def tiingo_history(ticker: str, start: str = "2016-01-01") -> list[dict]:
+    """All daily closes since `start`, adjusted for stock splits: [{ticker, day, close}]."""
+    global _tiingo_last
+    wait = _tiingo_last + TIINGO_GAP - time.monotonic()
+    if wait > 0:
+        time.sleep(wait)
+    _tiingo_last = time.monotonic()
+    key = os.getenv("TIINGO_API_KEY", "proxy-injected")
+    resp = requests.get(f"https://api.tiingo.com/tiingo/daily/{ticker}/prices",
+                        params={"startDate": start, "resampleFreq": "daily", "columns": "date,adjClose"},
+                        headers={"Authorization": f"Token {key}"}, timeout=60)
+    if resp.status_code == 404:
+        return []  # Tiingo doesn't have this stock
+    resp.raise_for_status()
+    return [{"ticker": ticker, "day": r["date"][:10], "close": r["adjClose"]} for r in resp.json() if r.get("adjClose")]

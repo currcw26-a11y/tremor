@@ -25,6 +25,27 @@ def backfill() -> dict:
     return {"backfilled": done, "skipped_already_had": len(have)}
 
 
+def backfill_long_history(limit: int = 95) -> dict:
+    """Tiingo's longer history (back to 2016). Resumable: skips companies that already have
+    prices from before 2024. Run it twice to cover all 196 companies (about 50 an hour)."""
+    from collections import defaultdict
+    earliest = defaultdict(lambda: "9999")
+    for r in db.select("prices", "ticker,day", day="lt.2024-01-01"):
+        earliest[r["ticker"]] = min(earliest[r["ticker"]], r["day"])
+    todo = [c["ticker"] for c in db.select("companies", "ticker", order="ticker") if c["ticker"] not in earliest][:limit]
+    done = 0
+    for t in todo:
+        try:
+            rows = prices.tiingo_history(t)
+            for i in range(0, len(rows), 1000):
+                db.upsert("prices", rows[i:i + 1000], on_conflict="ticker,day")
+            done += bool(rows)
+            print(f"  {t}: {len(rows)} days{' (from ' + rows[0]['day'] + ')' if rows else ''}", flush=True)
+        except Exception as err:
+            print(f"  {t}: {err}", flush=True)
+    return {"long_history_added": done, "still_to_do": max(0, len(todo) - done)}
+
+
 def run() -> dict:
     """Daily: fill in the last few trading days (1 request per day, all companies at once)."""
     tickers = {c["ticker"] for c in db.select("companies", "ticker")}
@@ -44,3 +65,5 @@ def run() -> dict:
 if __name__ == "__main__":
     if "--backfill" in sys.argv:
         print(backfill())
+    if "--long-history" in sys.argv:
+        print(backfill_long_history())
