@@ -3,6 +3,7 @@ import type { Change, Trial } from "@/lib/db";
 import { STATUS, describeChange, niceDate, phaseLabel, statusLabel } from "@/lib/words";
 import { TimeAgo } from "./time-ago";
 import { ScoreBadge } from "./score";
+import { ChangeDiff } from "./change-diff";
 
 const TONE = { good: "bg-calm/10 text-calm", neutral: "bg-line text-muted", bad: "bg-tremor/10 text-tremor" };
 const SEVERITY = { high: "bg-tremor", medium: "bg-shaky", low: "bg-line" };
@@ -76,6 +77,7 @@ export function ChangeRow({ c, showTrial = true }: { c: Change; showTrial?: bool
         <p className="mt-1 text-xs text-muted">
           Spotted <TimeAgo iso={c.detected_at} />
         </p>
+        {!showTrial && <ChangeDiff c={c} />}
       </div>
     </li>
   );
