@@ -211,26 +211,29 @@ def run(today: date | None = None) -> dict:
             "Move = close the day before to close the day after the company's announcement.")
     for signal_type, keep in (("trial_stopped", lambda e: True),
                               ("trial_stopped_safety", lambda e: e["stop_reason"] == "safety_or_efficacy")):
-        stop_cases, seen_news = [], set()
+        stop_cases, seen_news, seen_days = [], set(), set()
         for e in trial_events:
-            if e["kind"] != "trial_stopped" or not keep(e):
+            # Two trials stopped by the same company on the same day count as one case (one row, one stock move)
+            if e["kind"] != "trial_stopped" or not keep(e) or (e["ticker"], e["day"]) in seen_days:
                 continue
+            seen_days.add((e["ticker"], e["day"]))
             news_day, move = news.get((e["ticker"], date.fromisoformat(e["day"])), (None, None))
             if news_day and (e["ticker"], news_day) in seen_news:
-                news_day = move = None   # two trials stopped in one announcement: count the stock move once
+                news_day = move = None   # stops announced together: count the stock move once
             seen_news.add((e["ticker"], news_day))
             stop_cases.append({"signal_type": signal_type, "ticker": e["ticker"], "signal_day": e["day"],
                                "outcome": "bad", "news_day": news_day.isoformat() if news_day else None,
-                               "move_pct": move, "detail": e["nct_id"]})
-        all_cases += stop_cases
+                               "move_pct": move, "detail": e["nct_id"], "reason": e["stop_reason"]})
         summaries.append(bt.summarize(signal_type, stop_cases, None, note))
-    stopped = [e for e in trial_events if e["kind"] == "trial_stopped"]
+        if signal_type == "trial_stopped":
+            stopped = list(stop_cases)
+        all_cases += [{k: v for k, v in c.items() if k != "reason"} for c in stop_cases]
     safety = next(s for s in summaries if s["signal_type"] == "trial_stopped_safety")
     safety_moves = [c["move_pct"] for c in all_cases if c["signal_type"] == "trial_stopped_safety" and c["move_pct"] is not None]
     for s in summaries:
         s["extra"] = None
         if s["signal_type"] == "trial_stopped":
-            s["extra"] = {"reasons": dict(Counter(e["stop_reason"] for e in stopped)),
+            s["extra"] = {"reasons": dict(Counter(c["reason"] for c in stopped)),
                           "safety": {"moves": safety["bad_moves"], "typical_move": safety["typical_bad_move"],
                                      "worst_move": min(safety_moves) if safety_moves else None}}
         if s["signal_type"] in outlook.BACKTESTED:   # the same plain sentences the trial pages and emails use

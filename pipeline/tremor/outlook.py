@@ -34,7 +34,8 @@ RANDOM_DAY_NOTE = "Starting from a random day instead, a trial was stopped withi
 
 def one_in(share: float | None) -> int | None:
     """0.08 -> 12 ('about 1 in 12')."""
-    return round(1 / share) if share and share > 0 else None
+    # Round halves up (12.5 -> 13), the same way the website does, so both always show the same number
+    return int(1 / share + 0.5) if share and share > 0 else None
 
 
 def confidence(n: int) -> str:
@@ -87,7 +88,7 @@ def past_cases(signal_type: str, summary: dict | None) -> dict:
     if signal_type == "trial_stopped":
         reasons = (s.get("extra") or {}).get("reasons") or {}
         biz = reasons.get("business", 0)
-        sent.append(f"Since 2016, smaller cancer-drug companies stopped {n} trials early. "
+        sent.append(f"Since 2016, smaller cancer-drug companies stopped a trial early {n} times. "
                     + (f"{biz} out of {n} said it was a business decision, like saving money or focusing on other drugs, "
                        f"and {reasons.get('safety_or_efficacy', 0)} out of {n} said the drug wasn't working well "
                        "enough or had safety problems." if reasons else ""))

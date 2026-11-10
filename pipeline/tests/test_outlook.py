@@ -22,7 +22,7 @@ def text(o):
 def test_counts_are_written_as_x_out_of_n_and_compared_with_random_days():
     s = outlook.past_cases("key_exec_departure", SUMMARIES["key_exec_departure"])
     words = " ".join(s["sentences"])
-    assert "20 out of 177" in words and "1 in 12" in words
+    assert "20 out of 177" in words and "1 in 13" in words   # 1 / 0.08 = 12.5, rounded up like the website
     assert "a bit more often than a random day" in words
     assert s["confidence"] == "high"
 
