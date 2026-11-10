@@ -23,6 +23,24 @@ def _e(s) -> str:
     return html.escape(str(s or ""))
 
 
+def pick_past_cases(outlook: dict, signal_type: str | None) -> dict | None:
+    """The past-cases entry for this alert's signal (a score jump uses the trial's best-documented signal)."""
+    signals = (outlook or {}).get("signals") or []
+    match = [s for s in signals if s["type"] == signal_type]
+    return (match or signals or [None])[0]
+
+
+def sure_words(past: dict) -> str:
+    n = past.get("cases") or 0
+    if not past.get("has_history"):
+        return "Low. There aren't enough past cases yet."
+    if n < 10:
+        return f"Low. Only {n} past cases."
+    if n < 30:
+        return f"Medium. {n} past cases is a decent number, but not a lot."
+    return f"High. Based on {n} past cases."
+
+
 def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: int,
                 today: date | None = None) -> tuple[str, str]:
     """(html, text) for one tremor."""
@@ -33,7 +51,10 @@ def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: 
         rows.append(("Worry score now", f"{a['new_score']} out of 100"))
     if a.get("explanation"):
         rows.append(("Why it might matter", a["explanation"]))
-    if company:
+    ol = (trial or {}).get("outlook") or {}
+    if ol.get("stakes"):
+        rows.append(("How big a deal for them", ol["stakes"]["text"]))
+    elif company:
         rows.append(("How big a deal for them", f"Tremor tracks {trial_count} of {company['name']}'s cancer trials."
                      + (" This is one of only a few, so each one matters more." if trial_count <= 3 else "")))
         ml = money_left(company)
@@ -46,7 +67,13 @@ def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: 
                          "and no results are posted yet."))
         else:
             rows.append(("When we'll find out", f"Main results are expected around {nice_date(due)}."))
-    rows.append(("Past cases", "We're still collecting what happened in similar past cases, so we can't say yet how often this led to bad news."))
+    past = pick_past_cases(ol, a.get("signal_type"))
+    if past:
+        rows.append(("When this happened before", " ".join(past["sentences"])))
+        rows.append(("How sure are we", sure_words(past)))
+    else:
+        rows.append(("When this happened before", "We don't have enough similar past cases yet to say how often this "
+                     "led to bad news."))
 
     links = []
     if a.get("nct_id"):

@@ -9,10 +9,11 @@ import { Reasons, ScoreBadge } from "../../score";
 import { ScoreChart } from "../../score-chart";
 import { StarButton } from "../../star-button";
 import { AskBox } from "../../ask-box";
+import { OutlookSection } from "../../past-cases";
 
 async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["params"] }) {
   const { nct } = await params;
-  const { trial: t, changes, history } = await getTrial(nct);
+  const { trial: t, changes, history, company } = await getTrial(nct);
   if (!t) notFound();
 
   const facts = [
@@ -51,6 +52,8 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
           <ScoreChart points={history} current={t.score} currentLabel={t.score_label} />
         </div>
       </section>
+
+      <OutlookSection outlook={t.outlook} company={company} />
 
       <dl className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {facts.map(([label, value]) => (

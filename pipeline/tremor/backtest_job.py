@@ -7,7 +7,7 @@ from collections import Counter, defaultdict
 from datetime import date, timedelta
 
 from . import backtest as bt
-from . import db, matching
+from . import db, matching, outlook
 from .exec_changes import find_key_departure, html_to_text
 from .http import CACHE_DIR, get_json, get_text
 from .sources import clinicaltrials as ct
@@ -217,13 +217,24 @@ def run(today: date | None = None) -> dict:
                 continue
             news_day, move = news.get((e["ticker"], date.fromisoformat(e["day"])), (None, None))
             if news_day and (e["ticker"], news_day) in seen_news:
-                continue   # two trials stopped in one announcement: count the stock move once
+                news_day = move = None   # two trials stopped in one announcement: count the stock move once
             seen_news.add((e["ticker"], news_day))
             stop_cases.append({"signal_type": signal_type, "ticker": e["ticker"], "signal_day": e["day"],
                                "outcome": "bad", "news_day": news_day.isoformat() if news_day else None,
-                               "move_pct": move})
+                               "move_pct": move, "detail": e["nct_id"]})
         all_cases += stop_cases
         summaries.append(bt.summarize(signal_type, stop_cases, None, note))
+    stopped = [e for e in trial_events if e["kind"] == "trial_stopped"]
+    safety = next(s for s in summaries if s["signal_type"] == "trial_stopped_safety")
+    safety_moves = [c["move_pct"] for c in all_cases if c["signal_type"] == "trial_stopped_safety" and c["move_pct"] is not None]
+    for s in summaries:
+        s["extra"] = None
+        if s["signal_type"] == "trial_stopped":
+            s["extra"] = {"reasons": dict(Counter(e["stop_reason"] for e in stopped)),
+                          "safety": {"moves": safety["bad_moves"], "typical_move": safety["typical_bad_move"],
+                                     "worst_move": min(safety_moves) if safety_moves else None}}
+        if s["signal_type"] in outlook.BACKTESTED:   # the same plain sentences the trial pages and emails use
+            s["extra"] = {**(s["extra"] or {}), "plain": outlook.past_cases(s["signal_type"], s)["sentences"]}
 
     unique_cases = {(c["signal_type"], c["ticker"], c["signal_day"]): c for c in all_cases}
     db.delete("backtest_cases", signal_type="not.is.null")   # start fresh: old rows used the old news-day method

@@ -121,7 +121,9 @@ def build_cases(signal_type: str, signals: dict[str, list[date]], stops: dict[st
             news_day, move = news.get((ticker, event_day), (None, None)) if event_day else (None, None)
             cases.append({"signal_type": signal_type, "ticker": ticker, "signal_day": d.isoformat(),
                           "outcome": outcome, "news_day": news_day.isoformat() if news_day else None,
-                          "move_pct": move})
+                          "move_pct": move,
+                          # for 'bad': the day the trial was stopped (official record); for 'fine': first completion
+                          "detail": event_day.isoformat() if event_day else None})
     return cases
 
 
@@ -147,9 +149,11 @@ def summarize(signal_type: str, cases: list[dict], baseline: float | None, notes
     bad = [c for c in resolved if c["outcome"] == "bad"]
     fine = [c for c in resolved if c["outcome"] == "fine"]
     median = lambda xs: round(statistics.median(xs), 1) if xs else None  # noqa: E731
+    bad_moves = [c["move_pct"] for c in bad if c["move_pct"] is not None]
+    fine_moves = [c["move_pct"] for c in fine if c["move_pct"] is not None]
     return {
         "signal_type": signal_type, "cases": len(resolved), "bad": len(bad), "fine": len(fine),
-        "typical_bad_move": median([c["move_pct"] for c in bad if c["move_pct"] is not None]),
-        "typical_fine_move": median([c["move_pct"] for c in fine if c["move_pct"] is not None]),
+        "typical_bad_move": median(bad_moves), "typical_fine_move": median(fine_moves),
+        "bad_moves": len(bad_moves), "fine_moves": len(fine_moves),
         "baseline_bad_share": baseline, "confidence": confidence(len(resolved)), "notes": notes or None,
     }

@@ -60,6 +60,24 @@ export type Trial = {
   score: number;
   score_label: ScoreLabel;
   score_breakdown: Reason[] | null;
+  outlook?: Outlook | null;
+};
+
+/** The upside/downside breakdown, computed by the pipeline (pipeline/tremor/outlook.py). */
+export type PastCases = {
+  type: string;
+  cases: number;
+  bad?: number;
+  fine?: number;
+  has_history: boolean;
+  confidence?: "low" | "medium" | "high";
+  sentences: string[];
+};
+export type Outlook = {
+  signals: PastCases[];
+  stakes: { level: "high" | "medium" | "low"; trial_count: number; text: string };
+  next_event: { date: string; passed: boolean } | null;
+  notes: string[];
 };
 
 export type ScoreLabel = "calm" | "shaky" | "tremor";
@@ -176,7 +194,11 @@ export async function getTrial(nct: string) {
       order: "computed_at",
     }),
   ]);
-  return { trial: trial.rows[0] ?? null, changes: changes.rows, history: history.rows };
+  const t = trial.rows[0] ?? null;
+  const company = t
+    ? (await query<Company>("companies", { select: "*", ticker: `eq.${t.ticker}` })).rows[0] ?? null
+    : null;
+  return { trial: t, changes: changes.rows, history: history.rows, company };
 }
 
 export type Company = {
@@ -295,5 +317,71 @@ export async function getCompany(ticker: string) {
     jobs: jobs.rows,
     layoffs: layoffs.rows,
     jobBoard: board.rows[0]?.provider ?? null,
+  };
+}
+
+// ---------- Track record ----------
+export type BacktestSummary = {
+  signal_type: string;
+  cases: number;
+  bad: number;
+  fine: number;
+  typical_bad_move: number | null;
+  typical_fine_move: number | null;
+  bad_moves: number | null;
+  fine_moves: number | null;
+  baseline_bad_share: number | null;
+  confidence: "low" | "medium" | "high";
+  computed_at: string;
+  extra: { plain?: string[]; reasons?: Record<string, number> } | null;
+};
+export type BacktestCase = {
+  signal_type: string;
+  ticker: string;
+  signal_day: string;
+  outcome: "bad" | "fine" | "unknown";
+  news_day: string | null;
+  move_pct: number | null;
+  detail: string | null;
+};
+export type LiveAlert = {
+  id: number;
+  nct_id: string | null;
+  ticker: string | null;
+  detected_at: string;
+  kind: string;
+  signal_type: string | null;
+  headline: string;
+  baseline: boolean;
+};
+
+export async function getTrackRecord() {
+  "use cache";
+  cacheLife("hours");
+  const [summaries, cases, alerts, companies] = await Promise.all([
+    query<BacktestSummary>("backtest_summary", { select: "*" }),
+    queryAll<BacktestCase>("backtest_cases", {
+      select: "signal_type,ticker,signal_day,outcome,news_day,move_pct,detail",
+      signal_type: "in.(layoffs,key_exec_departure,trial_stopped)",
+      order: "signal_day.desc",
+    }),
+    query<LiveAlert>(
+      "alerts",
+      {
+        select: "id,nct_id,ticker,detected_at,kind,signal_type,headline,baseline",
+        kind: "eq.critical",
+        order: "detected_at.desc",
+        limit: "15",
+      },
+      true,
+    ),
+    queryAll<{ ticker: string; name: string }>("companies", { select: "ticker,name" }),
+  ]);
+  return {
+    summaries: summaries.rows,
+    cases,
+    alerts: alerts.rows,
+    alertCount: alerts.total || alerts.rows.length,
+    names: Object.fromEntries(companies.map((c) => [c.ticker, c.name])),
   };
 }

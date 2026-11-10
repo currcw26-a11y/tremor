@@ -33,6 +33,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/companies" className="hover:text-foreground">
                 Companies
               </Link>
+              <Link href="/track-record" className="hidden hover:text-foreground sm:inline">
+                Track record
+              </Link>
               <UserMenu />
             </div>
           </nav>
@@ -46,6 +49,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               edits are harmless paperwork. Data from ClinicalTrials.gov, the SEC, and the Federal Register.
             </p>
             <p className="mt-3 flex gap-4">
+              <Link href="/track-record" className="underline">
+                Track record
+              </Link>
               <Link href="/privacy" className="underline">
                 Privacy
               </Link>

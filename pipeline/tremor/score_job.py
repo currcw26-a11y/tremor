@@ -6,16 +6,27 @@ moves by 2+ points, changes color, or a new signal appears.
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 
-from . import db, scoring
+from . import db, outlook, scoring
 from .sources.federal_register import safe_term, useful_names
+
+
+def _backtest_summaries() -> dict | None:
+    """Backtest results by signal type, or None if migration 009 hasn't been run yet."""
+    try:
+        return {s["signal_type"]: s for s in db.select("backtest_summary", "*") if "bad_moves" in s}
+    except RuntimeError as err:
+        print(f"  (no backtest results yet: {err})")
+        return None
 
 
 def run(today: date | None = None) -> dict:
     today = today or date.today()
     since = (today - timedelta(days=400)).isoformat()
 
-    trials = db.select("trials", "nct_id,ticker,overall_status,primary_completion_date,results_first_posted,"
-                                 "interventions,score,score_label,score_breakdown", tracked="eq.true")
+    summaries = _backtest_summaries()
+    fields = ("nct_id,ticker,overall_status,primary_completion_date,results_first_posted,"
+              "interventions,score,score_label,score_breakdown,score_updated_at")
+    trials = db.select("trials", fields + (",outlook" if summaries is not None else ""), tracked="eq.true")
     changes = defaultdict(list)
     for c in db.select("trial_changes", "id,nct_id,change_type,details,is_paperwork,detected_at",
                        is_paperwork="eq.false", detected_at=f"gte.{since}"):
@@ -60,9 +71,16 @@ def run(today: date | None = None) -> dict:
         first_time = t.get("score_breakdown") is None
         moved = abs(value - (t["score"] or 0)) >= 2 or label != t["score_label"]
         new_signal = bool(new_types - old_types)
-        if first_time or moved or new_signal or old_types != new_types:
-            updates.append({"nct_id": t["nct_id"], "score": value, "score_label": label,
-                            "score_breakdown": bd, "score_updated_at": now})
+        row = {"nct_id": t["nct_id"], "score": value, "score_label": label, "score_breakdown": bd,
+               "score_updated_at": now}
+        changed = first_time or moved or new_signal or old_types != new_types
+        if summaries is not None:
+            row["outlook"] = outlook.build(t, [b["type"] for b in bd], summaries, trials_per_company[tk], today)
+            changed = changed or row["outlook"] != t.get("outlook")
+            if not (first_time or moved or new_signal or old_types != new_types):
+                row["score_updated_at"] = t.get("score_updated_at") or now
+        if changed:
+            updates.append(row)
         if (moved or new_signal) and not (first_time and value == 0):
             history.append({"nct_id": t["nct_id"], "old_score": None if first_time else t["score"],
                             "new_score": value, "old_label": None if first_time else t["score_label"],

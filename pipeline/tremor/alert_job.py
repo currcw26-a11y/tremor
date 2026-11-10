@@ -27,8 +27,12 @@ def _now():
 
 
 def _load_context():
-    trials = db.select("trials", "nct_id,ticker,sponsor_name,title,score,score_label,score_breakdown,"
-                                 "primary_completion_date,overall_status", tracked="eq.true")
+    fields = ("nct_id,ticker,sponsor_name,title,score,score_label,score_breakdown,"
+              "primary_completion_date,overall_status")
+    try:
+        trials = db.select("trials", fields + ",outlook", tracked="eq.true")
+    except RuntimeError:  # migration 009 (the upside/downside breakdown) not run yet
+        trials = db.select("trials", fields, tracked="eq.true")
     try:
         companies = {c["ticker"]: c for c in db.select("companies", COMPANY_FIELDS)}
     except RuntimeError:  # money-left columns not added yet
