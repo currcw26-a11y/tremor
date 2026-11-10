@@ -94,13 +94,8 @@ def collect_sec_events(companies: list[dict]) -> list[dict]:
 
 
 def _prices_for(ticker: str) -> bt.Prices:
-    rows, start = [], 0
-    while True:
-        page = db.select("prices", "day,close", ticker=f"eq.{ticker}", order="day", offset=str(start), limit="1000")
-        rows += page
-        if len(page) < 1000:
-            return bt.Prices(rows)
-        start += 1000
+    # db.select already reads every page (1,000 rows at a time)
+    return bt.Prices(db.select("prices", "day,close", ticker=f"eq.{ticker}", order="day"))
 
 
 def run(today: date | None = None) -> dict:
