@@ -64,7 +64,9 @@ STOP_WORDS = RESULTS_WORDS + ["discontinue", "discontinued", "discontinuation", 
 
 
 def _hits(cik: str, terms: list[str], start: date, end: date) -> dict[str, date]:
-    """accession number -> filing date, for this company's 8-Ks mentioning any of `terms`."""
+    """accession number -> filing date, for this company's 8-Ks mentioning any of `terms`.
+    Quarterly earnings releases (item 2.02) are left out: the stock moves on the whole quarter's
+    news that day, so the move can't be pinned on the trial."""
     out, offset = {}, 0
     while offset < 500:
         data = get_json(FULL_TEXT_SEARCH, params={
@@ -72,6 +74,8 @@ def _hits(cik: str, terms: list[str], start: date, end: date) -> dict[str, date]
             "dateRange": "custom", "startdt": start.isoformat(), "enddt": end.isoformat()}, cache_hours=24 * 30)
         hits = data.get("hits", {}).get("hits", [])
         for h in hits:
+            if "2.02" in (h["_source"].get("items") or []):
+                continue
             out[h["_id"].split(":")[0]] = date.fromisoformat(h["_source"]["file_date"])
         if len(hits) < 100:
             break
@@ -207,11 +211,14 @@ def run(today: date | None = None) -> dict:
             "Move = close the day before to close the day after the company's announcement.")
     for signal_type, keep in (("trial_stopped", lambda e: True),
                               ("trial_stopped_safety", lambda e: e["stop_reason"] == "safety_or_efficacy")):
-        stop_cases = []
+        stop_cases, seen_news = [], set()
         for e in trial_events:
             if e["kind"] != "trial_stopped" or not keep(e):
                 continue
             news_day, move = news.get((e["ticker"], date.fromisoformat(e["day"])), (None, None))
+            if news_day and (e["ticker"], news_day) in seen_news:
+                continue   # two trials stopped in one announcement: count the stock move once
+            seen_news.add((e["ticker"], news_day))
             stop_cases.append({"signal_type": signal_type, "ticker": e["ticker"], "signal_day": e["day"],
                                "outcome": "bad", "news_day": news_day.isoformat() if news_day else None,
                                "move_pct": move})
