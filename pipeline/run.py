@@ -9,7 +9,7 @@ import sys
 import traceback
 from datetime import datetime, timezone
 
-from tremor import alert_job, db, explain_job, jobs_job, layoffs_job, score_job, sec_job, trials_job
+from tremor import alert_job, db, explain_job, jobs_job, layoffs_job, prices_job, score_job, sec_job, trials_job
 
 
 def first_run_of_day() -> bool:
@@ -33,7 +33,8 @@ def main() -> int:
     stats, errors = {}, []
     jobs = [("trials", trials_job.run), ("sec", sec_job.run_sec), ("fda", sec_job.run_fda)]
     if daily:  # once a day: money left, job postings, layoff notices (before scoring, so scores use them)
-        jobs += [("runway", sec_job.run_runway), ("job_postings", jobs_job.run), ("layoff_notices", layoffs_job.run)]
+        jobs += [("runway", sec_job.run_runway), ("job_postings", jobs_job.run), ("layoff_notices", layoffs_job.run),
+                 ("prices", prices_job.run)]
     jobs += [
             ("scores", score_job.run),  # scores use everything above
             ("explanations", explain_job.run)]

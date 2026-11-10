@@ -1,0 +1,46 @@
+"""Stock prices: a one-time history download per company, then one request a day for everyone.
+
+    python -m tremor.prices_job --backfill   (about 40 minutes for 196 companies: 5 requests a minute)
+"""
+import sys
+from datetime import date, timedelta
+
+from . import db
+from .sources import prices
+
+
+def backfill() -> dict:
+    have = {r["ticker"] for r in db.select("prices", "ticker", day=f"lte.{(date.today() - timedelta(days=300)).isoformat()}")}
+    todo = [c["ticker"] for c in db.select("companies", "ticker", order="ticker") if c["ticker"] not in have]
+    done = 0
+    for t in todo:
+        try:
+            rows = prices.backfill(t)
+            if rows:
+                db.upsert("prices", rows, on_conflict="ticker,day")
+                done += 1
+            print(f"  {t}: {len(rows)} days", flush=True)
+        except Exception as err:
+            print(f"  {t}: {err}", flush=True)
+    return {"backfilled": done, "skipped_already_had": len(have)}
+
+
+def run() -> dict:
+    """Daily: fill in the last few trading days (1 request per day, all companies at once)."""
+    tickers = {c["ticker"] for c in db.select("companies", "ticker")}
+    latest = db.select("prices", "day", order="day.desc", limit="1")
+    start = date.fromisoformat(latest[0]["day"]) + timedelta(days=1) if latest else date.today() - timedelta(days=5)
+    added, day = 0, start
+    while day < date.today() and (day - start).days < 10:  # catch up at most 10 days per run
+        if day.weekday() < 5:  # markets are closed on weekends
+            rows = prices.one_day(day.isoformat(), tickers)
+            if rows:
+                db.upsert("prices", rows, on_conflict="ticker,day")
+                added += len(rows)
+        day += timedelta(days=1)
+    return {"price_rows_added": added}
+
+
+if __name__ == "__main__":
+    if "--backfill" in sys.argv:
+        print(backfill())
