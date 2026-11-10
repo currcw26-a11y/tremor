@@ -385,3 +385,34 @@ export async function getTrackRecord() {
     names: Object.fromEntries(companies.map((c) => [c.ticker, c.name])),
   };
 }
+
+// ---------- Upcoming calendar ----------
+export type UpcomingEvent = {
+  id: number;
+  kind: "fda_decision" | "fda_meeting" | "results_due";
+  ticker: string;
+  nct_id: string | null;
+  event_date: string;
+  date_precision: "day" | "month";
+  title: string | null;
+  quote: string | null;
+  source_url: string | null;
+  source_form: string | null;
+  filed_at: string | null;
+  updated_at: string;
+  trials: { score: number; score_label: ScoreLabel } | null;
+  companies: { name: string } | null;
+};
+
+export async function getUpcoming() {
+  "use cache";
+  cacheLife("hours");
+  try {
+    return await queryAll<UpcomingEvent>("upcoming_events", {
+      select: "*,trials(score,score_label),companies(name)",
+      order: "event_date,ticker",
+    });
+  } catch {
+    return []; // table not created yet (migration 010): show an empty calendar rather than break the build
+  }
+}

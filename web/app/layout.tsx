@@ -26,11 +26,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </span>
               Tremor
             </Link>
-            <div className="flex items-center gap-4 text-sm font-semibold text-muted">
+            <div className="flex items-center gap-3 text-sm font-semibold text-muted sm:gap-4">
               <Link href="/trials" className="hover:text-foreground">
                 Trials
               </Link>
-              <Link href="/companies" className="hover:text-foreground">
+              <Link href="/upcoming" className="hover:text-foreground">
+                Upcoming
+              </Link>
+              <Link href="/companies" className="hidden hover:text-foreground sm:inline">
                 Companies
               </Link>
               <Link href="/track-record" className="hidden hover:text-foreground sm:inline">
@@ -49,6 +52,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               edits are harmless paperwork. Data from ClinicalTrials.gov, the SEC, and the Federal Register.
             </p>
             <p className="mt-3 flex gap-4">
+              <Link href="/companies" className="underline">
+                Companies
+              </Link>
               <Link href="/track-record" className="underline">
                 Track record
               </Link>
