@@ -13,7 +13,7 @@ const OPTIONS: { key: keyof Omit<Profile, "email" | "unsubscribed">; title: stri
   {
     key: "daily_digest",
     title: "Daily digest",
-    help: "One email a day with smaller changes on your watchlist, like delays, insider selling, or FDA meetings. Only sent on days with news.",
+    help: "One email a day with smaller changes on your watchlist, like delays, insider selling, or FDA meetings, plus reminders about 30 and 7 days before an FDA decision or expected trial results. Only sent on days with news.",
   },
 ];
 

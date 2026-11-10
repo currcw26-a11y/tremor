@@ -11,6 +11,8 @@ Kinds (rules live in config/tremor.yaml under `alerts`):
   big_jump   -> emailed right away to watchers; to everyone if the score just turned red
   head_start -> goes into the daily digest for watchers
 """
+from datetime import date
+
 from . import config
 
 COMPANY_WIDE = {"insider_selling_cluster", "key_exec_departure", "layoffs", "job_postings_drop"}
@@ -88,8 +90,9 @@ def detect(trials: list[dict], history: list[dict], cfg: dict | None = None) -> 
 def drop_redundant_jumps(new_alerts: list[dict]) -> list[dict]:
     """Skip a 'score jumped' alert when another new alert in the same run already explains it
     (e.g. a key executive leaving makes every one of that company's trials jump). Same news once, not 3 times."""
-    explained_trials = {a["nct_id"] for a in new_alerts if a["kind"] != "big_jump" and a.get("nct_id")}
-    explained_companies = {a["ticker"] for a in new_alerts if a["kind"] != "big_jump" and not a.get("nct_id")}
+    explains = [a for a in new_alerts if a["kind"] not in ("big_jump", "coming_up")]   # a reminder explains nothing
+    explained_trials = {a["nct_id"] for a in explains if a.get("nct_id")}
+    explained_companies = {a["ticker"] for a in explains if not a.get("nct_id")}
     return [a for a in new_alerts if a["kind"] != "big_jump" or a.get("is_huge")
             or not (a["nct_id"] in explained_trials or a["ticker"] in explained_companies)]
 
@@ -123,3 +126,77 @@ def email_allowance(sent_today: int, sent_this_month: int, cfg: dict | None = No
     e = (cfg or config.load())["email"]
     left = max(0, min(e["daily_limit"] - sent_today, e["monthly_limit"] - sent_this_month))
     return {"instant": left, "digest": max(0, left - e["reserve_for_instant"])}
+
+
+# ---------- "Coming up" reminders (dates from the Upcoming calendar) ----------
+REMIND_DAYS = (30, 7)   # remind about 30 days before, then about 7 days before
+MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+          "November", "December"]
+COMING_UP_WHY = {
+    "fda_decision": "The FDA decides whether the drug can be sold. Stocks of drug companies, especially small ones, "
+                    "often move a lot on decision day, in either direction. The FDA can also decide early or "
+                    "extend its deadline.",
+    "fda_meeting": "Outside experts will publicly discuss the drug and vote on advice for the FDA. The stock often "
+                   "moves on the meeting and the vote.",
+    "results_due": "This is when the company expects the trial's main part to finish. It's the company's own "
+                   "estimate: results are often shared weeks or months later, and dates often slip.",
+}
+
+
+def reminder_stage(event: dict, today) -> str | None:
+    """'30d' or '7d' for a dated event that close; 'month' when a month-only date's month has started."""
+    d = date.fromisoformat(str(event["event_date"])[:10])
+    if event["date_precision"] == "month":
+        return "month" if (today.year, today.month) == (d.year, d.month) else None
+    days = (d - today).days
+    if days < 0:
+        return None
+    if days <= REMIND_DAYS[1]:
+        return "7d"
+    if days <= REMIND_DAYS[0]:
+        return "30d"
+    return None
+
+
+def _nice(d) -> str:
+    d = date.fromisoformat(str(d)[:10])
+    return f"{MONTHS[d.month - 1][:3]} {d.day}, {d.year}"
+
+
+def coming_up(events: list[dict], company_names: dict[str, str], today) -> list[dict]:
+    """Reminder alerts for calendar events that are about 30 or 7 days away. Only watchers get these
+    (never 'huge'), and they go in the daily digest. Fixed wording, no AI."""
+    out = []
+    for e in events:
+        stage = reminder_stage(e, today)
+        if not stage:
+            continue
+        name = company_names.get(e["ticker"], e["ticker"])
+        days = (date.fromisoformat(str(e["event_date"])[:10]) - today).days
+        soon = ("today" if days == 0 else "tomorrow" if days == 1 else f"in {days} days")
+        if e["kind"] == "fda_decision":
+            when = f"by {_nice(e['event_date'])}" if e["date_precision"] == "day" else "this month"
+            headline = f"FDA decision for {name} expected {when}" + (f" ({soon})" if stage != "month" else "")
+            short = f"FDA decision {soon}" if stage != "month" else "FDA decision this month"
+        elif e["kind"] == "fda_meeting":
+            headline = f"FDA advisory meeting about {name}'s drug on {_nice(e['event_date'])} ({soon})"
+            short = f"FDA advisory meeting {soon}"
+        else:
+            title = e.get("title") or ""
+            if len(title) > 100:   # cut at a whole word
+                title = title[:100].rsplit(" ", 1)[0].rstrip(" ,;:-(") + "…"
+            if stage == "month":
+                headline = f"Main results of “{title}” are expected this month, by the company's own estimate"
+                short = "trial results expected this month"
+            else:
+                headline = f"Main results of “{title}” are expected around {_nice(e['event_date'])} ({soon})"
+                short = f"trial results expected {soon}"
+        out.append({
+            "nct_id": e.get("nct_id"), "ticker": e["ticker"], "kind": "coming_up", "signal_type": e["kind"],
+            "instant": False, "is_huge": False, "headline": headline, "explanation": COMING_UP_WHY[e["kind"]],
+            "old_score": None, "new_score": None,
+            "details": {"short": short, "event_date": str(e["event_date"])[:10], "stage": stage,
+                        "quote": e.get("quote"), "source": {"url": e.get("source_url")}},
+            "dedupe_key": f"coming_up:{e['dedupe_key']}:{e['event_date']}:{stage}",
+        })
+    return out

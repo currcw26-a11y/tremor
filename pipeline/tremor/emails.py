@@ -16,7 +16,7 @@ EMAIL_FROM = os.getenv("EMAIL_FROM") or "Tremor <alerts@tremoralerts.com>"  # do
 
 COLORS = {"calm": "#166534", "shaky": "#d97706", "tremor": "#b91c1c"}
 LABELS = {"calm": "● Calm", "shaky": "▲ Shaky", "tremor": "◆ Tremor"}
-KIND_ICON = {"critical": "🔴", "big_jump": "🔴", "head_start": "🟡"}
+KIND_ICON = {"critical": "🔴", "big_jump": "🔴", "head_start": "🟡", "coming_up": "📅"}
 
 
 def _e(s) -> str:
@@ -44,6 +44,8 @@ def sure_words(past: dict) -> str:
 def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: int,
                 today: date | None = None) -> tuple[str, str]:
     """(html, text) for one tremor."""
+    if a["kind"] == "coming_up":
+        return _coming_up_block(a, company)
     rows: list[tuple[str, str]] = [("What happened", a["headline"])]
     if a.get("old_score") is not None:
         rows.append(("Worry score", f"{a['old_score']} → {a['new_score']} (out of 100)"))
@@ -95,6 +97,34 @@ def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: 
     h += [f'<li><a href="{_e(u)}" style="color:#0c0a09">{_e(t)}</a></li>' for t, u in links]
     h.append("</ul></div>")
     t = [title] + [f"{label}: {value}" for label, value in rows] + ["What to check next:"] + [f"- {t}: {u}" for t, u in links]
+    return "".join(h), "\n".join(t)
+
+
+def _coming_up_block(a: dict, company: dict | None) -> tuple[str, str]:
+    """A reminder: what's coming, why it matters, the company's own words, and money left."""
+    d = a.get("details") or {}
+    rows = [("Coming up", a["headline"]), ("Why it matters", a.get("explanation") or "")]
+    if d.get("quote"):
+        rows.append(("In the company's words", f"“{d['quote']}”"))
+    ml = money_left(company) if company else None
+    if ml:
+        rows.append(("Money left", ml))
+    links = [("Everything coming up on Tremor", f"{SITE_URL}/upcoming")]
+    if a.get("nct_id"):
+        links.insert(0, ("This trial on Tremor", f"{SITE_URL}/trials/{a['nct_id']}"))
+    if a.get("ticker"):
+        links.append(("The company on Tremor", f"{SITE_URL}/companies/{a['ticker']}"))
+    src = (d.get("source") or {}).get("url")
+    if isinstance(src, str) and src:
+        links.append(("Where this date comes from", src))
+    title = f"📅 {a.get('ticker') or ''}".strip()
+    h = ['<div style="border:1px solid #e7e5e4;border-radius:12px;padding:16px;margin:0 0 16px">',
+         f'<p style="margin:0 0 8px;font-weight:800;font-size:18px">{_e(title)}</p>']
+    h += [f'<p style="margin:0 0 10px"><strong>{_e(k)}:</strong> {_e(v)}</p>' for k, v in rows]
+    h.append('<p style="margin:12px 0 4px"><strong>What to check next:</strong></p><ul style="margin:0;padding-left:20px">')
+    h += [f'<li><a href="{_e(u)}" style="color:#0c0a09">{_e(t)}</a></li>' for t, u in links]
+    h.append("</ul></div>")
+    t = [title] + [f"{k}: {v}" for k, v in rows] + ["What to check next:"] + [f"- {k}: {u}" for k, u in links]
     return "".join(h), "\n".join(t)
 
 

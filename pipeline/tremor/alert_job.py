@@ -62,6 +62,23 @@ def _explain(alert: dict, trials: dict, companies: dict) -> str | None:
     return ai.write("alert", ALERT_SYSTEM, facts, essential=True, max_tokens=1500)
 
 
+def _reminders(companies: dict) -> list[dict]:
+    try:
+        events = db.select("upcoming_events", "*")
+    except RuntimeError:   # migration 010 not run yet
+        return []
+    names = {t: _short_name(c.get("name") or t) for t, c in companies.items()}
+    return alerts.coming_up(events, names, _now().date())
+
+
+def _short_name(name: str) -> str:
+    import re
+    n = re.sub(r"\s*/\s*[a-z]{2}\s*/?\s*$", "", name, flags=re.I).strip()
+    if n == n.upper():
+        n = n.title()
+    return re.sub(r",?\s+(Inc|Corp|Corporation|Co|Ltd|Limited)\.?$", "", n, flags=re.I).strip()
+
+
 def _sent_counts():
     now = _now()
     today = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
@@ -123,12 +140,15 @@ def run(daily: bool = False) -> dict:
     new = [a for k, a in found.items() if k not in seen]
 
     new = alerts.drop_redundant_jumps(new)
+    if daily:   # once a day: "coming up" reminders for watchers (FDA decisions, results due)
+        new += [a for a in _reminders(companies) if a["dedupe_key"] not in seen]
     if first_time:
         db.insert("alerts", [{**a, "baseline": True} for a in new])
         return {"baseline_recorded": len(new), "note": "first run: existing signals recorded, nothing emailed"}
 
     for a in new:
-        a["explanation"] = _explain(a, trials, companies)
+        if a["kind"] != "coming_up":   # reminders carry fixed wording; no AI needed
+            a["explanation"] = _explain(a, trials, companies)
     saved = db.insert("alerts", new, returning="id,dedupe_key") if new else []
     ids = {r["dedupe_key"]: r["id"] for r in saved}
 
