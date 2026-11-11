@@ -84,6 +84,14 @@ def update(table: str, values: dict, **filters):
                           headers=_headers({"Prefer": "return=minimal"}), timeout=60))
 
 
+def claim(table: str, values: dict, **filters) -> list[dict]:
+    """Update matching rows and return the ones that changed. With a filter like welcome_sent_at="is.null",
+    two programs can't both claim the same row: the second finds nothing left to change."""
+    resp = _check(_send("PATCH", f"{URL}/rest/v1/{table}", params=filters, data=json.dumps(values),
+                        headers=_headers({"Prefer": "return=representation"}), timeout=60))
+    return resp.json()
+
+
 def delete(table: str, **filters):
     """Remove rows matching the filters. Refuses to run with no filters (that would empty the table)."""
     if not filters:

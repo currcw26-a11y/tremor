@@ -179,6 +179,76 @@ def render(alerts: list[dict], mode: str, trials: dict, companies: dict, trial_c
     return {"subject": subject, "html": body_html, "text": body_text, "unsubscribe_url": one_click}
 
 
+WELCOME_SUBJECT = "Welcome to Tremor"
+
+
+def welcome_template() -> dict:
+    """The welcome email, with {{GREETING}} and {{UNSUBSCRIBE_URL}} left to fill in.
+    The website sends it the moment someone signs up (web/lib/welcome-email.json, exported by
+    `python -m tremor.export_rules`); the pipeline sends any the website missed. Same words either way."""
+    settings = f"{SITE_URL}/settings"
+    gets = [
+        ("Right away", "an email when something big happens to a trial or company you follow, like a trial "
+                       "stopping or its main goal changing. You'll also hear about the very biggest events on any "
+                       "trial Tremor tracks, like a trial being stopped or a worry score turning red."),
+        ("Once a day", "smaller changes to what you follow, plus reminders about a month and a week before "
+                       "an FDA decision or expected trial results."),
+        ("Quiet days", "you only get an email when something actually happens, so many days there's nothing."),
+    ]
+    start = [
+        ("Find trials to follow", f"{SITE_URL}/trials", "Tap the star on any trial or company."),
+        ("See what's coming up", f"{SITE_URL}/upcoming", "FDA decisions and trial results expected soon."),
+        ("New to biotech stocks?", f"{SITE_URL}/learn", "A 2-minute guide to how they move."),
+        ("How the worry score works", f"{SITE_URL}/how-it-works", "Every rule, written simply."),
+    ]
+    footer_text = ("Not investment advice. Tremor shows what changed in public records and never tells anyone to "
+                   "buy or sell. Many trial edits turn out to be harmless.")
+    h = [f'<div style="font-family:{SANS};max-width:600px;margin:0 auto;padding:20px 16px;color:{INK};line-height:1.55">',
+         f'<p style="margin:0 0 26px;font-family:{SERIF};font-size:26px;font-weight:600;letter-spacing:-0.3px">{LOGO}Tremor</p>',
+         '<p style="margin:0 0 12px">{{GREETING}}</p>',
+         '<p style="margin:0 0 26px">Thanks for signing up. Tremor watches public records about cancer drug trials '
+         'and the companies running them, and emails you when something changes that could matter before big news '
+         'comes out. You\'re all set: there\'s nothing else to do, and you won\'t need to sign in again.</p>',
+         f'<div style="border-top:2px solid {INK};padding:14px 0 4px;margin:0 0 26px">',
+         f'<p style="margin:0 0 10px;font-family:{SERIF};font-weight:500;font-size:21px">What you\'ll get</p>']
+    h += [f'<p style="margin:0 0 10px"><strong>{_e(k)}:</strong> {_e(v)}</p>' for k, v in gets]
+    h += ["</div>", f'<div style="border-top:2px solid {INK};padding:14px 0 4px;margin:0 0 26px">',
+          f'<p style="margin:0 0 10px;font-family:{SERIF};font-weight:500;font-size:21px">Get started</p>']
+    h += [f'<p style="margin:0 0 10px"><a href="{_e(u)}" style="color:{LINK};font-weight:600">{_e(t)}</a><br>'
+          f'<span style="color:{MUTED}">{_e(d)}</span></p>' for t, u, d in start]
+    h += ["</div>",
+          f'<p style="margin:0 0 10px">You can choose which emails you get in your '
+          f'<a href="{_e(settings)}" style="color:{LINK}">alert settings</a>.</p>',
+          f'<p style="font-size:13px;color:{MUTED};margin-top:28px;border-top:1px solid {LINE};padding-top:14px">'
+          f'<strong style="color:{INK}">{_e(footer_text)}</strong></p>',
+          f'<p style="font-size:13px;color:{MUTED}"><a href="{{{{UNSUBSCRIBE_URL}}}}" style="color:{MUTED}">Unsubscribe</a>'
+          f' · <a href="{_e(settings)}" style="color:{MUTED}">Alert settings</a></p></div>']
+    text = ("{{GREETING}}\n\nThanks for signing up. Tremor watches public records about cancer drug trials and the "
+            "companies running them, and emails you when something changes that could matter before big news comes "
+            "out. You're all set: there's nothing else to do, and you won't need to sign in again.\n\n"
+            "WHAT YOU'LL GET\n" + "\n".join(f"- {k}: {v}" for k, v in gets) + "\n\nGET STARTED\n"
+            + "\n".join(f"- {t}: {u} ({d})" for t, u, d in start)
+            + f"\n\nChoose which emails you get: {settings}\n\n{footer_text}\nUnsubscribe: {{{{UNSUBSCRIBE_URL}}}}\n")
+    return {"subject": WELCOME_SUBJECT, "html": "".join(h), "text": text}
+
+
+def greeting(name: str | None) -> str:
+    first = (name or "").strip().split(" ")[0]
+    return f"Hi {first}," if first and len(first) <= 40 else "Hi,"
+
+
+def welcome(name: str | None, unsubscribe_token: str) -> dict:
+    """The welcome email for one person (the pipeline's copy; the website fills the same template)."""
+    t = welcome_template()
+    fill = {"{{UNSUBSCRIBE_URL}}": f"{SITE_URL}/unsubscribe?token={unsubscribe_token}"}
+    html, text = t["html"], t["text"]
+    for k, v in fill.items():
+        html, text = html.replace(k, _e(v)), text.replace(k, v)
+    g = greeting(name)
+    return {"subject": t["subject"], "html": html.replace("{{GREETING}}", _e(g)), "text": text.replace("{{GREETING}}", g),
+            "unsubscribe_url": f"{SITE_URL}/api/unsubscribe?token={unsubscribe_token}"}
+
+
 class DomainNotVerified(Exception):
     pass
 

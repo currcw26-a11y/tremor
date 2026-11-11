@@ -1,8 +1,10 @@
 // Google sends people back here after they sign in. We swap the one-time code for a
 // session (saved in a cookie, so they stay signed in), then return them to the page they were on.
+// First sign-in: a welcome email goes out right after (lib/server/welcome.ts).
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
+import { sendWelcome } from "@/lib/server/welcome";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -22,8 +24,13 @@ export async function GET(request: NextRequest) {
         },
       },
     );
-    const { error } = await sb.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(safeNext, url.origin));
+    const { data, error } = await sb.auth.exchangeCodeForSession(code);
+    if (!error) {
+      // New here? Send the welcome email after the page has loaded (does nothing for people already welcomed)
+      const userId = data.user?.id;
+      if (userId) after(() => sendWelcome(userId));
+      return NextResponse.redirect(new URL(safeNext, url.origin));
+    }
     console.error("Sign-in failed:", error.message);
   }
   return NextResponse.redirect(new URL("/?signin=failed", url.origin));

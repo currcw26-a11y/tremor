@@ -41,6 +41,7 @@ def main() -> int:
             ("explanations", explain_job.run)]
     if daily:  # Tremor Weekly: written once, on the first daily run of each new week
         jobs.append(("weekly", weekly_job.run))
+    jobs.append(("welcome", alert_job.send_welcomes))   # welcome emails the website missed
     # Alerts go last: they use the newest scores and explanations
     jobs.append(("alerts", lambda: alert_job.run(daily=digest_due())))
     if os.getenv("SEND_TEST_EMAIL") == "1":

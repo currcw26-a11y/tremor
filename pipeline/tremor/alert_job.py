@@ -130,6 +130,51 @@ def _mark(uid, alert_ids, mode, status):
               user_id=f"eq.{uid}", mode=f"eq.{mode}", alert_id=f"in.({','.join(map(str, alert_ids))})")
 
 
+WELCOME_MAX_TRIES = 3
+
+
+def welcome_due(profiles: list[dict], failed_tries: dict[str, int]) -> list[dict]:
+    """People who still need a welcome email: not sent yet, not unsubscribed, fewer than 3 failed tries."""
+    return [p for p in profiles if not p.get("welcome_sent_at") and not p.get("unsubscribed")
+            and failed_tries.get(p["user_id"], 0) < WELCOME_MAX_TRIES]
+
+
+def send_welcomes(channel=None) -> dict:
+    """Backup for the website: it sends the welcome email the moment someone signs up; this sends any it missed."""
+    channel = channel or emails.EmailChannel()
+    try:
+        profiles = db.select("profiles", "user_id,email,name,unsubscribed,unsubscribe_token,welcome_sent_at",
+                             welcome_sent_at="is.null")
+    except RuntimeError as err:
+        return {"skipped": f"welcome_sent_at missing (run migration 014): {str(err)[:80]}"}
+    if not profiles:
+        return {"sent": 0}
+    if not channel.available():
+        return {"skipped": "RESEND_API_KEY not set", "waiting": len(profiles)}
+    failed = defaultdict(int)
+    for r in db.select("email_log", "user_id", kind="eq.welcome", ok="eq.false"):
+        failed[r["user_id"]] += 1
+    cfg = config.load()["email"]
+    today_n, month_n = _sent_counts()
+    sent = errors = 0
+    for p in welcome_due(profiles, failed):
+        if today_n + sent >= cfg["daily_limit"] or month_n + sent >= cfg["monthly_limit"]:
+            break   # out of emails for now; the next run tries again
+        if not db.claim("profiles", {"welcome_sent_at": _now().isoformat()}, user_id=f"eq.{p['user_id']}",
+                        welcome_sent_at="is.null"):
+            continue   # the website got there first
+        try:
+            provider_id = channel.send(p["email"], emails.welcome(p.get("name"), p["unsubscribe_token"]))
+            db.insert("email_log", [{"kind": "welcome", "user_id": p["user_id"], "provider_id": provider_id, "ok": True}])
+            sent += 1
+        except Exception as err:
+            errors += 1
+            print(f"    welcome email to user {p['user_id'][:8]} failed: {err}")
+            db.update("profiles", {"welcome_sent_at": None}, user_id=f"eq.{p['user_id']}")
+            db.insert("email_log", [{"kind": "welcome", "user_id": p["user_id"], "ok": False, "note": str(err)[:300]}])
+    return {"sent": sent, "failed": errors}
+
+
 def run(daily: bool = False) -> dict:
     cfg = config.load()
     trials_list, companies, counts = _load_context()

@@ -35,3 +35,24 @@ export async function userFromToken(token: string | null): Promise<string | null
   const user = await res.json();
   return typeof user?.id === "string" ? user.id : null;
 }
+
+/** Update matching rows and return the ones that changed (a filter like welcome_sent_at=is.null makes it a claim). */
+export async function claim<T>(table: string, filters: Record<string, string>, values: object): Promise<T[]> {
+  const res = await fetch(`${URL}/rest/v1/${table}?${new URLSearchParams(filters)}`, {
+    method: "PATCH",
+    headers: headers({ Prefer: "return=representation" }),
+    body: JSON.stringify(values),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`Database error ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+export async function update(table: string, filters: Record<string, string>, values: object) {
+  const res = await fetch(`${URL}/rest/v1/${table}?${new URLSearchParams(filters)}`, {
+    method: "PATCH",
+    headers: headers({ Prefer: "return=minimal" }),
+    body: JSON.stringify(values),
+  });
+  if (!res.ok) throw new Error(`Database error ${res.status}: ${await res.text()}`);
+}
