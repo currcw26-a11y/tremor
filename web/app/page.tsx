@@ -5,6 +5,8 @@ import { ChangeRow, Empty, Ticker } from "./components";
 import { ScoreBadge } from "./score";
 import { TimeAgo } from "./time-ago";
 
+export const metadata = { alternates: { canonical: "/" } };
+
 async function Stats() {
   const s = await getStats();
   const items = [

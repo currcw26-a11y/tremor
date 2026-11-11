@@ -3,7 +3,11 @@ import { Suspense } from "react";
 import { PAGE_SIZE, searchTrials } from "@/lib/db";
 import { Empty, TrialRow } from "../components";
 
-export const metadata = { title: "All trials — Tremor" };
+export const metadata = {
+  title: "All cancer trials",
+  description: "Search every Phase 2 and Phase 3 cancer drug trial Tremor tracks, with each one's worry score.",
+  alternates: { canonical: "/trials" },
+};
 
 async function Results({ searchParams }: { searchParams: PageProps<"/trials">["searchParams"] }) {
   const sp = await searchParams;

@@ -1,6 +1,6 @@
 import { Watchlist } from "./watchlist";
 
-export const metadata = { title: "Your watchlist — Tremor" };
+export const metadata = { title: "Your watchlist", robots: { index: false } };
 
 export default function WatchlistPage() {
   return (

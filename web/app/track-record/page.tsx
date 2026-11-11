@@ -6,7 +6,8 @@ import { Dots } from "../past-cases";
 import { Ticker } from "../components";
 
 export const metadata: Metadata = {
-  title: "Track record · Tremor",
+  title: "Track record",
+  alternates: { canonical: "/track-record" },
   description: "Every warning sign Tremor can check, and what happened next: hits and misses.",
 };
 

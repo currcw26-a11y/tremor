@@ -1,7 +1,7 @@
 import { SITE } from "@/lib/site";
 import { LegalPage } from "../legal";
 
-export const metadata = { title: "Privacy policy — Tremor" };
+export const metadata = { title: "Privacy policy" };
 
 export default function Privacy() {
   return (

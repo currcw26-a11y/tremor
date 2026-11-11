@@ -60,6 +60,7 @@ export type Trial = {
   score: number;
   score_label: ScoreLabel;
   score_breakdown: Reason[] | null;
+  tracked?: boolean;
   outlook?: Outlook | null;
 };
 

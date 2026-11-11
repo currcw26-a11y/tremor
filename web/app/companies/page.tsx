@@ -4,7 +4,11 @@ import { getCompanies } from "@/lib/db";
 import { Ticker } from "../components";
 import { ScoreBadge } from "../score";
 
-export const metadata = { title: "Companies — Tremor" };
+export const metadata = {
+  title: "Companies",
+  description: "Every company Tremor tracks, with its cancer drug trials and worst current worry score.",
+  alternates: { canonical: "/companies" },
+};
 
 async function List() {
   const companies = await getCompanies();

@@ -7,7 +7,8 @@ import { ScoreBadge } from "../score";
 import { Term } from "../term";
 
 export const metadata: Metadata = {
-  title: "Coming up · Tremor",
+  title: "Coming up",
+  alternates: { canonical: "/upcoming" },
   description: "FDA decisions and cancer-trial results expected soon, from companies' own filings and trial records.",
 };
 

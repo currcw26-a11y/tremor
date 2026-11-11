@@ -4,7 +4,8 @@ import { getTrackRecord } from "@/lib/db";
 import { Term } from "../term";
 
 export const metadata: Metadata = {
-  title: "How biotech stocks move · Tremor",
+  title: "How biotech stocks move",
+  alternates: { canonical: "/learn" },
   description: "A 2-minute guide for people who have never bought a stock: why small drug companies' stocks jump and crash, and how to read Tremor.",
 };
 

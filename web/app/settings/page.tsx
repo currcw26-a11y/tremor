@@ -1,6 +1,6 @@
 import { Settings } from "./settings";
 
-export const metadata = { title: "Alert settings — Tremor" };
+export const metadata = { title: "Alert settings", robots: { index: false } };
 
 export default function SettingsPage() {
   return (

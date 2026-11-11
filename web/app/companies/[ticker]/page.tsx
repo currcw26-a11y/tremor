@@ -1,8 +1,9 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getCompany, type InsiderTrade } from "@/lib/db";
 import { FORM_HELP, FORM_NAMES, filingSummary } from "@/lib/filings";
-import { niceDate } from "@/lib/words";
+import { companyName, niceDate } from "@/lib/words";
 import { Empty, Ticker, TrialRow } from "../../components";
 import { StarButton } from "../../star-button";
 import { MoneyLeft } from "./money-left";
@@ -24,6 +25,24 @@ function role(t: InsiderTrade) {
   if (t.is_officer) return "Executive";
   if (t.is_director) return "Board member";
   return "Large shareholder";
+}
+
+export async function generateMetadata({ params }: PageProps<"/companies/[ticker]">): Promise<Metadata> {
+  const { ticker } = await params;
+  const { company, trials } = await getCompany(ticker);
+  if (!company) return { title: "Company not found", robots: { index: false } };
+  const name = companyName(company.name, company.ticker);
+  const title = `${name} (${company.ticker})`;
+  const description =
+    `${name}'s ${trials.length} tracked cancer drug trial${trials.length === 1 ? "" : "s"}, money left, insider trades, ` +
+    "executive changes and layoff notices, with worry scores explained in plain English.";
+  return {
+    title,
+    description,
+    alternates: { canonical: `/companies/${company.ticker}` },
+    openGraph: { title, description, url: `/companies/${company.ticker}`, images: "/opengraph-image" },
+    robots: trials.length ? undefined : { index: false },
+  };
 }
 
 async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticker]">["params"] }) {

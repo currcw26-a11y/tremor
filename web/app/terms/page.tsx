@@ -1,7 +1,7 @@
 import { SITE } from "@/lib/site";
 import { LegalPage } from "../legal";
 
-export const metadata = { title: "Terms of use — Tremor" };
+export const metadata = { title: "Terms of use" };
 
 export default function Terms() {
   return (

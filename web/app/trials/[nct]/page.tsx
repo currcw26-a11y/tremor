@@ -1,8 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getTrial } from "@/lib/db";
-import { niceDate, phaseLabel } from "@/lib/words";
+import { companyName, niceDate, phaseLabel } from "@/lib/words";
 import { BANDS } from "@/lib/score";
 import { ChangeRow, Empty, StatusPill, Ticker } from "../../components";
 import { Reasons, ScoreBadge } from "../../score";
@@ -11,6 +12,25 @@ import { StarButton } from "../../star-button";
 import { AskBox } from "../../ask-box";
 import { OutlookSection } from "../../past-cases";
 import { Term } from "../../term";
+
+export async function generateMetadata({ params }: PageProps<"/trials/[nct]">): Promise<Metadata> {
+  const { nct } = await params;
+  const { trial: t, company } = await getTrial(nct);
+  if (!t) return { title: "Trial not found", robots: { index: false } };
+  const who = companyName(company?.name ?? t.sponsor_name, t.ticker);
+  const title = `${t.title.length > 70 ? t.title.slice(0, 70).replace(/\s+\S*$/, "") + "…" : t.title} (${t.ticker})`;
+  const description =
+    `${who}'s ${phaseLabel(t.phases)} cancer trial${t.conditions.length ? ` in ${t.conditions.slice(0, 2).join(", ")}` : ""}. ` +
+    `Worry score ${t.score} out of 100 (${BANDS[t.score_label].name}). Every change to its official record, explained in plain English.`;
+  return {
+    title,
+    description: description.slice(0, 300),
+    alternates: { canonical: `/trials/${t.nct_id}` },
+    // A page-level openGraph replaces the inherited one, so the share card is named again here
+    openGraph: { title, description: description.slice(0, 300), url: `/trials/${t.nct_id}`, images: "/opengraph-image" },
+    robots: t.tracked === false ? { index: false } : undefined,
+  };
+}
 
 async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["params"] }) {
   const { nct } = await params;

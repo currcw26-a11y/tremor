@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { UnsubscribeButton } from "./unsubscribe-button";
 
-export const metadata = { title: "Unsubscribe — Tremor" };
+export const metadata = { title: "Unsubscribe", robots: { index: false } };
 
 async function Content({ searchParams }: { searchParams: PageProps<"/unsubscribe">["searchParams"] }) {
   const token = (await searchParams).token;

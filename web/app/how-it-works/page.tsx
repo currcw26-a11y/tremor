@@ -6,7 +6,8 @@ import { BANDS } from "@/lib/score";
 import { Shape } from "../score";
 
 export const metadata: Metadata = {
-  title: "How the score works · Tremor",
+  title: "How the score works",
+  alternates: { canonical: "/how-it-works" },
   description: "Every rule behind Tremor's 0-100 worry score, in plain English, with what the past says about each one.",
 };
 

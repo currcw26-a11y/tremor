@@ -3,13 +3,22 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { UserMenu } from "./user-menu";
 import "./globals.css";
+import { SITE } from "@/lib/site";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
+const DESCRIPTION =
+  "Free early warnings for cancer drug trials, in plain English. Tremor watches trial records, SEC filings and FDA notices and gives every trial a 0-100 worry score. Not investment advice.";
+
 export const metadata: Metadata = {
-  title: "Tremor — early warnings for cancer drug trials",
-  description: "Tremor watches public data about cancer drug trials and flags quiet changes before big news comes out.",
+  metadataBase: new URL(SITE.url),
+  title: { default: "Tremor: early warnings for cancer drug trials", template: "%s · Tremor" },
+  description: DESCRIPTION,
+  applicationName: "Tremor",
+  // No canonical or og:url here: pages inherit layout metadata, so each page sets its own address
+  openGraph: { type: "website", siteName: "Tremor", locale: "en_US" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

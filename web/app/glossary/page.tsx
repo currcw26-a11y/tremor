@@ -3,7 +3,8 @@ import Link from "next/link";
 import { GLOSSARY } from "@/lib/glossary";
 
 export const metadata: Metadata = {
-  title: "Words to know · Tremor",
+  title: "Words to know",
+  alternates: { canonical: "/glossary" },
   description: "Plain-English definitions of the drug-trial and stock-market words used on Tremor.",
 };
 
