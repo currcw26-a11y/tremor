@@ -5,6 +5,7 @@ The secret key can write to every table, so it only ever lives in the pipeline.
 """
 import json
 import os
+import time
 
 import requests
 
@@ -26,6 +27,18 @@ def _headers(extra: dict | None = None) -> dict:
     return {**h, **(extra or {})}
 
 
+def _send(method: str, url: str, **kw) -> requests.Response:
+    """One web request, tried again if the connection drops. After a long quiet stretch (like a slow ChEMBL
+    lookup), Supabase closes the idle connection and the next request fails before it reaches the database."""
+    for attempt in range(3):
+        try:
+            return _session.request(method, url, **kw)
+        except requests.ConnectionError:
+            if attempt == 2:
+                raise
+            time.sleep(2 * (attempt + 1))
+
+
 def _check(resp: requests.Response):
     if resp.status_code >= 300:
         raise RuntimeError(f"Supabase error {resp.status_code}: {resp.text[:500]}")
@@ -36,7 +49,7 @@ def select(table: str, columns: str = "*", **filters) -> list[dict]:
     """Read every matching row, 1,000 at a time. Filters look like  tracked="eq.true"."""
     rows, start = [], 0
     while True:
-        resp = _check(_session.get(f"{URL}/rest/v1/{table}", params={"select": columns, **filters},
+        resp = _check(_send("GET", f"{URL}/rest/v1/{table}", params={"select": columns, **filters},
                                    headers=_headers({"Range": f"{start}-{start + 999}"}), timeout=60))
         page = resp.json()
         rows += page
@@ -51,7 +64,7 @@ def insert(table: str, rows: list[dict], returning: str | None = None) -> list[d
     for i in range(0, len(rows), BATCH):
         prefer = "return=representation" if returning else "return=minimal"
         params = {"select": returning} if returning else {}
-        resp = _check(_session.post(f"{URL}/rest/v1/{table}", params=params, data=json.dumps(rows[i:i + BATCH]),
+        resp = _check(_send("POST", f"{URL}/rest/v1/{table}", params=params, data=json.dumps(rows[i:i + BATCH]),
                                     headers=_headers({"Prefer": prefer}), timeout=120))
         if returning:
             out += resp.json()
@@ -61,13 +74,13 @@ def insert(table: str, rows: list[dict], returning: str | None = None) -> list[d
 def upsert(table: str, rows: list[dict], on_conflict: str):
     """Add rows, or update them if a row with the same key already exists."""
     for i in range(0, len(rows), BATCH):
-        _check(_session.post(f"{URL}/rest/v1/{table}", params={"on_conflict": on_conflict},
+        _check(_send("POST", f"{URL}/rest/v1/{table}", params={"on_conflict": on_conflict},
                              data=json.dumps(rows[i:i + BATCH]),
                              headers=_headers({"Prefer": "resolution=merge-duplicates,return=minimal"}), timeout=120))
 
 
 def update(table: str, values: dict, **filters):
-    _check(_session.patch(f"{URL}/rest/v1/{table}", params=filters, data=json.dumps(values),
+    _check(_send("PATCH", f"{URL}/rest/v1/{table}", params=filters, data=json.dumps(values),
                           headers=_headers({"Prefer": "return=minimal"}), timeout=60))
 
 
@@ -75,5 +88,5 @@ def delete(table: str, **filters):
     """Remove rows matching the filters. Refuses to run with no filters (that would empty the table)."""
     if not filters:
         raise ValueError("delete() needs at least one filter")
-    _check(_session.delete(f"{URL}/rest/v1/{table}", params=filters, headers=_headers({"Prefer": "return=minimal"}),
+    _check(_send("DELETE", f"{URL}/rest/v1/{table}", params=filters, headers=_headers({"Prefer": "return=minimal"}),
                            timeout=60))

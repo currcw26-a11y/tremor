@@ -53,3 +53,27 @@ def test_rival_needs_same_target_same_cancer_and_a_different_drug():
 def test_only_the_newest_rival_failure_counts():
     sigs = rival_signals(ME, [fail("NCT8", days_ago=200), fail("NCT9", days_ago=20)], TODAY)
     assert len(sigs) == 1 and sigs[0].source["rival_nct"] == "NCT9"
+
+
+def test_only_the_new_drugs_target_counts_when_a_trial_fails():
+    from tremor.rivals_job import failed_drug_targets
+    known = {
+        "sotorasib": {"chembl_id": "C1", "approved": True, "symbols": ["KRAS"]},
+        "pembrolizumab": {"chembl_id": "C2", "approved": True, "symbols": ["PDCD1"]},
+        "newmab": {"chembl_id": "C3", "approved": False, "symbols": ["TIGIT"]},
+    }
+    look = lambda name: known.get(name.lower())
+    # A new TIGIT drug given with pembrolizumab: only TIGIT failed
+    assert failed_drug_targets("TIGIT and PD-1", ["Newmab", "Pembrolizumab"], look) == ({"TIGIT"}, {"C3"})
+    # A drug ChEMBL doesn't know yet: use the record's words, minus the usual partner-drug targets
+    t, ids = failed_drug_targets("MK-9999 is a TIGIT antibody given with a PD-1 inhibitor", ["MK-9999", "Pembrolizumab"], look)
+    assert t == {"TIGIT"} and ids == {"mk9999"}
+    # Only approved drugs: nothing new failed, so no rival target
+    assert failed_drug_targets("PD-L1", ["Pembrolizumab"], look)[0] == set()
+
+
+def test_a_stop_is_dated_by_when_the_trial_ended_not_a_later_record_edit():
+    from tremor.rivals_job import stop_day
+    assert stop_day({"primary_completion_date": "2024-01", "last_update_posted": "2026-01-13"}) == "2024-01-15"
+    assert stop_day({"primary_completion_date": "2027-06-30", "last_update_posted": "2026-03-01"}) == "2026-03-01"  # planned end
+    assert stop_day({"primary_completion_date": None, "last_update_posted": "2026-03-01"}) == "2026-03-01"

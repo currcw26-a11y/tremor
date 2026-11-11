@@ -26,20 +26,41 @@ FILING_LAG_DAYS = 4
 STOP_NEWS_WINDOW = (60, 120)        # stops are often announced before the record changes, sometimes after
 RESULTS_NEWS_WINDOW = (30, 365)     # results usually come out in the months after a trial finishes
 
-SAFETY_EFFICACY = re.compile(r"safety|toxicit|adverse|efficacy|futility|lack of (benefit|response|activity)|"
-                             r"interim analysis|did not meet|unfavorable|insufficient (efficacy|activity)|risk", re.I)
+# "The goal wasn't reached" phrases carry their own "not", so they're checked before negations are removed.
+GOAL_MISSED = re.compile(
+    r"(endpoint|criteria|criterion|threshold|efficacy|primary objective|signals? of|response)[^.;]{0,50}?"
+    r"(\bnot (been |be )?(met|achieved|fulfill?ed|reached|fulfill?ing|meeting)|did not (meet|fulfill?|achieve|reach))|"
+    r"(did not|not|failed to) (meet|meeting|fulfill?|fulfill?ing|achieve|reach)[^.;]{0,30}?"
+    r"(endpoint|criteria|criterion|threshold|efficacy|interim|benchmark|primary objective)|"
+    r"unlikely to (be )?(met|meet|achieve|succeed|demonstrate|show)|(unable|not able) to (demonstrate|show)|"
+    r"(efficacy|response|results?|activity|benefit)[^.;]{0,70}?not (\w+ )?sufficient", re.I)
+# Only clear failure words count. Bare "safety" or "efficacy" don't: records say things like "after reviewing
+# safety and efficacy data" or "during the safety lead-in" when nothing went wrong.
+SAFETY_EFFICACY = re.compile(
+    r"futilit|lack of (\w+ )?(efficacy|benefit|response|activity)|insufficient (\w+ )?(efficacy|activity|benefit|response)|"
+    r"did not (meet|show|demonstrate)|failed to (meet|show|demonstrate)|negative (interim|result|data|outcome|efficacy)|"
+    r"(analysis|results?|data) (was|were) negative|unfavou?rable|unsatisfactory(?! (patient |subject )?(accrual|enrol|recruit))|low probability|probability of (less than|meeting)|"
+    r"benefit[-/ ]*risk|toxicit|adverse (event|effect|reaction)|(safety|efficacy|tolerability) (concern|issue|signal|finding|reason|event|risk)|"
+    r"(due to|because of|owing to|for) (\w+ ){0,2}(safety|toxicity|tolerability)\b", re.I)
 BUSINESS = re.compile(r"business|strateg|portfolio|sponsor('s)? decision|priorit|commercial|funding|financ|"
-                      r"company decision|development program|pipeline", re.I)
+                      r"company decision|development program|pipeline|corporate", re.I)
 ENROLLMENT = re.compile(r"enrol|accrual|recruit|slow", re.I)
 
 
-# "not related to safety", "not due to any safety concerns": these say the OPPOSITE of a safety problem
-NOT_SAFETY = re.compile(r"\b(not|no|unrelated to|without)\b[^.;]{0,60}?\b(safety|efficacy|toxicit\w*|adverse)\w*", re.I)
+# "not related to safety", "not prompted by any safety or efficacy concerns", "reasons other than safety":
+# these say the OPPOSITE of a problem, so the rest of that sentence is ignored.
+NEGATION = re.compile(r"(\bnot\b|n't\b|\bunrelated to\b|\bother than\b|\bwithout\b|\bnor\b|\bno\b(?! (further|more|longer|new)\b))"
+                      r"(?=[^.;]{0,60}?\b(safety|efficacy|toxicit|adverse|futilit|benefit[- ]*risk|tolerab))[^.;]*", re.I)
+# ...but "no efficacy" / "no clinical benefit" IS a failure, so name it plainly first
+NO_BENEFIT = re.compile(r"\bno (meaningful |significant |clinical |sufficient )?(efficacy|benefit|activity|response)\b"
+                        r"(?!\s*(and|or|/|,)?\s*(and/or )?(safety|efficacy|concern|issue|related))", re.I)
 
 
 def stop_reason(why: str | None) -> str:
     """Sort the company's stated reason for stopping a trial into a plain bucket."""
-    why = NOT_SAFETY.sub(" ", why or "")
+    if GOAL_MISSED.search(why or ""):
+        return "safety_or_efficacy"
+    why = NEGATION.sub(" ", NO_BENEFIT.sub("lack of efficacy", why or ""))
     if SAFETY_EFFICACY.search(why):
         return "safety_or_efficacy"
     if BUSINESS.search(why):

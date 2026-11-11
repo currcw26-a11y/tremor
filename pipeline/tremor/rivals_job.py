@@ -5,7 +5,8 @@
 2. Each tracked trial gets a profile: its targets (from ChEMBL, plus target names written in its own
    record), its drugs, and its kind of cancer. Saved in trial_profiles.
 3. Industry cancer trials (any company, public or private) stopped in the last year BECAUSE the drug
-   didn't work well enough or wasn't safe are "rival failures". Saved in rival_failures.
+   didn't work well enough or wasn't safe are "rival failures". Only the NEW drugs' targets count (an
+   approved partner drug like pembrolizumab isn't what failed). Saved in rival_failures.
 Scoring (scoring.rival_signals) then matches them: same target + same kind of cancer + a different drug.
 
     python -m tremor.rivals_job
@@ -16,7 +17,7 @@ from . import backtest, db
 from .sources import chembl
 from .sources import clinicaltrials as ct
 from .sources.federal_register import useful_names
-from .sources.targets import cancer_types, from_symbols, targets_in
+from .sources.targets import BACKBONE, cancer_types, from_symbols, targets_in
 
 RECHECK_DAYS = 30        # drugs ChEMBL didn't know are looked up again after this long
 FAILURE_WINDOW_DAYS = 365
@@ -74,7 +75,44 @@ def profile(nct_id: str, text: str, drug_names: list[str], conditions: list[str]
             "cancer_types": sorted(cancer_types(conditions, title)), "updated_at": datetime.now(timezone.utc).isoformat()}
 
 
-def recent_failures(mech: Mechanisms, today: date) -> list[dict]:
+def stop_day(sm: dict) -> str | None:
+    """When a trial stopped: its end date, else the last record update, whichever is EARLIER. Records are often
+    edited long after the stop (a 2023 decision written up in 2026 is old news, not a fresh failure)."""
+    days = []
+    for d in (sm.get("primary_completion_date"), sm.get("completion_date"), sm.get("last_update_posted")):
+        d = str(d or "")[:10]
+        if len(d) == 7:
+            d += "-15"
+        if len(d) == 10:
+            days.append(d)
+    return min(days) if days else None
+
+
+def failed_drug_targets(text: str, drug_names: list[str], lookup=chembl.lookup) -> tuple[set[str], set[str]]:
+    """(targets, drug ids) of the NEW drugs in a failed trial. Approved partner drugs (like pembrolizumab given
+    alongside the new drug) aren't what failed, so their targets don't count. A drug ChEMBL doesn't know yet
+    falls back to target names in the record, minus the usual partner-drug targets."""
+    targets, ids, partner, unknown = set(), set(), set(), False
+    for name in useful_names(drug_names):
+        try:
+            r = lookup(name)
+        except Exception:
+            r = None
+        found = from_symbols(r["symbols"]) if r else set()
+        if r and r.get("approved"):
+            partner |= found
+        elif found:
+            targets |= found
+            ids.add(r["chembl_id"])
+        else:
+            unknown = True
+            ids.add((r and r["chembl_id"]) or chembl.norm(chembl.clean(name)))
+    if unknown:
+        targets |= targets_in(text) - partner - BACKBONE
+    return targets, ids
+
+
+def recent_failures(today: date) -> list[dict]:
     since = (today - timedelta(days=FAILURE_WINDOW_DAYS)).isoformat()
     params = {"query.cond": ct.CANCER_WORDS, "filter.overallStatus": "TERMINATED,SUSPENDED",
               "filter.advanced": f"{ct.PHASE_AND_SPONSOR} AND AREA[LastUpdatePostDate]RANGE[{since},MAX]"}
@@ -84,14 +122,18 @@ def recent_failures(mech: Mechanisms, today: date) -> list[dict]:
         why = s["protocolSection"]["statusModule"].get("whyStopped")
         if backtest.stop_reason(why) != "safety_or_efficacy" or not ct.is_cancer_trial(sm):
             continue
+        stopped_on = stop_day(sm)
+        if not stopped_on or stopped_on < since:
+            continue
         text, names = _text(s)
-        prof = profile(sm["nct_id"], text, names, sm["conditions"], sm["title"], mech)
-        if not prof["targets"] or not prof["cancer_types"]:
+        targets, ids = failed_drug_targets(text, names)
+        kinds = cancer_types(sm["conditions"], sm["title"])
+        if not targets or not kinds:
             continue   # can't match a rival without knowing both
         out.append({"nct_id": sm["nct_id"], "sponsor": sm["sponsor_name"], "title": (sm["title"] or "")[:300],
-                    "why_stopped": (why or "")[:400], "stopped_on": str(sm["last_update_posted"])[:10],
-                    "targets": prof["targets"], "cancer_types": prof["cancer_types"], "drug_ids": prof["drug_ids"],
-                    "updated_at": prof["updated_at"]})
+                    "why_stopped": (why or "")[:400], "stopped_on": stopped_on,
+                    "targets": sorted(targets), "cancer_types": sorted(kinds), "drug_ids": sorted(ids),
+                    "updated_at": datetime.now(timezone.utc).isoformat()})
     return out
 
 
@@ -118,7 +160,7 @@ def run(today: date | None = None) -> dict:
             mech.save()   # keep progress if the run is cut short
     db.upsert("trial_profiles", profiles, on_conflict="nct_id")
 
-    failures = recent_failures(mech, today)
+    failures = recent_failures(today)
     mech.save()
     db.delete("rival_failures", stopped_on="lt.2100-01-01")   # small table: rebuilt each day
     if failures:

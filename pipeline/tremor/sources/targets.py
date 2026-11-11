@@ -77,6 +77,11 @@ TARGETS = {
 }
 _TARGET_RE = {k: re.compile(v, re.I) for k, v in TARGETS.items()}
 
+# Targets of approved drugs that are often given ALONGSIDE a new drug (like pembrolizumab for PD-1). When a trial
+# fails, a target named only in its record text and in this list is probably the partner drug's, so it doesn't count.
+BACKBONE = {"PD-1", "PD-L1", "CTLA-4", "VEGF", "HER2", "EGFR", "CDK4/6", "Estrogen receptor", "Androgen receptor",
+            "CD20", "CD38", "BTK", "BCL-2", "PARP", "mTOR"}
+
 # Gene symbols ChEMBL reports -> the same canonical names, so both sources speak one language
 SYMBOLS = {
     "PDCD1": "PD-1", "CD274": "PD-L1", "CTLA4": "CTLA-4", "TIGIT": "TIGIT", "LAG3": "LAG-3", "HAVCR2": "TIM-3",

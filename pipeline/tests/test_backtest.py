@@ -77,3 +77,26 @@ def test_baseline_only_counts_months_when_the_company_was_trading():
 
 def test_confidence_levels():
     assert [bt.confidence(n) for n in (9, 10, 29, 30)] == ["low", "medium", "medium", "high"]
+
+
+def test_real_stop_reasons_from_trial_records():
+    # Negations cover the whole list, not just the first word
+    assert bt.stop_reason("This study was closed due to business reasons. Closure was not prompted by any safety or efficacy concerns.") == "business"
+    assert bt.stop_reason("The sponsor discontinued the development of the drug for reasons other than safety.") == "other"
+    assert bt.stop_reason("Strategic business reasons. This isn't related to any safety/efficacy/clinical activity/benefit-risk concern.") == "business"
+    assert bt.stop_reason("After meeting enrollment targets and primary objectives. The decision was not due to safety concerns, futility, or any regulatory request.") != "safety_or_efficacy"
+    # Neutral mentions of safety or efficacy aren't failures
+    assert bt.stop_reason("After reviewing available safety and efficacy data to date, the study reached the required number of events.") == "other"
+    assert bt.stop_reason("The sponsor decided to terminate the study during the safety lead-in phase.") == "other"
+    # Real failures, however they're worded
+    assert bt.stop_reason("Lack of efficacy and not driven by safety concerns.") == "safety_or_efficacy"
+    assert bt.stop_reason("Stopped due to sponsor decision (stage 2 efficacy criteria not met); not due to safety concerns.") == "safety_or_efficacy"
+    assert bt.stop_reason("Primary endpoint would unlikely to be met based on the interim assessment") == "safety_or_efficacy"
+    assert bt.stop_reason("Due to an unsatisfactory benefit/risk ratio") == "safety_or_efficacy"
+    assert bt.stop_reason("Trial terminated by Sponsor based on benefit- risk reassessment") == "safety_or_efficacy"
+    assert bt.stop_reason("Interim analysis was negative") == "safety_or_efficacy"
+    assert bt.stop_reason("No efficacy observed") == "safety_or_efficacy"
+    assert bt.stop_reason("No further enrollment due to futility") == "safety_or_efficacy"
+    # Sign-up problems stay sign-up problems
+    assert bt.stop_reason("Unsatisfactory patient accrual") == "enrollment"
+    assert bt.stop_reason("Enrollment target was not met") == "enrollment"

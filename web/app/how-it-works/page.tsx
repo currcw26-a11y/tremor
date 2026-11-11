@@ -60,7 +60,7 @@ const TRIAL_RULES: Rule[] = [
     title: "A rival drug failed",
     what: "In the last year, another company's drug aimed at the same target, in the same kind of cancer, had its trial stopped because it wasn't working well enough or wasn't safe.",
     why: "If a similar drug didn't work, investors may worry this one won't either. Stops for business reasons don't count.",
-    status: "Only counts when both drugs' targets are known, from the ChEMBL drug database or named in the trial record. Not tested on past cases yet.",
+    status: "Only counts when both drugs' targets are known, from the ChEMBL drug database or named in the trial record. Only the new drug that failed counts, not an approved drug given alongside it. Not tested on past cases yet.",
   },
 ];
 

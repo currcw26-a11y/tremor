@@ -37,7 +37,7 @@ def _mechanisms(chembl_id: str) -> list[dict]:
 
 
 def lookup(name: str) -> dict | None:
-    """{'chembl_id', 'pref_name', 'targets': [target ids], 'mechanism': 'PD-1 inhibitor; ...'} or None."""
+    """{'chembl_id', 'pref_name', 'approved', 'targets': [target ids], 'symbols', 'mechanism'} or None."""
     q = clean(name)
     if len(norm(q)) < 4:
         return None
@@ -52,6 +52,7 @@ def lookup(name: str) -> dict | None:
             mechs = _mechanisms(parent)
         target_ids = sorted({x["target_chembl_id"] for x in mechs})
         return {"chembl_id": m["molecule_chembl_id"], "pref_name": m.get("pref_name"),
+                "approved": float(m.get("max_phase") or 0) >= 4,   # already sold somewhere (ChEMBL phase 4)
                 "targets": target_ids,
                 "symbols": sorted({sym for t in target_ids for sym in target_symbols(t)}),
                 "mechanism": "; ".join(sorted({x["mechanism_of_action"] for x in mechs if x.get("mechanism_of_action")}))}
