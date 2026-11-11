@@ -202,6 +202,35 @@ def company_signals(filings: list[dict], sales: list[dict], trial_count: int, cf
     return signals
 
 
+def rival_signals(profile: dict | None, failures: list[dict], today: date, cfg: dict | None = None) -> list[Signal]:
+    """'A rival trial with the same mechanism in the same cancer fails' (spec): a recent rival failure that shares
+    a target AND a kind of cancer with this trial, and is a different drug. Only the newest one counts."""
+    from .sources.targets import cancer_phrase
+    if not profile or not profile.get("targets") or not profile.get("cancer_types"):
+        return []
+    cfg = cfg or config.load()
+    weight, max_age = cfg["score"]["weights"].get("rival_trial_failed", 0), cfg["score"]["max_age_days"]
+    mine_t, mine_c, mine_d = set(profile["targets"]), set(profile["cancer_types"]), set(profile.get("drug_ids") or [])
+    best = None
+    for f in failures:
+        if f["nct_id"] == profile.get("nct_id") or mine_d & set(f.get("drug_ids") or []):
+            continue   # the same trial, or the same drug: not a rival
+        shared_t, shared_c = mine_t & set(f["targets"]), mine_c & set(f["cancer_types"])
+        when = _d(f["stopped_on"])
+        if not shared_t or not shared_c or when is None or when > today or (today - when).days > max_age:
+            continue
+        if best is None or when > best[0]:
+            best = (when, f, sorted(shared_t)[0], sorted(shared_c)[0])
+    if not best or not weight:
+        return []
+    when, f, target, kind = best
+    label = (f"A rival drug that also targets {target} was stopped in a {cancer_phrase(kind)} trial "
+             "because it wasn't working well enough or wasn't safe")
+    return [Signal("rival_trial_failed", label, when, weight,
+                   source={"url": f"https://clinicaltrials.gov/study/{f['nct_id']}", "rival_nct": f["nct_id"],
+                           "sponsor": f.get("sponsor"), "text": f.get("why_stopped"), "target": target})]
+
+
 def fda_signals(trial_drugs: set[str], meetings: list[dict], today: date, cfg: dict | None = None) -> list[Signal]:
     """FDA advisory meetings about THIS trial's drug (company-name-only matches don't count)."""
     cfg = cfg or config.load()

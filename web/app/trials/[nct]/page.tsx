@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: PageProps<"/trials/[nct]">): 
 
 async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["params"] }) {
   const { nct } = await params;
-  const { trial: t, changes, history, company } = await getTrial(nct);
+  const { trial: t, changes, history, company, profile } = await getTrial(nct);
   if (!t) notFound();
 
   const facts: [React.ReactNode, React.ReactNode][] = [
@@ -45,6 +45,20 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
     ["Main results expected", niceDate(t.primary_completion_date)],
     ["Fully finished", niceDate(t.completion_date)],
     ["Results posted", t.results_first_posted ? niceDate(t.results_first_posted) : "not yet"],
+    [
+      <Term key="dt" id="drug_target">Drug targets</Term>,
+      profile?.targets.length ? (
+        <span
+          title={profile.targets
+            .map((x) => `${x}: ${profile.target_source?.[x] === "chembl" ? "from the ChEMBL drug database" : "named in the trial record"}`)
+            .join("\n")}
+        >
+          {profile.targets.join(" · ")}
+        </span>
+      ) : (
+        <span className="font-normal text-muted">not known</span>
+      ),
+    ],
   ];
 
   const band = BANDS[t.score_label];

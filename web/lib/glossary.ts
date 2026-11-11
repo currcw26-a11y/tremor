@@ -34,6 +34,11 @@ export const GLOSSARY = {
     group: "trials",
     text: "How many patients the trial signs up. While signing up is open, the record shows a planned number; afterward it shows the final count.",
   },
+  drug_target: {
+    term: "Drug target",
+    group: "trials",
+    text: "The specific thing in the body a drug is built to attach to or block, like a protein called PD-1. Drugs aimed at the same target often succeed or fail for similar reasons, so one drug's failure can worry investors in its rivals.",
+  },
   stopped: {
     term: "Stopped early",
     group: "trials",

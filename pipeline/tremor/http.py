@@ -20,6 +20,7 @@ MIN_GAP_SECONDS = {
     "www.sec.gov": 0.15,   # SEC allows 10/second; we stay well under
     "data.sec.gov": 0.15,
     "efts.sec.gov": 0.15,
+    "www.ebi.ac.uk": 0.2,   # ChEMBL: polite, about 5 requests a second
 }
 DEFAULT_GAP = 0.5
 RETRY_STATUS = {429, 500, 502, 503, 504}

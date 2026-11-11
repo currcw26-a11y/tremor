@@ -56,6 +56,13 @@ def run(today: date | None = None) -> dict:
                            id=f"in.({','.join(snap_ids)})"):
             why_stopped[r["nct_id"]] = r.get("why")
 
+    # Rival drugs (rivals_job): each trial's targets/cancer, and recent rival failures. Skipped until migration 012.
+    try:
+        profiles = {p["nct_id"]: p for p in db.select("trial_profiles", "nct_id,targets,drug_ids,cancer_types")}
+        failures = db.select("rival_failures", "*")
+    except RuntimeError:
+        profiles, failures = {}, []
+
     trials_per_company = defaultdict(int)
     for t in trials:
         trials_per_company[t["ticker"]] += 1
@@ -71,7 +78,8 @@ def run(today: date | None = None) -> dict:
         drugs = {safe_term(d).lower() for d in useful_names(t.get("interventions") or [])}
         signals = (scoring.trial_signals(t, changes[t["nct_id"]], today)
                    + [scoring.Signal(**{**vars(s)}) for s in company_cache[tk]]  # copies: points differ per call
-                   + scoring.fda_signals(drugs, meetings, today))
+                   + scoring.fda_signals(drugs, meetings, today)
+                   + scoring.rival_signals(profiles.get(t["nct_id"]), failures, today))
         value, label, kept = scoring.score(signals, t["overall_status"], today)
         bd = scoring.breakdown(kept)
 

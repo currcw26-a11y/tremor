@@ -58,9 +58,9 @@ const TRIAL_RULES: Rule[] = [
   {
     key: "rival_trial_failed",
     title: "A rival drug failed",
-    what: "A trial of a drug that works the same way, in the same cancer, failed.",
-    why: "If a similar drug didn't work, investors may worry this one won't either.",
-    status: "Not active yet: Tremor doesn't collect rival drugs yet.",
+    what: "In the last year, another company's drug aimed at the same target, in the same kind of cancer, had its trial stopped because it wasn't working well enough or wasn't safe.",
+    why: "If a similar drug didn't work, investors may worry this one won't either. Stops for business reasons don't count.",
+    status: "Only counts when both drugs' targets are known, from the ChEMBL drug database or named in the trial record. Not tested on past cases yet.",
   },
 ];
 

@@ -81,6 +81,12 @@ export type Outlook = {
   notes: string[];
 };
 
+export type TrialProfile = {
+  targets: string[];
+  target_source: Record<string, "chembl" | "record"> | null;
+  cancer_types: string[];
+};
+
 export type ScoreLabel = "calm" | "shaky" | "tremor";
 
 /** One reason behind a score, written by the pipeline's scoring engine. */
@@ -198,10 +204,16 @@ export async function getTrial(nct: string) {
     }),
   ]);
   const t = trial.rows[0] ?? null;
+  let profile: TrialProfile | null = null;
+  try {
+    profile = (await query<TrialProfile>("trial_profiles", { select: "targets,target_source,cancer_types", nct_id: `eq.${nct}` })).rows[0] ?? null;
+  } catch {
+    profile = null; // table not created yet (migration 012)
+  }
   const company = t
     ? (await query<Company>("companies", { select: "*", ticker: `eq.${t.ticker}` })).rows[0] ?? null
     : null;
-  return { trial: t, changes: changes.rows, history: history.rows, company };
+  return { trial: t, changes: changes.rows, history: history.rows, company, profile };
 }
 
 export type Company = {
