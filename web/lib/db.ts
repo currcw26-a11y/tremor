@@ -314,7 +314,7 @@ export async function getCompany(ticker: string) {
       limit: "200",
     }),
   ]);
-  const [jobs, layoffs, board] = await Promise.all([
+  const [jobs, layoffs, board, medicines] = await Promise.all([
     query<JobCount>("job_counts", { select: "day,total_jobs,clinical_jobs", ticker: `eq.${t}`, order: "day.desc", limit: "60" }),
     query<LayoffNotice>("layoff_notices", {
       select: "state,company_name,notice_date,employees,location",
@@ -323,6 +323,11 @@ export async function getCompany(ticker: string) {
       limit: "20",
     }),
     query<{ provider: string }>("job_boards", { select: "provider", ticker: `eq.${t}`, confirmed: "eq.true" }),
+    query<ApprovedMedicine>("approved_medicines", {
+      select: "application_number,brand_name,ingredient,approved_on,still_sold",
+      ticker: `eq.${t}`,
+      order: "approved_on.desc",
+    }).catch(() => ({ rows: [] as ApprovedMedicine[], total: 0 })), // table appears with migration 013
   ]);
   return {
     company: company.rows[0] ?? null,
@@ -332,8 +337,17 @@ export async function getCompany(ticker: string) {
     jobs: jobs.rows,
     layoffs: layoffs.rows,
     jobBoard: board.rows[0]?.provider ?? null,
+    medicines: medicines.rows,
   };
 }
+
+export type ApprovedMedicine = {
+  application_number: string;
+  brand_name: string;
+  ingredient: string | null;
+  approved_on: string;
+  still_sold: boolean;
+};
 
 // ---------- Track record ----------
 export type BacktestSummary = {

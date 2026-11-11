@@ -86,3 +86,11 @@ def test_stopped_trial_shows_the_companys_own_reason_first():
     assert "didn't give a reason" in none[0]
     page = outlook.past_cases("trial_stopped", summ, why_stopped=False)["sentences"]   # track record page
     assert not any("stated reason" in w or "didn't give" in w for w in page)
+
+
+def test_stakes_mention_approved_medicines_only_when_there_are_some():
+    from tremor.outlook import stakes
+    assert "approved" not in stakes(1)["text"]              # none found is not proof of none, so we say nothing
+    assert stakes(1, approved=1)["text"].endswith("It also has 1 FDA-approved medicine on the market, so this trial isn't its only hope.")
+    assert "3 FDA-approved medicines" in stakes(5, approved=3)["text"]
+    assert "approved" not in stakes(40, approved=30)["text"]   # big companies: already 'one of many'

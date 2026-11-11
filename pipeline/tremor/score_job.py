@@ -63,6 +63,12 @@ def run(today: date | None = None) -> dict:
     except RuntimeError:
         profiles, failures = {}, []
 
+    try:   # FDA-approved medicines still on the market, per company (approvals_job, weekly)
+        approved = defaultdict(set)
+        for m in db.select("approved_medicines", "ticker,brand_name", still_sold="eq.true"):
+            approved[m["ticker"]].add(m["brand_name"].split(",")[0].split()[0].lower())
+    except RuntimeError:
+        approved = defaultdict(set)
     trials_per_company = defaultdict(int)
     for t in trials:
         trials_per_company[t["ticker"]] += 1
@@ -93,7 +99,7 @@ def run(today: date | None = None) -> dict:
         changed = first_time or moved or new_signal or old_types != new_types
         if summaries is not None:
             row["outlook"] = outlook.build({**t, "why_stopped": why_stopped.get(t["nct_id"])}, [b["type"] for b in bd],
-                                           summaries, trials_per_company[tk], today)
+                                           summaries, trials_per_company[tk], today, len(approved[tk]))
             changed = changed or row["outlook"] != t.get("outlook")
             if not (first_time or moved or new_signal or old_types != new_types):
                 row["score_updated_at"] = t.get("score_updated_at") or now

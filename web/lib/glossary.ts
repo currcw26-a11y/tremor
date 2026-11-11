@@ -59,6 +59,11 @@ export const GLOSSARY = {
     group: "fda",
     text: "The FDA's deadline to decide on a drug, named after a law (the Prescription Drug User Fee Act). The FDA can decide early or extend the deadline.",
   },
+  approved_medicine: {
+    term: "FDA-approved medicine",
+    group: "fda",
+    text: "A drug the FDA has allowed to be sold in the US after it passed its trials. Sales of approved medicines bring in money, so a company that has some depends less on any one trial.",
+  },
   fda_advisory: {
     term: "FDA advisory meeting",
     group: "fda",

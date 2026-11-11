@@ -8,6 +8,7 @@ import { Empty, Ticker, TrialRow } from "../../components";
 import { StarButton } from "../../star-button";
 import { MoneyLeft } from "./money-left";
 import { Hiring, Layoffs } from "./hiring";
+import { Medicines } from "./medicines";
 import { AskBox } from "../../ask-box";
 import { Term } from "../../term";
 
@@ -62,7 +63,7 @@ async function CompanyDetails({
   params: PageProps<"/companies/[ticker]">["params"];
 }) {
   const { ticker } = await params;
-  const { company, trials, filings, trades, jobs, layoffs, jobBoard } =
+  const { company, trials, filings, trades, jobs, layoffs, jobBoard, medicines } =
     await getCompany(ticker);
   if (!company) notFound();
 
@@ -283,6 +284,13 @@ async function CompanyDetails({
               <Term id="runway">Money left</Term>
             </h2>
             <MoneyLeft company={company} filings={filings} />
+          </section>
+
+          <section>
+            <h2 className="mb-3 border-t border-foreground pt-3 font-serif text-xl font-medium tracking-tight">
+              <Term id="approved_medicine">FDA-approved medicines</Term>
+            </h2>
+            <Medicines medicines={medicines} />
           </section>
 
           <section>

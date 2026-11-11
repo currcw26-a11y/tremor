@@ -1,0 +1,235 @@
+ticker,fda_sponsor,status,note
+AAPG,,none,no FDA sponsor with this name
+ABBV,ABBVIE,confirmed,same name (145 applications)
+ABBV,ABBVIE ENDOCRINE,confirmed,checked: same company (subsidiary or older spelling)
+ABBV,ABBVIE ENDOCRINE INC,confirmed,checked: same company (subsidiary or older spelling)
+ABBV,ABBVIE INC,confirmed,same name (8 applications)
+ABBV,PHARMACYCLICS LLC,confirmed,"added by hand: Imbruvica, AbbVie owns Pharmacyclics"
+ACET,,none,no FDA sponsor with this name
+ACRV,,none,no FDA sponsor with this name
+ACTU,,none,no FDA sponsor with this name
+ADAG,,none,no FDA sponsor with this name
+AGEN,,none,no FDA sponsor with this name
+AGIO,AGIOS PHARMS INC,confirmed,same name (1 applications)
+ALDX,,none,no FDA sponsor with this name
+ALLO,,none,no FDA sponsor with this name
+ALLR,,none,no FDA sponsor with this name
+ALXO,,none,no FDA sponsor with this name
+AMGN,AMGEN,confirmed,same name (9 applications)
+AMGN,AMGEN INC,confirmed,same name (18 applications)
+AMGN,ONYX PHARMS AMGEN,confirmed,"added by hand: Kyprolis, Amgen bought Onyx"
+ANGO,,none,no FDA sponsor with this name
+ANL,,none,no FDA sponsor with this name
+ANTX,,none,no FDA sponsor with this name
+APLM,,none,no FDA sponsor with this name
+APRE,,none,no FDA sponsor with this name
+ARTV,,none,no FDA sponsor with this name
+ARVN,,none,no FDA sponsor with this name
+ATNM,,none,no FDA sponsor with this name
+ATOS,,none,no FDA sponsor with this name
+AURA,,none,no FDA sponsor with this name
+AUTL,,none,no FDA sponsor with this name
+AVBP,,none,no FDA sponsor with this name
+AZN,ASTRAZENECA,confirmed,same name (81 applications)
+AZN,ASTRAZENECA AB,confirmed,same name (21 applications)
+AZN,ASTRAZENECA LP,confirmed,same name (2 applications)
+AZN,ASTRAZENECA PHARMS,confirmed,same name (1 applications)
+AZN,ASTRAZENECA UK LTD,confirmed,checked: same company (subsidiary or older spelling)
+BCAX,,none,no FDA sponsor with this name
+BCTX,,none,no FDA sponsor with this name
+BDTX,,none,no FDA sponsor with this name
+BEAM,,none,no FDA sponsor with this name
+BFRI,BIOFRONTERA,confirmed,same name (2 applications)
+BHVN,,none,no FDA sponsor with this name
+BLRX,,none,no FDA sponsor with this name
+BLSM,,none,no FDA sponsor with this name
+BMY,BRISTOL,confirmed,checked: same company (subsidiary or older spelling)
+BMY,BRISTOL MYERS,confirmed,checked: same company (subsidiary or older spelling)
+BMY,BRISTOL MYERS SQUIBB,confirmed,same name (79 applications)
+BMY,BRISTOL-MYERS,confirmed,checked: same company (subsidiary or older spelling)
+BMY,BRISTOL-MYERS SQUIBB,confirmed,same name (3 applications)
+BMY,CELGENE,confirmed,"added by hand: Reblozyl, BMS bought Celgene"
+BMY,CELGENE CORP,confirmed,"added by hand: Reblozyl, BMS bought Celgene"
+BNTX,,none,no FDA sponsor with this name
+BOLT,,none,no FDA sponsor with this name
+BSX,BOSTON,confirmed,"checked: Varithena, Boston Scientific (via BTG)"
+BYSI,,none,no FDA sponsor with this name
+CADL,,none,no FDA sponsor with this name
+CANF,,none,no FDA sponsor with this name
+CATX,,none,no FDA sponsor with this name
+CBIO,,none,no FDA sponsor with this name
+CELC,CELCUITY,confirmed,same name (1 applications)
+CGEM,,none,no FDA sponsor with this name
+CGEN,,none,no FDA sponsor with this name
+CHRS,COHERUS BIOSCIENCES INC,confirmed,same name (2 applications)
+CLLS,,none,no FDA sponsor with this name
+CLRB,,none,no FDA sponsor with this name
+CMPX,,none,no FDA sponsor with this name
+CNSP,,none,no FDA sponsor with this name
+CNSY,,none,no FDA sponsor with this name
+COGT,,none,no FDA sponsor with this name
+CORT,CORCEPT THERAP,confirmed,same name (2 applications)
+CRBP,,none,no FDA sponsor with this name
+CRDF,,none,no FDA sponsor with this name
+CRIS,,none,no FDA sponsor with this name
+CRSP,,none,no FDA sponsor with this name
+CRVS,,none,no FDA sponsor with this name
+CTMX,,none,no FDA sponsor with this name
+DCTH,DELCATH SYSTEMS INC,confirmed,same name (1 applications)
+DTIL,PRECISION DERMAT,rejected,checked: a different company
+DTIL,PRECISION DOSE,rejected,checked: a different company
+DTIL,PRECISION DOSE INC,rejected,checked: a different company
+DTIL,PRECISION NUCLEAR,rejected,checked: a different company
+DWTX,,none,no FDA sponsor with this name
+EIKN,,none,no FDA sponsor with this name
+ELTX,,none,no FDA sponsor with this name
+ELVN,,none,no FDA sponsor with this name
+ENGN,,none,no FDA sponsor with this name
+ERAS,,none,no FDA sponsor with this name
+ESLA,,none,no FDA sponsor with this name
+ETRA,,none,no FDA sponsor with this name
+EVAX,,none,no FDA sponsor with this name
+EXEL,EXELIXIS,confirmed,same name (1 applications)
+EXEL,EXELIXIS INC,confirmed,same name (1 applications)
+FTH,,none,no FDA sponsor with this name
+GERN,GERON,confirmed,same name (1 applications)
+GILD,GILEAD,confirmed,same name (6 applications)
+GILD,GILEAD SCIENCES,confirmed,same name (1 applications)
+GILD,GILEAD SCIENCES INC,confirmed,same name (30 applications)
+GLSI,,none,no FDA sponsor with this name
+GLUE,,none,no FDA sponsor with this name
+GMAB,"GENMAB US, INC.",confirmed,same name (1 applications)
+GNLX,,none,no FDA sponsor with this name
+GNPX,,none,no FDA sponsor with this name
+GOVX,,none,no FDA sponsor with this name
+GRFS,,none,no FDA sponsor with this name
+GSK,GLAXOSMITHKLINE,confirmed,added by hand: GSK's former full name
+GSK,GLAXOSMITHKLINE LLC,confirmed,added by hand: GSK's former full name
+HCM,,none,no FDA sponsor with this name
+HOWL,,none,no FDA sponsor with this name
+HURA,,none,no FDA sponsor with this name
+IBRX,"ALTOR BIOSCIENCE, LLC, AN INDIRECT WHOLLY-OWNED SU",confirmed,"added by hand: Anktiva, ImmunityBio's subsidiary"
+IDYA,,none,no FDA sponsor with this name
+IMCR,IMMUNOCORE LTD,confirmed,same name (1 applications)
+IMNM,,none,no FDA sponsor with this name
+IMNN,,none,no FDA sponsor with this name
+IMRX,,none,no FDA sponsor with this name
+INAB,,none,no FDA sponsor with this name
+INBX,,none,no FDA sponsor with this name
+INCY,INCYTE CORP,confirmed,same name (6 applications)
+INDP,,none,no FDA sponsor with this name
+INMB,,none,no FDA sponsor with this name
+INO,,none,no FDA sponsor with this name
+INTS,,none,no FDA sponsor with this name
+IONS,IONIS PHARMS INC,confirmed,same name (3 applications)
+IOVA,,none,no FDA sponsor with this name
+IPHA,INNATE PHARMA,confirmed,same name (1 applications)
+IRON,,none,no FDA sponsor with this name
+ISRG,,none,no FDA sponsor with this name
+JAZZ,JAZZ,confirmed,same name (4 applications)
+JAZZ,JAZZ PHARMS,confirmed,same name (4 applications)
+JAZZ,JAZZ PHARMS INC,confirmed,same name (1 applications)
+JAZZ,JAZZ PHARMS RES,confirmed,checked: same company (subsidiary or older spelling)
+JAZZ,JAZZ PHARMS THERAP,confirmed,same name (1 applications)
+JNJ,JANSSEN BIOTECH,confirmed,added by hand: Janssen is J&J's drug arm
+JNJ,JANSSEN PHARMA,confirmed,added by hand: Janssen is J&J's drug arm
+JNJ,JANSSEN PHARMS,confirmed,added by hand: Janssen is J&J's drug arm
+JNJ,JANSSEN PRODS,confirmed,added by hand: Janssen is J&J's drug arm
+JNJ,JANSSEN R AND D,confirmed,added by hand: Janssen is J&J's drug arm
+JNJ,JANSSEN THERAP,confirmed,added by hand: Janssen is J&J's drug arm
+JNJ,JOHNSON AND JOHNSON,confirmed,same name (4 applications)
+JNJ,JOHNSON JOHNSON VISN,confirmed,checked: same company (subsidiary or older spelling)
+KPTI,KARYOPHARM THERAPS,confirmed,same name (1 applications)
+KRYS,,none,no FDA sponsor with this name
+KURA,KURA,confirmed,same name (1 applications)
+KYNB,,none,no FDA sponsor with this name
+LKFT,,none,no FDA sponsor with this name
+LLY,ELI LILLY AND CO,confirmed,same name (23 applications)
+LLY,ELI LILLY CO,confirmed,same name (4 applications)
+LLY,LOXO ONCOL,confirmed,"added by hand: Jaypirca, Lilly bought Loxo"
+LONA,,none,no FDA sponsor with this name
+LSTA,,none,no FDA sponsor with this name
+LTRN,,none,no FDA sponsor with this name
+LYEL,,none,no FDA sponsor with this name
+MAIA,MAIA PHARMS INC,rejected,checked: a different company (makes injectables like daptomycin; MAIA Biotechnology has none approved)
+MBRX,,none,no FDA sponsor with this name
+MDWD,"MEDIWOUND, LTD",confirmed,same name (1 applications)
+MGNX,,none,no FDA sponsor with this name
+MGTX,,none,no FDA sponsor with this name
+MOLN,,none,no FDA sponsor with this name
+MRK,MERCK,confirmed,same name (68 applications)
+MRK,MERCK AND CO INC,confirmed,same name (1 applications)
+MRK,MERCK SHARP AND DOHME LLC,confirmed,checked: Merck Sharp & Dohme is Merck's US arm
+MRK,MERCK SHARP DOHME,confirmed,checked: Merck Sharp & Dohme is Merck's US arm
+MRK,MSD,confirmed,"added by hand: Januvia, MSD = Merck outside the US"
+MRK,MERCK KGAA,rejected,checked: a different company
+NRIX,,none,no FDA sponsor with this name
+NTHI,,none,no FDA sponsor with this name
+NUVB,NUVATION,confirmed,same name (1 applications)
+NVCR,,none,no FDA sponsor with this name
+NVS,NOVARTIS,confirmed,same name (194 applications)
+NVS,NOVARTIS PHARM,confirmed,same name (2 applications)
+NVS,NOVARTIS PHARMS,confirmed,same name (2 applications)
+NVS,NOVARTIS PHARMS CORP,confirmed,same name (6 applications)
+OBX,,none,no FDA sponsor with this name
+OKUR,,none,no FDA sponsor with this name
+OLMA,,none,no FDA sponsor with this name
+ONC,BEONE MEDICINES USA,confirmed,same name (3 applications)
+ONCY,,none,no FDA sponsor with this name
+ORIC,,none,no FDA sponsor with this name
+PBLS,,none,no FDA sponsor with this name
+PBYI,PUMA BIOTECH,confirmed,same name (1 applications)
+PDSB,,none,no FDA sponsor with this name
+PFE,PFIZER,confirmed,same name (191 applications)
+PFE,PFIZER GLOBAL,confirmed,same name (1 applications)
+PFE,PFIZER INC,confirmed,same name (12 applications)
+PFE,PFIZER IRELAND PHARMACEUTICALS,confirmed,checked: same company (subsidiary or older spelling)
+PFE,PFIZER LABS,confirmed,same name (1 applications)
+PFE,PFIZER PHARMS,confirmed,same name (4 applications)
+PFE,SEAGEN,confirmed,"added by hand: Tukysa/Tivdak, Pfizer bought Seagen"
+PGEN,,none,no FDA sponsor with this name
+PMVP,,none,no FDA sponsor with this name
+PTGX,,none,no FDA sponsor with this name
+PYXS,,none,no FDA sponsor with this name
+RADX,,none,no FDA sponsor with this name
+RCUS,,none,no FDA sponsor with this name
+REGN,REGENERON PHARMACEUTICALS,confirmed,same name (8 applications)
+REGN,"REGENERON PHARMACEUTICALS, INC",confirmed,same name (1 applications)
+REPL,,none,no FDA sponsor with this name
+RIGL,RIGEL PHARMS,confirmed,same name (4 applications)
+RLAY,,none,no FDA sponsor with this name
+RLMD,,none,no FDA sponsor with this name
+RNAZ,,none,no FDA sponsor with this name
+RNXT,,none,no FDA sponsor with this name
+RVMD,REVOLUTION MEDICINES,confirmed,same name (1 applications)
+RXRX,,none,no FDA sponsor with this name
+SLGL,,none,no FDA sponsor with this name
+SLN,,none,no FDA sponsor with this name
+SLS,,none,no FDA sponsor with this name
+SMMT,,none,no FDA sponsor with this name
+SNDX,SYNDAX,confirmed,same name (1 applications)
+SNGX,,none,no FDA sponsor with this name
+SNY,GENZYME,confirmed,added by hand: Sanofi owns Genzyme
+SNY,GENZYME CORP,confirmed,added by hand: Sanofi owns Genzyme
+SNY,SANOFI,confirmed,same name (5 applications)
+SNY,SANOFI AVENTIS US,confirmed,checked: Sanofi-Aventis / Synthelabo are Sanofi
+SNY,SANOFI SYNTHELABO,confirmed,checked: Sanofi-Aventis / Synthelabo are Sanofi
+SNY,SANOFI US SERVICES,confirmed,checked: Sanofi-Aventis / Synthelabo are Sanofi
+SNY,SANOFI-AVENTIS U.S. LLC,confirmed,checked: Sanofi-Aventis / Synthelabo are Sanofi
+SNY,SANOFI-AVENTIS US,confirmed,checked: Sanofi-Aventis / Synthelabo are Sanofi
+TAK,TAKEDA,confirmed,same name (1 applications)
+TAK,TAKEDA PHARMS AM,confirmed,checked: Takeda's US arm
+TAK,TAKEDA PHARMS NA,confirmed,same name (3 applications)
+TAK,TAKEDA PHARMS USA,confirmed,same name (44 applications)
+TARA,,none,no FDA sponsor with this name
+TELO,,none,no FDA sponsor with this name
+TNGX,,none,no FDA sponsor with this name
+TPST,,none,no FDA sponsor with this name
+TVRD,,none,no FDA sponsor with this name
+TYRA,,none,no FDA sponsor with this name
+URGN,UROGEN PHARMA,confirmed,same name (2 applications)
+VIR,,none,no FDA sponsor with this name
+VRCA,VERRICA PHARMS,confirmed,same name (1 applications)
+VSTM,VERASTEM INC,confirmed,same name (1 applications)
+XLO,,none,no FDA sponsor with this name
+XNCR,,none,no FDA sponsor with this name

@@ -156,8 +156,10 @@ def past_cases(signal_type: str, summary: dict | None, why_stopped: str | None =
     return out
 
 
-def stakes(trial_count: int) -> dict:
-    """How much rides on this trial, from how many late-stage cancer trials we track for the company."""
+def stakes(trial_count: int, approved: int = 0) -> dict:
+    """How much rides on this trial, from how many late-stage cancer trials we track for the company and how many
+    FDA-approved medicines it already has on the market (from openFDA). We only ever SAY it has some: the FDA
+    database leaves out cell and gene therapies, so finding none doesn't prove there are none."""
     if trial_count <= 2:
         level, text = "high", (f"High. This is one of only {trial_count} late-stage cancer trials we track for this "
                                "company, so a lot rides on it." if trial_count == 2 else
@@ -167,7 +169,10 @@ def stakes(trial_count: int) -> dict:
     else:
         level, text = "low", (f"Lower. It's one of {trial_count} late-stage cancer trials we track for this big company, "
                               "so one trial usually matters less to its stock.")
-    return {"level": level, "trial_count": trial_count, "text": text}
+    if approved and trial_count < 15:
+        text += (f" It also has {approved} FDA-approved medicine{'s' if approved > 1 else ''} on the market, "
+                 "so this trial isn't its only hope.")
+    return {"level": level, "trial_count": trial_count, "approved": approved, "text": text}
 
 
 def next_event(trial: dict, today: date) -> dict | None:
@@ -178,7 +183,8 @@ def next_event(trial: dict, today: date) -> dict | None:
     return {"date": due, "passed": due < today.isoformat()[:len(due)]}
 
 
-def build(trial: dict, signal_types: list[str], summaries: dict[str, dict], trial_count: int, today: date) -> dict:
+def build(trial: dict, signal_types: list[str], summaries: dict[str, dict], trial_count: int, today: date,
+          approved: int = 0) -> dict:
     """Everything the breakdown shows for one trial. Only signals the trial actually has right now."""
     seen, signals = set(), []
     for t in signal_types:
@@ -193,5 +199,5 @@ def build(trial: dict, signal_types: list[str], summaries: dict[str, dict], tria
     if big and any(s["has_history"] and s["type"] != "trial_stopped" for s in signals):
         notes.append("These past cases are from smaller companies. At a big company, one signal like this usually "
                      "matters less.")
-    return {"signals": signals, "stakes": stakes(trial_count), "next_event": next_event(trial, today),
+    return {"signals": signals, "stakes": stakes(trial_count, approved), "next_event": next_event(trial, today),
             "notes": notes}
