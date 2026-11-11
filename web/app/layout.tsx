@@ -35,6 +35,7 @@ function Mark({ className = "" }: { className?: string }) {
 
 const NAV = [
   { href: "/trials", label: "Trials", phone: true },
+  { href: "/changes", label: "Changes", phone: false },
   { href: "/upcoming", label: "Calendar", phone: true },
   { href: "/companies", label: "Companies", phone: false },
   { href: "/track-record", label: "Track record", phone: false },
@@ -44,7 +45,7 @@ const NAV = [
 const FOOTER = [
   {
     title: "Explore",
-    links: [["/trials", "All trials"], ["/upcoming", "Calendar"], ["/companies", "Companies"], ["/track-record", "Track record"]],
+    links: [["/trials", "All trials"], ["/changes", "Latest changes"], ["/upcoming", "Calendar"], ["/companies", "Companies"], ["/track-record", "Track record"]],
   },
   {
     title: "Learn",

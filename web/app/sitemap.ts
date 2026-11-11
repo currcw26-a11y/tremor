@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/site";
 import { sitemapData } from "@/lib/sitemap-data";
 
-const PAGES = ["", "/trials", "/companies", "/upcoming", "/track-record", "/how-it-works", "/learn", "/glossary", "/privacy", "/terms"];
+const PAGES = ["", "/trials", "/changes", "/companies", "/upcoming", "/track-record", "/how-it-works", "/learn", "/glossary", "/privacy", "/terms"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { trials, tickers } = await sitemapData();

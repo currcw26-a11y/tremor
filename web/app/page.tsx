@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { getRecentChanges, getStats, getTopWorries, getUpcoming } from "@/lib/db";
+import { getStats, getTopWorries, getUpcoming } from "@/lib/db";
 import { companyName } from "@/lib/words";
 import { BANDS } from "@/lib/score";
-import { ChangeRow, Empty, Ticker } from "./components";
+import { Empty, Ticker } from "./components";
 import { Shape } from "./score";
 import { SectionHead } from "./ui";
 import { TimeAgo } from "./time-ago";
@@ -23,8 +23,8 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 async function NextUp() {
   const events = await getUpcoming();
-  const decisions = events.filter((e) => e.kind === "fda_decision").slice(0, 4);
-  const list = decisions.length ? decisions : events.filter((e) => e.kind === "results_due").slice(0, 4);
+  const decisions = events.filter((e) => e.kind === "fda_decision").slice(0, 3);
+  const list = decisions.length ? decisions : events.filter((e) => e.kind === "results_due").slice(0, 3);
   return (
     <div>
       <SectionHead title="Next on the calendar" href="/upcoming" linkText="See all" />
@@ -69,15 +69,15 @@ async function NextUp() {
 }
 
 async function TopWorries() {
-  const trials = await getTopWorries(6);
+  const trials = await getTopWorries(4);
   if (!trials.length) return <Empty>No warning signs on any tracked trial right now.</Empty>;
   return (
-    <ol className="mt-2">
+    <ol className="mt-2 grid grid-cols-1 gap-x-12 lg:grid-cols-2">
       {trials.map((t) => {
         const band = BANDS[t.score_label];
         const [first, ...rest] = t.score_breakdown ?? [];
         return (
-          <li key={t.nct_id} className="border-b border-line last:border-b-0">
+          <li key={t.nct_id} className="border-b border-line">
             <Link
               href={`/trials/${t.nct_id}`}
               className="group -mx-3 grid grid-cols-[4.5rem_minmax(0,1fr)] gap-4 rounded-md px-3 py-4 transition-colors hover:bg-surface"
@@ -124,47 +124,17 @@ async function TopWorries() {
   );
 }
 
-async function LatestChanges({ searchParams }: { searchParams: PageProps<"/">["searchParams"] }) {
-  const showMinor = (await searchParams).minor === "1";
-  const changes = await getRecentChanges(12, showMinor);
+export default function Home() {
   return (
-    <>
-      <SectionHead title="Latest changes" />
-      {changes.length ? (
-        <ul className="mt-1">
-          {changes.map((c) => (
-            <ChangeRow key={c.id} c={c} />
-          ))}
-        </ul>
-      ) : (
-        <Empty>No important changes spotted yet. Tremor checks every trial every 4 hours.</Empty>
-      )}
-      <p className="mt-3 text-sm text-muted">
-        {showMinor ? "Showing routine edits too. " : "Routine edits, like a trial starting to sign up patients, are hidden. "}
-        <Link
-          href={showMinor ? "/" : "/?minor=1"}
-          scroll={false}
-          className="text-ink-2 underline underline-offset-2 hover:text-foreground"
-        >
-          {showMinor ? "Hide them" : "Show them"}
-        </Link>
-      </p>
-    </>
-  );
-}
-
-export default function Home(props: PageProps<"/">) {
-  return (
-    <div className="space-y-16 lg:space-y-20">
+    <div className="space-y-16 lg:space-y-24">
       <section className="grid grid-cols-1 gap-12 lg:grid-cols-12">
         <div className="rise lg:col-span-7 lg:pt-4">
           <h1 className="max-w-2xl font-serif text-[2.75rem] font-medium leading-[1.04] tracking-tight sm:text-6xl">
             Early warnings for cancer drug trials
           </h1>
-          <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-ink-2 sm:text-lg">
-            When a drug trial is in trouble, the company rarely says so right away. The clues tend to show up first, in
-            public records. Tremor reads those records every four hours, gives each trial a worry score, and explains every
-            change in plain English.
+          <p className="mt-6 max-w-lg text-[17px] leading-relaxed text-ink-2 sm:text-lg">
+            When a drug trial is in trouble, the clues often show up in public records before the news does. Tremor reads
+            them and explains what changed, in plain English.
           </p>
           <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-[15px] font-medium">
             <Link href="/learn">
@@ -179,27 +149,23 @@ export default function Home(props: PageProps<"/">) {
           </Suspense>
         </div>
         <aside className="rise rise-2 lg:col-span-5">
-          <Suspense fallback={<div className="h-72" />}>
+          <Suspense fallback={<div className="h-64" />}>
             <NextUp />
           </Suspense>
         </aside>
       </section>
 
-      <section className="grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-12">
-        <div className="lg:col-span-7">
-          <SectionHead title="Biggest worries right now" href="/trials" linkText="All trials" />
-          <Suspense fallback={<div className="h-96" />}>
-            <TopWorries />
-          </Suspense>
-          <p className="mt-3 text-sm text-muted">
-            The score counts warning signs in public records. A high score is not a prediction.
-          </p>
-        </div>
-        <div className="lg:col-span-5">
-          <Suspense fallback={<div className="h-96" />}>
-            <LatestChanges searchParams={props.searchParams} />
-          </Suspense>
-        </div>
+      <section>
+        <SectionHead title="Biggest worries right now" href="/trials" linkText="All trials" />
+        <Suspense fallback={<div className="h-72" />}>
+          <TopWorries />
+        </Suspense>
+        <p className="mt-4 text-sm text-muted">
+          The score counts warning signs in public records. A high score is not a prediction. See also the{" "}
+          <Link href="/changes" className="text-ink-2 underline underline-offset-2 hover:text-foreground">latest changes</Link> and
+          Tremor&apos;s{" "}
+          <Link href="/track-record" className="text-ink-2 underline underline-offset-2 hover:text-foreground">track record</Link>.
+        </p>
       </section>
     </div>
   );
