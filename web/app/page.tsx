@@ -143,6 +143,9 @@ export default function Home() {
             <Link href="/how-it-works">
               <span className="link-grow">How the score works</span> <span className="nudge">→</span>
             </Link>
+            <Link href="/weekly">
+              <span className="link-grow">This week&apos;s roundup</span> <span className="nudge">→</span>
+            </Link>
           </div>
           <Suspense fallback={<p className="mt-10 h-4" />}>
             <Facts />

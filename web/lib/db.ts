@@ -419,3 +419,28 @@ export async function getUpcoming() {
     return []; // table not created yet (migration 010): show an empty calendar rather than break the build
   }
 }
+
+// ---------- Tremor Weekly ----------
+export type WeeklyIssue = {
+  week_start: string;
+  week_end: string;
+  title: string;
+  body: string;
+  written_by: "ai" | "code";
+};
+
+export async function getWeeklyIssues() {
+  "use cache";
+  cacheLife("hours");
+  try {
+    return (
+      await query<WeeklyIssue>("weekly_issues", {
+        select: "week_start,week_end,title,body,written_by",
+        order: "week_start.desc",
+        limit: "52",
+      })
+    ).rows;
+  } catch {
+    return []; // table not created yet (migration 011)
+  }
+}

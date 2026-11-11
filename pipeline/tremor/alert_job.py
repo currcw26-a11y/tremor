@@ -76,7 +76,10 @@ def _short_name(name: str) -> str:
     n = re.sub(r"\s*/\s*[a-z]{2}\s*/?\s*$", "", name, flags=re.I).strip()
     if n == n.upper():
         n = n.title()
-    return re.sub(r",?\s+(Inc|Corp|Corporation|Co|Ltd|Limited)\.?$", "", n, flags=re.I).strip()
+    # Drop legal endings ("Inc.", "plc", "S.A.") and fix a few well-known spellings that title-case gets wrong
+    n = re.sub(r",?\s+(Inc|Corp|Corporation|Co|Ltd|Limited|plc|S\.?A|N\.?V|AG|SE)\.?$", "", n, flags=re.I).strip()
+    return {"Astrazeneca": "AstraZeneca", "Glaxosmithkline": "GlaxoSmithKline", "Biontech": "BioNTech",
+            "Beigene": "BeiGene"}.get(n, n)
 
 
 def _sent_counts():

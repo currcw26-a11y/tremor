@@ -9,7 +9,7 @@ import sys
 import traceback
 from datetime import datetime, timezone
 
-from tremor import alert_job, db, explain_job, jobs_job, layoffs_job, prices_job, score_job, sec_job, trials_job, upcoming_job
+from tremor import alert_job, db, explain_job, jobs_job, layoffs_job, prices_job, score_job, sec_job, trials_job, upcoming_job, weekly_job
 
 
 def first_run_of_day() -> bool:
@@ -38,6 +38,8 @@ def main() -> int:
     jobs += [
             ("scores", score_job.run),  # scores use everything above
             ("explanations", explain_job.run)]
+    if daily:  # Tremor Weekly: written once, on the first daily run of each new week
+        jobs.append(("weekly", weekly_job.run))
     # Alerts go last: they use the newest scores and explanations
     jobs.append(("alerts", lambda: alert_job.run(daily=digest_due())))
     if os.getenv("SEND_TEST_EMAIL") == "1":

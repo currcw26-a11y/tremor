@@ -45,7 +45,7 @@ const NAV = [
 const FOOTER = [
   {
     title: "Explore",
-    links: [["/trials", "All trials"], ["/changes", "Latest changes"], ["/upcoming", "Calendar"], ["/companies", "Companies"], ["/track-record", "Track record"]],
+    links: [["/trials", "All trials"], ["/changes", "Latest changes"], ["/weekly", "Tremor Weekly"], ["/upcoming", "Calendar"], ["/companies", "Companies"], ["/track-record", "Track record"]],
   },
   {
     title: "Learn",
