@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import Link from "next/link";
 import { UserMenu } from "./user-menu";
 import "./globals.css";
 import { SITE } from "@/lib/site";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+// Newsreader (an editorial serif) for headlines, IBM Plex Sans for reading, Plex Mono for tickers, dates and numbers
+const serif = Newsreader({ variable: "--font-newsreader", subsets: ["latin"], axes: ["opsz"], style: ["normal", "italic"] });
+const sans = IBM_Plex_Sans({ variable: "--font-plex-sans", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const mono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 const DESCRIPTION =
   "Free early warnings for cancer drug trials, in plain English. Tremor watches trial records, SEC filings and FDA notices and gives every trial a 0-100 worry score. Not investment advice.";
@@ -21,67 +23,89 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
+function Mark({ className = "" }: { className?: string }) {
+  return (
+    <span className={`flex items-end gap-[3px] ${className}`} aria-hidden>
+      <span className="h-3.5 w-[5px] rounded-full bg-calm" />
+      <span className="h-[18px] w-[5px] rounded-full bg-shaky" />
+      <span className="h-[22px] w-[5px] rounded-full bg-tremor" />
+    </span>
+  );
+}
+
+const NAV = [
+  { href: "/trials", label: "Trials", phone: true },
+  { href: "/upcoming", label: "Calendar", phone: true },
+  { href: "/companies", label: "Companies", phone: false },
+  { href: "/track-record", label: "Track record", phone: false },
+  { href: "/learn", label: "Learn", phone: false },
+];
+
+const FOOTER = [
+  {
+    title: "Explore",
+    links: [["/trials", "All trials"], ["/upcoming", "Calendar"], ["/companies", "Companies"], ["/track-record", "Track record"]],
+  },
+  {
+    title: "Learn",
+    links: [["/learn", "How biotech stocks move"], ["/how-it-works", "How the score works"], ["/glossary", "Words to know"]],
+  },
+  { title: "About", links: [["/privacy", "Privacy"], ["/terms", "Terms"]] },
+];
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans">
-        <header className="border-b border-line bg-surface">
-          <nav className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
-            <Link href="/" className="flex items-center gap-2 text-xl font-black tracking-tight">
-              <span className="flex gap-0.5" aria-hidden>
-                <span className="h-4 w-1.5 rounded-full bg-calm" />
-                <span className="h-4 w-1.5 rounded-full bg-shaky" />
-                <span className="h-4 w-1.5 rounded-full bg-tremor" />
-              </span>
-              Tremor
+    <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col font-sans">
+        <header className="sticky top-0 z-40 border-b border-line bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <Link href="/" className="group flex items-center gap-2.5">
+              <Mark className="transition-transform duration-300 group-hover:-translate-y-px" />
+              <span className="font-serif text-[1.6rem] font-semibold leading-none tracking-tight">Tremor</span>
             </Link>
-            <div className="flex items-center gap-3 text-sm font-semibold text-muted sm:gap-4">
-              <Link href="/trials" className="hover:text-foreground">
-                Trials
-              </Link>
-              <Link href="/upcoming" className="hover:text-foreground">
-                Upcoming
-              </Link>
-              <Link href="/companies" className="hidden hover:text-foreground sm:inline">
-                Companies
-              </Link>
-              <Link href="/track-record" className="hidden hover:text-foreground sm:inline">
-                Track record
-              </Link>
+            <div className="flex items-center gap-4 text-[15px] text-ink-2 sm:gap-6">
+              {NAV.map((n) => (
+                <Link key={n.href} href={n.href} className={`link-grow hover:text-foreground ${n.phone ? "" : "hidden md:inline"}`}>
+                  {n.label}
+                </Link>
+              ))}
               <UserMenu />
             </div>
           </nav>
         </header>
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">{children}</main>
-        <footer className="border-t border-line bg-surface">
-          <div className="mx-auto max-w-3xl px-4 py-6 text-sm text-muted">
-            <p className="font-semibold text-foreground">Not investment advice.</p>
-            <p className="mt-1">
-              Tremor shows what changed in public records. It never tells anyone to buy or sell. Many trial
-              edits are harmless paperwork. Data from ClinicalTrials.gov, the SEC, and the Federal Register.
-            </p>
-            <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
-              <Link href="/companies" className="underline">
-                Companies
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">{children}</main>
+        <footer className="mt-16 bg-navy text-white/75">
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-12 lg:px-8">
+            <div className="md:col-span-5">
+              <Link href="/" className="flex items-center gap-2.5 text-white">
+                <Mark />
+                <span className="font-serif text-2xl font-semibold tracking-tight">Tremor</span>
               </Link>
-              <Link href="/track-record" className="underline">
-                Track record
-              </Link>
-              <Link href="/how-it-works" className="underline">
-                How the score works
-              </Link>
-              <Link href="/learn" className="underline">
-                How biotech stocks move
-              </Link>
-              <Link href="/glossary" className="underline">
-                Words to know
-              </Link>
-              <Link href="/privacy" className="underline">
-                Privacy
-              </Link>
-              <Link href="/terms" className="underline">
-                Terms
-              </Link>
+              <p className="mt-4 max-w-sm text-sm leading-relaxed">
+                Tremor reads public records about cancer drug trials every four hours and explains what changed, in plain
+                English. Data from ClinicalTrials.gov, the SEC, the Federal Register, and state layoff notices.
+              </p>
+            </div>
+            {FOOTER.map((col) => (
+              <div key={col.title} className="md:col-span-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/50">{col.title}</p>
+                <ul className="mt-3 space-y-2 text-sm">
+                  {col.links.map(([href, label]) => (
+                    <li key={href}>
+                      <Link href={href} className="link-grow text-white/85 hover:text-white">
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-white/10">
+            <p className="mx-auto max-w-6xl px-4 py-5 text-xs leading-relaxed sm:px-6 lg:px-8">
+              <span className="font-semibold text-white">Not investment advice.</span> Tremor shows what changed in
+              public records and what happened in similar past cases. It never tells anyone to buy or sell, and many
+              trial edits turn out to be harmless paperwork.
             </p>
           </div>
         </footer>

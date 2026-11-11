@@ -2,6 +2,7 @@
 // "Ask about this trial/company": answers come only from Tremor's own data. 10 questions a day.
 import { useEffect, useState } from "react";
 import { signIn, supabase, useUser } from "@/lib/supabase-browser";
+import { SectionHead } from "./ui";
 
 type QA = { question: string; answer: string };
 
@@ -50,14 +51,17 @@ export function AskBox({ nctId, ticker, kind }: { nctId?: string; ticker: string
   }
 
   return (
-    <section className="rounded-xl border border-line bg-surface p-4">
-      <h2 className="text-lg font-bold">Ask about this {kind}</h2>
-      <p className="mt-1 text-sm text-muted">
+    <section>
+      <SectionHead title={`Ask about this ${kind}`} />
+      <p className="mt-3 text-sm text-muted">
         Answers use only Tremor&apos;s data about this {kind}, written by AI. Not investment advice.
       </p>
 
       {user === null && (
-        <button onClick={() => signIn()} className="mt-3 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background">
+        <button
+          onClick={() => signIn()}
+          className="mt-4 rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-navy-2"
+        >
           Sign in to ask a question
         </button>
       )}
@@ -78,7 +82,7 @@ export function AskBox({ nctId, ticker, kind }: { nctId?: string; ticker: string
             <div className="mt-3 flex flex-wrap gap-2">
               {EXAMPLES[kind].map((e) => (
                 <button key={e} onClick={() => submit(e)} disabled={busy}
-                  className="rounded-full border border-line px-3 py-1 text-sm hover:border-foreground disabled:opacity-50">
+                  className="rounded-md border border-line px-3 py-1.5 text-sm text-ink-2 transition-colors hover:border-foreground hover:text-foreground disabled:opacity-50">
                   {e}
                 </button>
               ))}
@@ -96,9 +100,9 @@ export function AskBox({ nctId, ticker, kind }: { nctId?: string; ticker: string
               onChange={(e) => setQuestion(e.target.value)}
               maxLength={500}
               placeholder="Type a question…"
-              className="min-w-0 flex-1 rounded-xl border border-line bg-background px-3 py-2 outline-none focus:border-foreground"
+              className="min-w-0 flex-1 rounded-md border border-line bg-background px-3 py-2 outline-none transition-colors focus:border-foreground"
             />
-            <button disabled={busy || !question.trim()} className="rounded-xl bg-foreground px-4 font-semibold text-background disabled:opacity-50">
+            <button disabled={busy || !question.trim()} className="rounded-md bg-foreground px-4 font-medium text-background transition-colors hover:bg-navy-2 disabled:opacity-50">
               {busy ? "…" : "Ask"}
             </button>
           </form>

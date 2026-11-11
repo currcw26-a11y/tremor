@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Company, Outlook, PastCases } from "@/lib/db";
 import { niceDate } from "@/lib/words";
 import { Shape } from "./score";
+import { SectionHead } from "./ui";
 
 const TITLES: Record<string, string> = {
   layoffs: "Layoffs",
@@ -66,10 +67,10 @@ export function Dots({
 function SignalCard({ s }: { s: PastCases }) {
   const showDots = s.has_history && (s.fine ?? 0) > 0;
   return (
-    <li className="rounded-xl border border-line bg-surface p-4">
-      <h3 className="font-bold">{TITLES[s.type] ?? s.type}</h3>
+    <li className="py-5">
+      <h3 className="font-serif text-xl font-medium tracking-tight">{TITLES[s.type] ?? s.type}</h3>
       {s.sentences.map((t, i) => (
-        <p key={i} className="mt-2 text-sm leading-relaxed">{t}</p>
+        <p key={i} className="mt-2 max-w-2xl leading-relaxed text-ink-2">{t}</p>
       ))}
       {showDots && (
         <div className="mt-3">
@@ -94,40 +95,40 @@ export function OutlookSection({ outlook, company }: { outlook: Outlook | null |
   const ne = outlook.next_event;
 
   return (
-    <section className="mt-8">
-      <h2 className="text-lg font-bold">Upside and downside</h2>
-      <p className="text-sm text-muted">
+    <section>
+      <SectionHead title="Upside and downside" />
+      <p className="mt-3 text-sm text-muted">
         What happened after similar warning signs in the past. This is history, not a prediction.
       </p>
 
       {outlook.signals.length === 0 && (
-        <p className="mt-3 rounded-xl border border-line bg-surface p-4 text-sm">
+        <p className="mt-3 border-y border-line py-5 text-ink-2">
           No warning signs right now, so there are no past cases to compare.
         </p>
       )}
       {withHistory.length > 0 && (
-        <ul className="mt-3 space-y-3">
+        <ul className="mt-2 divide-y divide-line border-b border-line">
           {withHistory.map((s) => (
             <SignalCard key={s.type} s={s} />
           ))}
         </ul>
       )}
       {without.length > 0 && (
-        <ul className="mt-3 space-y-3">
+        <ul className="divide-y divide-line border-b border-line">
           {without.map((s) => (
             <SignalCard key={s.type} s={s} />
           ))}
         </ul>
       )}
 
-      <dl className="mt-3 grid gap-2 sm:grid-cols-3">
-        <div className="rounded-xl border border-line bg-surface p-3">
-          <dt className="text-xs text-muted">How big a deal for them</dt>
-          <dd className="mt-1 text-sm">{outlook.stakes.text}</dd>
+      <dl className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-3">
+        <div className="border-t-2 border-foreground pt-3">
+          <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">How big a deal for them</dt>
+          <dd className="mt-2 text-sm leading-relaxed text-ink-2">{outlook.stakes.text}</dd>
         </div>
-        <div className="rounded-xl border border-line bg-surface p-3">
-          <dt className="text-xs text-muted">Money left</dt>
-          <dd className="mt-1 text-sm">
+        <div className="border-t-2 border-foreground pt-3">
+          <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Money left</dt>
+          <dd className="mt-2 text-sm leading-relaxed text-ink-2">
             {months != null ? (
               <>
                 About {months < 1 ? "under 1" : months} month{months === 1 ? "" : "s"} at its recent spending rate.{" "}
@@ -145,9 +146,9 @@ export function OutlookSection({ outlook, company }: { outlook: Outlook | null |
             )}
           </dd>
         </div>
-        <div className="rounded-xl border border-line bg-surface p-3">
-          <dt className="text-xs text-muted">When we&apos;ll find out</dt>
-          <dd className="mt-1 text-sm">
+        <div className="border-t-2 border-foreground pt-3">
+          <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">When we&apos;ll find out</dt>
+          <dd className="mt-2 text-sm leading-relaxed text-ink-2">
             {!ne
               ? "No upcoming results date listed."
               : ne.passed

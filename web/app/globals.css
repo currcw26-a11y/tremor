@@ -1,32 +1,98 @@
 @import "tailwindcss";
 
-/* Tremor's colors in one place. Calm = green, Shaky = yellow, Tremor = red. */
+/* Tremor's design tokens. Clean white paper, deep navy ink, one cool gray for quiet surfaces.
+   Green / gold / red mean ONLY the worry score (Calm / Shaky / Tremor) and always come with a word
+   and a shape. That trio was checked with a colorblindness + contrast validator (all checks pass). */
 :root {
-  --background: #fafaf9;
-  --surface: #ffffff;
-  --foreground: #0c0a09;
-  --muted: #78716c;
-  --line: #e7e5e4;
-  /* Checked with a colorblindness validator (all pass). Always shown with a word + shape too. */
-  --calm: #166534;
-  --shaky: #d97706;
-  --tremor: #b91c1c;
+  --background: #ffffff;
+  --surface: #f5f7f9;        /* quiet fill instead of boxed cards */
+  --foreground: #0b1626;     /* navy ink */
+  --ink-2: #344055;          /* body text that isn't the main thing */
+  --muted: #667085;
+  --line: #e2e6eb;
+  --navy: #0d2240;           /* footer and the few solid surfaces */
+  --navy-2: #1b3a63;
+  --calm: #18794e;
+  --shaky: #d4900a;          /* marks only; too light for text */
+  --shaky-text: #8a5a00;     /* the word "Shaky" and other yellow text */
+  --tremor: #b4232c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-foreground: var(--foreground);
+  --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
   --color-line: var(--line);
+  --color-navy: var(--navy);
+  --color-navy-2: var(--navy-2);
   --color-calm: var(--calm);
   --color-shaky: var(--shaky);
+  --color-shaky-text: var(--shaky-text);
   --color-tremor: var(--tremor);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-plex-sans);
+  --font-serif: var(--font-newsreader);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-feature-settings: "ss01";
+}
+
+::selection {
+  background: #d7e3f4;
+}
+
+:focus-visible {
+  outline: 2px solid var(--navy-2);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---------- Small motion. Everything here is off for people who ask for reduced motion. ---------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes draw {
+  from { stroke-dashoffset: var(--len, 1000); }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes slide-in {
+  from { left: 0; }
+}
+
+/* Content gently rises in on load; .rise-1/2/3 stagger it */
+.rise { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.rise-1 { animation-delay: 0.06s; }
+.rise-2 { animation-delay: 0.12s; }
+.rise-3 { animation-delay: 0.18s; }
+
+/* Links that grow an underline on hover instead of always being underlined */
+.link-grow {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: background-size 0.25s ease;
+}
+.link-grow:hover, .link-grow:focus-visible { background-size: 100% 1px; }
+
+/* An arrow that nudges forward when its row or link is hovered */
+.nudge { display: inline-block; transition: transform 0.2s ease; }
+.group:hover .nudge, a:hover > .nudge { transform: translateX(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -7,14 +7,17 @@ export function UserMenu() {
   if (user === undefined) return <span className="w-16" aria-hidden />;
   if (!user)
     return (
-      <button onClick={() => signIn()} className="rounded-full bg-foreground px-3 py-1 text-sm font-semibold text-background">
+      <button
+        onClick={() => signIn()}
+        className="rounded-md border border-foreground/80 px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-foreground hover:text-background"
+      >
         Sign in
       </button>
     );
   return (
     <span className="flex items-center gap-3">
-      <Link href="/watchlist" className="text-sm font-semibold text-foreground">
-        ★ Watchlist
+      <Link href="/watchlist" className="link-grow text-sm font-medium text-foreground">
+        Watchlist
       </Link>
       <Link href="/settings" aria-label="Alert settings" className="text-sm text-muted hover:text-foreground">
         ⚙︎

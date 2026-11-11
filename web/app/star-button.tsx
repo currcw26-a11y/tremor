@@ -53,13 +53,15 @@ export function StarButton({
         onClick={toggle}
         disabled={busy || (!!user && starred === null)}
         aria-pressed={on}
-        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+        className={`inline-flex items-center gap-2 rounded-md border px-3.5 py-2 text-sm font-medium transition-colors ${
           on
             ? "border-foreground bg-foreground text-background"
-            : "border-line bg-surface hover:border-foreground"
+            : "border-foreground/80 text-foreground hover:bg-foreground hover:text-background"
         }`}
       >
-        <span aria-hidden>{on ? "★" : "☆"}</span>
+        <span aria-hidden className={`inline-block transition-transform duration-300 ${on ? "scale-110 rotate-[72deg]" : ""}`}>
+          {on ? "★" : "☆"}
+        </span>
         {on ? "On your watchlist" : "Add to watchlist"}
       </button>
       {failed && (
