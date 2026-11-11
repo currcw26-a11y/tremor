@@ -4,6 +4,7 @@ import { getUpcoming, type UpcomingEvent } from "@/lib/db";
 import { companyName, niceDate } from "@/lib/words";
 import { Ticker } from "../components";
 import { ScoreBadge } from "../score";
+import { Term } from "../term";
 
 export const metadata: Metadata = {
   title: "Coming up · Tremor",
@@ -133,7 +134,7 @@ export default async function UpcomingPage() {
         <h2 className="text-xl font-bold">FDA decisions</h2>
         <p className="mt-1 text-sm leading-relaxed">
           The FDA decides whether a new drug can be sold in the US, and it sets itself a deadline (called a{" "}
-          &ldquo;PDUFA date&rdquo;). Companies announce these in their SEC filings; below are their own words. The FDA can
+          <Term id="pdufa">PDUFA date</Term>). Companies announce these in their SEC filings; below are their own words. The FDA can
           decide early or extend the deadline by 3 months, so check the company&apos;s latest news.
         </p>
         {decisions.length ? (
@@ -152,7 +153,9 @@ export default async function UpcomingPage() {
 
       {meetings.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-xl font-bold">FDA advisory meetings</h2>
+          <h2 className="text-xl font-bold">
+            <Term id="fda_advisory">FDA advisory meetings</Term>
+          </h2>
           <p className="mt-1 text-sm">
             Outside experts meet in public to advise the FDA on a drug. The FDA usually, but not always, follows their vote.
           </p>

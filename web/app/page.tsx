@@ -102,6 +102,12 @@ export default function Home(props: PageProps<"/">) {
           When a drug trial is in trouble, companies rarely say so right away. But clues show up first. Tremor
           watches for them and gives every trial a worry score from 0 to 100.
         </p>
+        <Link
+          href="/learn"
+          className="mt-4 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold hover:border-foreground"
+        >
+          New to stocks? Read the 2-minute guide →
+        </Link>
       </section>
 
       <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-line" />}>

@@ -10,6 +10,7 @@ import { ScoreChart } from "../../score-chart";
 import { StarButton } from "../../star-button";
 import { AskBox } from "../../ask-box";
 import { OutlookSection } from "../../past-cases";
+import { Term } from "../../term";
 
 async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["params"] }) {
   const { nct } = await params;
@@ -17,8 +18,8 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
   if (!t) notFound();
 
   const facts = [
-    ["Stage", phaseLabel(t.phases)],
-    ["Patients", t.enrollment != null ? `${t.enrollment.toLocaleString()} ${t.enrollment_type === "ACTUAL" ? "(final count)" : "(planned)"}` : "unknown"],
+    ["Stage", <PhaseTerm key="stage" phases={t.phases} />],
+    [<Term key="p" id="enrollment">Patients</Term>, t.enrollment != null ? `${t.enrollment.toLocaleString()} ${t.enrollment_type === "ACTUAL" ? "(final count)" : "(planned)"}` : "unknown"],
     ["Started", niceDate(t.start_date)],
     ["Main results expected", niceDate(t.primary_completion_date)],
     ["Fully finished", niceDate(t.completion_date)],
@@ -59,8 +60,8 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
       <OutlookSection outlook={t.outlook} company={company} />
 
       <dl className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {facts.map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-line bg-surface p-3">
+        {facts.map(([label, value], i) => (
+          <div key={String(i)} className="rounded-xl border border-line bg-surface p-3">
             <dt className="text-xs text-muted">{label}</dt>
             <dd className="mt-1 font-semibold">{value}</dd>
           </div>
@@ -69,7 +70,9 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
 
       <section className="mt-8">
         <h2 className="text-lg font-bold">What counts as success</h2>
-        <p className="text-sm text-muted">The trial&apos;s main goal(s), called the &ldquo;primary outcome.&rdquo;</p>
+        <p className="text-sm text-muted">
+          The trial&apos;s <Term id="primary_outcome">main goal(s)</Term>, called the &ldquo;primary outcome.&rdquo;
+        </p>
         <ul className="mt-3 space-y-2">
           {t.primary_outcomes.map((o, i) => (
             <li key={i} className="rounded-xl border border-line bg-surface p-3">
@@ -166,4 +169,13 @@ export default function TrialPage(props: PageProps<"/trials/[nct]">) {
       <TrialDetails params={props.params} />
     </Suspense>
   );
+}
+
+/** "Phase 3" with a tap-to-learn popup (the highest phase listed). */
+function PhaseTerm({ phases }: { phases: string[] }) {
+  const label = phaseLabel(phases);
+  const top = Math.max(...(phases ?? []).map((x) => Number(x.replace(/\D/g, "")) || 0), 0);
+  if (top === 3) return <Term id="phase3">{label}</Term>;
+  if (top === 2) return <Term id="phase2">{label}</Term>;
+  return <>{label}</>;
 }

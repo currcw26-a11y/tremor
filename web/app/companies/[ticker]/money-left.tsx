@@ -1,5 +1,6 @@
 import type { Company, Filing } from "@/lib/db";
 import { niceDate } from "@/lib/words";
+import { Term } from "../../term";
 
 const SHARE_SALE_FORMS = new Set(["S-3", "S-1", "424B5"]);
 
@@ -53,8 +54,8 @@ export function MoneyLeft({ company, filings }: { company: Company; filings: Fil
       </dl>
       {months != null && months < 18 && (
         <p className="mt-3 text-sm">
-          Companies running low on money often raise more by creating and issuing new shares, which usually makes each
-          existing share worth less.
+          Companies running low on money often raise more by{" "}
+          <Term id="dilution">creating and issuing new shares</Term>, which usually makes each existing share worth less.
         </p>
       )}
       {laterShareSale && (

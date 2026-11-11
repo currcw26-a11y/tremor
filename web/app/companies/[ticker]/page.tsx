@@ -8,6 +8,7 @@ import { StarButton } from "../../star-button";
 import { MoneyLeft } from "./money-left";
 import { Hiring, Layoffs } from "./hiring";
 import { AskBox } from "../../ask-box";
+import { Term } from "../../term";
 
 const COMPANY_SIGNALS = new Set(["insider_selling_cluster", "key_exec_departure", "layoffs"]);
 const BIG_COMPANY = 15; // matches big_company_trial_count in config/tremor.yaml
@@ -52,7 +53,9 @@ async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticke
       </header>
 
       <section>
-        <h2 className="mb-3 text-xl font-bold">Money left</h2>
+        <h2 className="mb-3 text-xl font-bold">
+          <Term id="runway">Money left</Term>
+        </h2>
         <MoneyLeft company={company} filings={filings} />
       </section>
 
@@ -114,8 +117,8 @@ async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticke
       <section>
         <h2 className="text-xl font-bold">Insider trades (last 6 months)</h2>
         <p className="text-sm text-muted">
-          &ldquo;Insiders&rdquo; are executives, board members, and big shareholders. Many of their sales are{" "}
-          <strong>pre-planned</strong>: scheduled months ahead under a legal plan (called 10b5-1), so they usually
+          &ldquo;<Term id="insider">Insiders</Term>&rdquo; are executives, board members, and big shareholders. Many of their sales are{" "}
+          <strong>pre-planned</strong>: scheduled months ahead under a legal plan (called <Term id="plan_10b5_1">10b5-1</Term>), so they usually
           say little. Tremor only counts sales that weren&apos;t pre-planned.
         </p>
         <p className="mt-3 text-sm">
@@ -158,12 +161,16 @@ async function CompanyDetails({ params }: { params: PageProps<"/companies/[ticke
       </section>
 
       <section>
-        <h2 className="mb-3 text-xl font-bold">Layoff notices</h2>
+        <h2 className="mb-3 text-xl font-bold">
+          <Term id="layoff_notice">Layoff notices</Term>
+        </h2>
         <Layoffs notices={layoffs} />
       </section>
 
       <section>
-        <h2 className="text-xl font-bold">Recent SEC filings</h2>
+        <h2 className="text-xl font-bold">
+          Recent <Term id="sec">SEC filings</Term>
+        </h2>
         <p className="text-sm text-muted">
           Public companies must report important news and their finances to the SEC, the US agency that oversees
           the stock market.

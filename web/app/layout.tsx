@@ -61,6 +61,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/how-it-works" className="underline">
                 How the score works
               </Link>
+              <Link href="/learn" className="underline">
+                How biotech stocks move
+              </Link>
+              <Link href="/glossary" className="underline">
+                Words to know
+              </Link>
               <Link href="/privacy" className="underline">
                 Privacy
               </Link>
