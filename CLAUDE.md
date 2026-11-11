@@ -206,6 +206,15 @@ If we fall behind, protect Weeks 1 to 3 first. A working site with alerts beats 
 - [x] Week 5: Google search visibility + own icon (Nov 11). Next.js default 'N' favicon replaced (owner disliked it): app/icon.svg (three score-color bars, same as header), app/apple-icon.tsx (180px home-screen), app/opengraph-image.tsx (share card). Root metadata: metadataBase, title template '%s · Tremor', description; NO canonical/og:url in layout (it would leak to every page). Per-page titles/descriptions/canonicals; trial + company pages via generateMetadata (cached getTrial/getCompany) and must re-list images: '/opengraph-image' (page openGraph replaces the inherited one). app/sitemap.ts (1,754 URLs: pages + companies with tracked trials + tracked trials, lastModified = record's last update) via lib/sitemap-data.ts; app/robots.ts disallows /api /auth /settings /watchlist /unsubscribe (also noindex). Owner to submit sitemap in Search Console.
 - [ ] Week 3 checkpoint: classmates sign up and receive alerts on their own (also completes Week 2 checkpoint)
 
+## Design direction (owner feedback, Nov 11, 2026) — applies to ALL future UI work
+
+The current site looks AI-built ("looks like every AI site with things switched around", compared with DataLookout). The owner wants it to feel human-designed, more like Goldman Sachs' site than a typical AI landing page. Redesign is planned (do it when the owner says; until then, new UI should already move this way):
+- No "punchy" emphasis. Don't highlight words in color inside headlines (like red "cancer drug trials"), don't stack bold claims, don't put a gray subtitle under every heading, don't push every fact at the reader at once. Let hierarchy come from typography and layout, calmly.
+- Use the screen. The narrow centered column (max-w-3xl) leaves about two-thirds of a desktop empty. Use wider, purposeful layouts (asymmetric grids, side columns, data shown at real density) while staying great on phones.
+- New color scheme (owner dislikes the current stone/beige look). Keep green/yellow/red ONLY for the score meaning (spec requires Calm green / Shaky yellow / Tremor red, always with word + shape), but retune shades and build a more distinctive palette around them; re-validate contrast and colorblind safety.
+- Break out of the generic AI template: fewer bordered rounded-xl cards and pill badges, no stat-tile row, no "New to X? ->" pill buttons, consider an editorial type pairing (serif display + clean sans) instead of default Geist everywhere.
+- Small interactions make it feel crafted: subtle hover states, gentle transitions/animations, small hover/tap previews. Keep them quick and respect prefers-reduced-motion.
+
 ## Notes for later weeks
 
 - Choices beyond spec (in config, user OK'd by not objecting, Nov 6): big companies (15+ trials) get x0.5 on company-wide signals; final-count enrollment cuts get x0.5; 8-K item 2.05 counts as layoffs; only the most recent insider cluster per company counts.
