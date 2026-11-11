@@ -8,19 +8,27 @@ import { Shape } from "../score";
 export const metadata: Metadata = {
   title: "How the score works",
   alternates: { canonical: "/how-it-works" },
-  description: "Every rule behind Tremor's 0-100 worry score, in plain English, with what the past says about each one.",
+  description:
+    "Every rule behind Tremor's 0-100 worry score, in plain English, with what the past says about each one.",
 };
 
 const W = rules.weights as Record<string, number>;
 const D = rules.detection;
 
-type Rule = { key: string; title: string; what: string; why: string; status?: string; tested?: string };
+type Rule = {
+  key: string;
+  title: string;
+  what: string;
+  why: string;
+  status?: string;
+  tested?: string;
+};
 
 const TRIAL_RULES: Rule[] = [
   {
     key: "primary_outcome_changed",
     title: "The main goal changed",
-    what: "The company changed or removed what the trial is trying to prove (its \"main goal\" or primary outcome).",
+    what: 'The company changed or removed what the trial is trying to prove (its "main goal" or primary outcome).',
     why: "Changing what counts as success can mean the company worries the original goal won't be met. It can also be routine: regulators sometimes ask for it.",
   },
   {
@@ -87,24 +95,27 @@ const COMPANY_RULES: Rule[] = [
     title: "Fewer clinical job postings",
     what: "Job postings for clinical roles dropped by half or more compared with a few weeks earlier.",
     why: "A hiring freeze on trial staff can come before a trial is cut back.",
-    status: "Needs about 2 weeks of daily job counts before it can fire; only for companies whose job board we could confirm.",
+    status:
+      "Needs about 2 weeks of daily job counts before it can fire; only for companies whose job board we could confirm.",
   },
 ];
 
 function RuleCard({ r, tested }: { r: Rule; tested?: string }) {
   return (
-    <li className="rounded-xl border border-line bg-surface p-4">
+    <li className="border-t border-line py-5">
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-bold">{r.title}</h3>
-        <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-sm font-bold tabular-nums text-background">
+        <span className="shrink-0 font-serif text-3xl font-medium leading-none tabular-nums">
           +{W[r.key]}
         </span>
       </div>
       <p className="mt-1.5 text-sm">{r.what}</p>
       <p className="mt-1.5 text-sm text-muted">{r.why}</p>
       {(tested || r.status) && (
-        <p className="mt-2 rounded-lg bg-background px-2.5 py-1.5 text-xs">
-          <span className="font-semibold">{tested ? "What the past says: " : "Note: "}</span>
+        <p className="mt-3 border-l-2 border-line pl-3 text-xs leading-relaxed text-ink-2">
+          <span className="font-semibold">
+            {tested ? "What the past says: " : "Note: "}
+          </span>
           {tested ?? r.status}
         </p>
       )}
@@ -130,23 +141,40 @@ export default async function HowItWorks() {
   const L = rules.labels;
 
   return (
-    <article>
-      <h1 className="text-3xl font-black tracking-tight">How the score works</h1>
-      <p className="mt-2 text-muted">
-        Every trial gets a worry score from 0 to 100. It adds up warning signs found in public records. It is not a
-        prediction, and it never tells anyone to buy or sell.
+    <article className="rise">
+      <h1 className="font-serif text-4xl font-medium tracking-tight sm:text-5xl">
+        How the score works
+      </h1>
+      <p className="mt-4 max-w-2xl text-ink-2">
+        Every trial gets a worry score from 0 to 100. It adds up warning signs
+        found in public records. It is not a prediction, and it never tells
+        anyone to buy or sell.
       </p>
 
-      <section className="mt-6 grid gap-2 sm:grid-cols-3">
+      <section className="mt-10 grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-3">
         {(
           [
-            ["calm", `${L.calm} to ${L.shaky - 1}`, "No strong warning signs right now."],
-            ["shaky", `${L.shaky} to ${L.tremor - 1}`, "A few warning signs. Worth a look."],
-            ["tremor", `${L.tremor} to 100`, "Several strong warning signs, or the trial was stopped."],
+            [
+              "calm",
+              `${L.calm} to ${L.shaky - 1}`,
+              "No strong warning signs right now.",
+            ],
+            [
+              "shaky",
+              `${L.shaky} to ${L.tremor - 1}`,
+              "A few warning signs. Worth a look.",
+            ],
+            [
+              "tremor",
+              `${L.tremor} to 100`,
+              "Several strong warning signs, or the trial was stopped.",
+            ],
           ] as const
         ).map(([label, range, text]) => (
-          <div key={label} className="rounded-xl border border-line bg-surface p-3">
-            <p className={`flex items-center gap-1.5 font-bold ${BANDS[label].color}`}>
+          <div key={label} className="border-t-2 border-foreground pt-3">
+            <p
+              className={`flex items-center gap-1.5 font-bold ${BANDS[label].color}`}
+            >
               <Shape label={label} size={12} />
               {BANDS[label].name}
               <span className="font-semibold text-muted">{range}</span>
@@ -156,62 +184,87 @@ export default async function HowItWorks() {
         ))}
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-xl font-bold">The basic rules</h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
+      <section className="mt-14">
+        <h2 className="border-t border-foreground pt-3 font-serif text-2xl font-medium tracking-tight">
+          The basic rules
+        </h2>
+        <ul className="mt-4 grid max-w-4xl list-disc grid-cols-1 gap-x-12 gap-y-2 pl-5 leading-relaxed text-ink-2 md:grid-cols-2">
           <li>Each warning sign adds points. The points are listed below.</li>
           <li>
-            Points fade: after {rules.half_life_days} days a sign counts half, after {rules.half_life_days * 2} days a
-            quarter. After {rules.max_age_days} days it stops counting. (A few signs, like overdue results, count until
-            they&apos;re fixed.)
+            Points fade: after {rules.half_life_days} days a sign counts half,
+            after {rules.half_life_days * 2} days a quarter. After{" "}
+            {rules.max_age_days} days it stops counting. (A few signs, like
+            overdue results, count until they&apos;re fixed.)
           </li>
           <li>
-            A stopped trial (suspended, ended early, or withdrawn) goes straight to at least {rules.stopped_floor}, which is
-            red. The trial page shows the company&apos;s stated reason, because many stops are business decisions.
+            A stopped trial (suspended, ended early, or withdrawn) goes straight
+            to at least {rules.stopped_floor}, which is red. The trial page
+            shows the company&apos;s stated reason, because many stops are
+            business decisions.
           </li>
           <li>
-            Company-wide signs (executives, layoffs, insider sales) count for every trial the company runs. For big
-            companies with {rules.big_company_trial_count}+ cancer trials, they count{" "}
-            {rules.big_company_factor === 0.5 ? "half" : rules.big_company_factor}, since one sign matters less to a giant.
+            Company-wide signs (executives, layoffs, insider sales) count for
+            every trial the company runs. For big companies with{" "}
+            {rules.big_company_trial_count}+ cancer trials, they count{" "}
+            {rules.big_company_factor === 0.5
+              ? "half"
+              : rules.big_company_factor}
+            , since one sign matters less to a giant.
           </li>
           <li>
-            Some signs are counted once even if they show up in several places: only the newest layoff and the newest
-            group of insider sales count.
+            Some signs are counted once even if they show up in several places:
+            only the newest layoff and the newest group of insider sales count.
           </li>
           <li>The score can&apos;t go above 100.</li>
         </ul>
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-xl font-bold">Signs from the trial&apos;s official record</h2>
-        <p className="mt-1 text-sm text-muted">
-          Tremor saves its own copy of each trial record every 4 hours and compares it with the last one. Many edits are
-          harmless paperwork; those add no points.
+      <section className="mt-14">
+        <h2 className="border-t border-foreground pt-3 font-serif text-2xl font-medium tracking-tight">
+          Signs from the trial&apos;s official record
+        </h2>
+        <p className="mt-3 text-sm text-muted">
+          Tremor saves its own copy of each trial record every 4 hours and
+          compares it with the last one. Many edits are harmless paperwork;
+          those add no points.
         </p>
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-2 grid grid-cols-1 gap-x-12 md:grid-cols-2">
           {TRIAL_RULES.map((r) => (
-            <RuleCard key={r.key} r={r} tested={r.status ? undefined : notYet} />
+            <RuleCard
+              key={r.key}
+              r={r}
+              tested={r.status ? undefined : notYet}
+            />
           ))}
         </ul>
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-xl font-bold">Signs about the company</h2>
-        <p className="mt-1 text-sm text-muted">From SEC filings, state layoff notices, and job boards.</p>
-        <ul className="mt-3 space-y-2">
+      <section className="mt-14">
+        <h2 className="border-t border-foreground pt-3 font-serif text-2xl font-medium tracking-tight">
+          Signs about the company
+        </h2>
+        <p className="mt-3 text-sm text-muted">
+          From SEC filings, state layoff notices, and job boards.
+        </p>
+        <ul className="mt-2 grid grid-cols-1 gap-x-12 md:grid-cols-2">
           {COMPANY_RULES.map((r) => (
             <RuleCard key={r.key} r={r} tested={tested(r.key)} />
           ))}
         </ul>
       </section>
 
-      <section className="mt-8 rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed">
-        <h2 className="text-lg font-bold">How the points were chosen</h2>
+      <section className="mt-14 max-w-3xl text-sm leading-relaxed">
+        <h2 className="border-t border-foreground pt-3 font-serif text-xl font-medium tracking-tight">
+          How the points were chosen
+        </h2>
         <p className="mt-2">
-          The first points were starting guesses. On Nov 11, 2026 we changed three of them after checking past cases:
-          layoffs and a key executive leaving went from 15 to 10 points each, because they came before bad news only a
-          bit more often than a random day. A second executive leaving within 6 months got +10 extra, because that came
-          before bad news about 1 in 4 times. Signs that can&apos;t be tested yet keep their starting points.
+          The first points were starting guesses. On Nov 11, 2026 we changed
+          three of them after checking past cases: layoffs and a key executive
+          leaving went from 15 to 10 points each, because they came before bad
+          news only a bit more often than a random day. A second executive
+          leaving within 6 months got +10 extra, because that came before bad
+          news about 1 in 4 times. Signs that can&apos;t be tested yet keep
+          their starting points.
         </p>
         <p className="mt-2">
           <Link href="/track-record" className="font-semibold underline">
@@ -220,12 +273,15 @@ export default async function HowItWorks() {
         </p>
       </section>
 
-      <section className="mt-6 text-sm">
-        <h2 className="text-lg font-bold">Email alerts</h2>
+      <section className="mt-10 max-w-3xl text-sm">
+        <h2 className="border-t border-foreground pt-3 font-serif text-xl font-medium tracking-tight">
+          Email alerts
+        </h2>
         <p className="mt-1 leading-relaxed">
-          Big events (the main goal changes, patients are cut, a trial stops, a key executive leaves) and score jumps of{" "}
-          {rules.big_jump_points}+ points are emailed right away. Smaller signs and &ldquo;coming up&rdquo; reminders go in
-          one daily email.
+          Big events (the main goal changes, patients are cut, a trial stops, a
+          key executive leaves) and score jumps of {rules.big_jump_points}+
+          points are emailed right away. Smaller signs and &ldquo;coming
+          up&rdquo; reminders go in one daily email.
         </p>
       </section>
     </article>

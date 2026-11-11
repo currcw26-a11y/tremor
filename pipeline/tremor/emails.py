@@ -14,7 +14,26 @@ from .words import money_left, nice_date
 SITE_URL = (os.getenv("SITE_URL") or "https://www.tremoralerts.com").rstrip("/")
 EMAIL_FROM = os.getenv("EMAIL_FROM") or "Tremor <alerts@tremoralerts.com>"  # domain verified in Resend on Nov 9, 2026
 
-COLORS = {"calm": "#166534", "shaky": "#d97706", "tremor": "#b91c1c"}
+# Same palette and type as the website. The gold here is the darker text version, so it reads on white.
+COLORS = {"calm": "#18794e", "shaky": "#8a5a00", "tremor": "#b4232c"}
+INK, MUTED, LINE, LINK = "#0b1626", "#667085", "#e2e6eb", "#1b3a63"
+SANS = "'IBM Plex Sans',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif"
+SERIF = "Newsreader,Georgia,'Times New Roman',serif"
+LOGO = "".join(
+    f'<span style="display:inline-block;width:5px;height:{h}px;border-radius:3px;background:{c};margin-right:{m}px"></span>'
+    for h, c, m in ((14, "#18794e", 3), (18, "#d4900a", 3), (22, "#b4232c", 10)))
+
+
+def _block_html(title: str, rows: list[tuple[str, str]], links: list[tuple[str, str]]) -> str:
+    """One tremor in an email: a rule on top, a serif title, label/value lines, then links to check."""
+    h = [f'<div style="border-top:2px solid {INK};padding:14px 0 4px;margin:0 0 26px">',
+         f'<p style="margin:0 0 10px;font-family:{SERIF};font-weight:500;font-size:21px;color:{INK}">{_e(title)}</p>']
+    h += [f'<p style="margin:0 0 10px"><strong>{_e(k)}:</strong> {_e(v)}</p>' for k, v in rows]
+    h.append(f'<p style="margin:14px 0 4px;color:{MUTED};font-size:13px;text-transform:uppercase;letter-spacing:1px">'
+             f'What to check next</p><ul style="margin:0;padding-left:20px">')
+    h += [f'<li style="margin:2px 0"><a href="{_e(u)}" style="color:{LINK}">{_e(t)}</a></li>' for t, u in links]
+    h.append("</ul></div>")
+    return "".join(h)
 LABELS = {"calm": "● Calm", "shaky": "▲ Shaky", "tremor": "◆ Tremor"}
 KIND_ICON = {"critical": "🔴", "big_jump": "🔴", "head_start": "🟡", "coming_up": "📅"}
 
@@ -89,15 +108,8 @@ def alert_block(a: dict, trial: dict | None, company: dict | None, trial_count: 
 
     icon = KIND_ICON.get(a["kind"], "🟡")
     title = f"{icon} {a.get('ticker') or ''}".strip()
-    h = [f'<div style="border:1px solid #e7e5e4;border-radius:12px;padding:16px;margin:0 0 16px">',
-         f'<p style="margin:0 0 8px;font-weight:800;font-size:18px">{_e(title)}</p>']
-    for label, value in rows:
-        h.append(f'<p style="margin:0 0 10px"><strong>{_e(label)}:</strong> {_e(value)}</p>')
-    h.append('<p style="margin:12px 0 4px"><strong>What to check next:</strong></p><ul style="margin:0;padding-left:20px">')
-    h += [f'<li><a href="{_e(u)}" style="color:#0c0a09">{_e(t)}</a></li>' for t, u in links]
-    h.append("</ul></div>")
     t = [title] + [f"{label}: {value}" for label, value in rows] + ["What to check next:"] + [f"- {t}: {u}" for t, u in links]
-    return "".join(h), "\n".join(t)
+    return _block_html(title, rows, links), "\n".join(t)
 
 
 def _coming_up_block(a: dict, company: dict | None) -> tuple[str, str]:
@@ -118,14 +130,8 @@ def _coming_up_block(a: dict, company: dict | None) -> tuple[str, str]:
     if isinstance(src, str) and src:
         links.append(("Where this date comes from", src))
     title = f"📅 {a.get('ticker') or ''}".strip()
-    h = ['<div style="border:1px solid #e7e5e4;border-radius:12px;padding:16px;margin:0 0 16px">',
-         f'<p style="margin:0 0 8px;font-weight:800;font-size:18px">{_e(title)}</p>']
-    h += [f'<p style="margin:0 0 10px"><strong>{_e(k)}:</strong> {_e(v)}</p>' for k, v in rows]
-    h.append('<p style="margin:12px 0 4px"><strong>What to check next:</strong></p><ul style="margin:0;padding-left:20px">')
-    h += [f'<li><a href="{_e(u)}" style="color:#0c0a09">{_e(t)}</a></li>' for t, u in links]
-    h.append("</ul></div>")
     t = [title] + [f"{k}: {v}" for k, v in rows] + ["What to check next:"] + [f"- {k}: {u}" for k, u in links]
-    return "".join(h), "\n".join(t)
+    return _block_html(title, rows, links), "\n".join(t)
 
 
 def short_subject(a: dict, companies: dict) -> str:
@@ -159,14 +165,14 @@ def render(alerts: list[dict], mode: str, trials: dict, companies: dict, trial_c
     footer_text = ("Not investment advice. Tremor shows what changed in public records and never tells anyone to buy or sell. "
                    "Many trial edits turn out to be harmless.")
     body_html = (
-        '<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;'
-        'padding:16px;color:#0c0a09;line-height:1.5">'
-        '<p style="font-size:22px;font-weight:900;margin:0 0 4px">Tremor</p>'
-        f'<p style="margin:0 0 16px;color:#57534e">{_e(intro)}</p>'
+        f'<div style="font-family:{SANS};max-width:600px;margin:0 auto;padding:20px 16px;color:{INK};line-height:1.55">'
+        f'<p style="margin:0 0 6px;font-family:{SERIF};font-size:26px;font-weight:600;letter-spacing:-0.3px">{LOGO}Tremor</p>'
+        f'<p style="margin:0 0 26px;color:{MUTED}">{_e(intro)}</p>'
         + "".join(b[0] for b in blocks)
-        + f'<p style="font-size:13px;color:#57534e;margin-top:24px"><strong>{_e(footer_text)}</strong></p>'
-        f'<p style="font-size:13px;color:#57534e"><a href="{_e(unsub)}" style="color:#57534e">Unsubscribe</a>'
-        f' · <a href="{_e(settings)}" style="color:#57534e">Alert settings</a></p></div>'
+        + f'<p style="font-size:13px;color:{MUTED};margin-top:28px;border-top:1px solid {LINE};padding-top:14px">'
+        f'<strong style="color:{INK}">{_e(footer_text)}</strong></p>'
+        f'<p style="font-size:13px;color:{MUTED}"><a href="{_e(unsub)}" style="color:{MUTED}">Unsubscribe</a>'
+        f' · <a href="{_e(settings)}" style="color:{MUTED}">Alert settings</a></p></div>'
     )
     body_text = (intro + "\n\n" + "\n\n".join(b[1] for b in blocks) + f"\n\n{footer_text}\n"
                  f"Unsubscribe: {unsub}\nAlert settings: {settings}\n")

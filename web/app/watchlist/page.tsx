@@ -5,8 +5,8 @@ export const metadata = { title: "Your watchlist", robots: { index: false } };
 export default function WatchlistPage() {
   return (
     <div>
-      <h1 className="text-3xl font-black tracking-tight">Your watchlist</h1>
-      <p className="mt-2 text-muted">Only you can see this list.</p>
+      <h1 className="font-serif text-4xl font-medium tracking-tight sm:text-5xl">Your watchlist</h1>
+      <p className="mt-4 max-w-2xl text-ink-2">Only you can see this list.</p>
       <div className="mt-6">
         <Watchlist />
       </div>

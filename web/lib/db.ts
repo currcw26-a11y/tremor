@@ -252,7 +252,7 @@ export async function getCompanies() {
   "use cache";
   cacheLife("hours");
   const [companies, trials] = await Promise.all([
-    query<Company>("companies", { select: "ticker,name,cik", order: "ticker" }),
+    query<Company>("companies", { select: "ticker,name,cik,runway_months", order: "ticker" }),
     queryAll<{ ticker: string; score: number; score_label: ScoreLabel }>("trials", {
       select: "ticker,score,score_label",
       tracked: "eq.true",

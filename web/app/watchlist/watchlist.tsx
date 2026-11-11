@@ -36,13 +36,13 @@ export function Watchlist() {
       );
   }, [user]);
 
-  if (user === undefined) return <div className="h-40 animate-pulse rounded-xl bg-line" />;
+  if (user === undefined) return <div className="h-40 animate-pulse rounded-lg bg-line" />;
   if (!user)
     return (
-      <div className="rounded-xl border border-line bg-surface p-6 text-center">
+      <div className="max-w-xl border-t border-foreground pt-5">
         <p className="font-semibold">Sign in to keep a watchlist.</p>
-        <p className="mt-1 text-sm text-muted">Star trials and companies, and Tremor will email you when something changes.</p>
-        <button onClick={() => signIn("/watchlist")} className="mt-4 rounded-full bg-foreground px-4 py-2 font-semibold text-background">
+        <p className="mt-3 text-sm text-muted">Star trials and companies, and Tremor will email you when something changes.</p>
+        <button onClick={() => signIn("/watchlist")} className="mt-4 rounded-md bg-foreground px-4 py-2 font-medium text-background transition-colors hover:bg-navy-2">
           Sign in with Google
         </button>
       </div>
@@ -51,10 +51,10 @@ export function Watchlist() {
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="text-xl font-bold">Trials</h2>
+        <h2 className="border-t border-foreground pt-3 font-serif text-2xl font-medium tracking-tight">Trials</h2>
         <div className="mt-3">
           {trials === null ? (
-            <div className="h-24 animate-pulse rounded-xl bg-line" />
+            <div className="h-24 animate-pulse rounded-lg bg-line" />
           ) : trials.length ? (
             <ul className="space-y-2">
               {trials.map((t) => (
@@ -70,12 +70,12 @@ export function Watchlist() {
         </div>
       </section>
       <section>
-        <h2 className="text-xl font-bold">Companies</h2>
+        <h2 className="border-t border-foreground pt-3 font-serif text-2xl font-medium tracking-tight">Companies</h2>
         <div className="mt-3">
           {companies === null ? (
-            <div className="h-16 animate-pulse rounded-xl bg-line" />
+            <div className="h-16 animate-pulse rounded-lg bg-line" />
           ) : companies.length ? (
-            <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+            <ul className="max-w-2xl divide-y divide-line border-y border-line">
               {companies.map((c) => (
                 <li key={c.ticker}>
                   <Link href={`/companies/${c.ticker}`} className="flex items-center gap-3 p-3 hover:bg-background">

@@ -11,10 +11,10 @@ export function Hiring({ jobs, board }: { jobs: JobCount[]; board: string | null
   const now = jobs[0];
   const monthAgo = jobs.find((j) => (Date.parse(now.day) - Date.parse(j.day)) / 86_400_000 >= 28);
   return (
-    <div className="rounded-xl border border-line bg-surface p-4">
+    <div>
       <p>
-        <span className="text-3xl font-black tabular-nums">{now.clinical_jobs}</span>{" "}
-        <span className="font-semibold">clinical job openings</span>
+        <span className="font-serif text-4xl font-medium tabular-nums">{now.clinical_jobs}</span>{" "}
+        <span className="font-medium">clinical job openings</span>
         <span className="block text-sm text-muted">
           out of {now.total_jobs} total, on {niceDate(now.day)}
         </span>
@@ -40,10 +40,10 @@ export function Layoffs({ notices }: { notices: LayoffNotice[] }) {
   return (
     <>
       {notices.length ? (
-        <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+        <ul className="divide-y divide-line border-y border-line">
           {notices.map((n, i) => (
-            <li key={i} className="p-3 text-sm">
-              <span className="font-semibold">
+            <li key={i} className="py-3 text-sm">
+              <span className="font-medium">
                 {n.employees ? `${n.employees.toLocaleString()} people` : "Layoff notice"} in {n.state}
               </span>
               <span className="block text-xs text-muted">

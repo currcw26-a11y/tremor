@@ -21,23 +21,23 @@ export function MoneyLeft({ company, filings }: { company: Company; filings: Fil
   const asOf = niceDate(c.finances_as_of);
   const laterShareSale = filings.find((f) => SHARE_SALE_FORMS.has(f.form) && f.filed_at > c.finances_as_of!);
   const months = c.runway_months == null ? null : Math.round(c.runway_months);
-  const tone = months == null ? "text-calm" : months < 12 ? "text-tremor" : months < 24 ? "text-shaky" : "text-calm";
+  const tone = months == null ? "text-calm" : months < 12 ? "text-tremor" : months < 24 ? "text-shaky-text" : "text-calm";
 
   return (
-    <div className="rounded-xl border border-line bg-surface p-4">
+    <div>
       {months != null ? (
         <p>
-          <span className={`text-4xl font-black tabular-nums ${tone}`}>{months < 1 ? "Under 1" : `About ${months}`}</span>{" "}
-          <span className="font-semibold">month{months === 1 ? "" : "s"} of money left</span>
+          <span className={`font-serif text-5xl font-medium tabular-nums ${tone}`}>{months < 1 ? "Under 1" : `About ${months}`}</span>{" "}
+          <span className="font-medium">month{months === 1 ? "" : "s"} of money left</span>
           <span className="block text-sm text-muted">at its recent spending rate</span>
         </p>
       ) : (
-        <p className="text-lg font-bold text-calm">Not burning cash</p>
+        <p className="font-serif text-2xl font-medium text-calm">Not burning cash</p>
       )}
-      <dl className="mt-4 space-y-1 text-sm">
+      <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-sm">
         <div>
           <dt className="inline text-muted">Cash and short-term investments: </dt>
-          <dd className="inline font-semibold">{dollars(c.cash_usd)}</dd>
+          <dd className="inline font-medium">{dollars(c.cash_usd)}</dd>
           <span className="text-muted"> (as of {asOf})</span>
         </div>
         {c.monthly_burn_usd != null && (
@@ -45,7 +45,7 @@ export function MoneyLeft({ company, filings }: { company: Company; filings: Fil
             <dt className="inline text-muted">
               {c.monthly_burn_usd > 0 ? "Spending on running the business: " : "Brings in from running the business: "}
             </dt>
-            <dd className="inline font-semibold">about {dollars(c.monthly_burn_usd)} a month</dd>
+            <dd className="inline font-medium">about {dollars(c.monthly_burn_usd)} a month</dd>
             {c.burn_period_months && (
               <span className="text-muted"> (average over the {c.burn_period_months} months up to {asOf})</span>
             )}
@@ -59,7 +59,7 @@ export function MoneyLeft({ company, filings }: { company: Company; filings: Fil
         </p>
       )}
       {laterShareSale && (
-        <p className="mt-3 rounded-lg bg-shaky/10 p-2 text-sm">
+        <p className="mt-3 border-l-2 border-shaky pl-3 text-sm">
           Since {asOf}, the company has filed paperwork to issue new shares ({laterShareSale.form} on{" "}
           {niceDate(laterShareSale.filed_at)}), so it may have more cash now.
         </p>

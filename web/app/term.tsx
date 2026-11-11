@@ -48,7 +48,7 @@ export function Term({ id, children }: { id: GlossaryId; children?: React.ReactN
           role="dialog"
           aria-label={g.term}
           style={{ left: shift, width: WIDTH }}
-          className="absolute top-full z-30 mt-1.5 block max-w-[calc(100vw-2rem)] rounded-xl border border-line bg-surface p-3 text-left text-sm font-normal normal-case leading-relaxed tracking-normal text-foreground shadow-lg"
+          className="absolute top-full z-30 mt-1.5 block max-w-[calc(100vw-2rem)] rounded-lg bg-surface p-3 text-left text-sm font-normal normal-case leading-relaxed tracking-normal text-foreground shadow-lg"
         >
           <span className="block font-bold">{g.term}</span>
           <span className="mt-1 block">{g.text}</span>

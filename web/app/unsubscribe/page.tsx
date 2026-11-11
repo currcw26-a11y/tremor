@@ -12,8 +12,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/unsubscribe
 export default function Unsubscribe(props: PageProps<"/unsubscribe">) {
   return (
     <div>
-      <h1 className="mb-6 text-3xl font-black tracking-tight">Unsubscribe</h1>
-      <Suspense fallback={<div className="h-32 animate-pulse rounded-xl bg-line" />}>
+      <h1 className="mb-8 font-serif text-4xl font-medium tracking-tight sm:text-5xl">Unsubscribe</h1>
+      <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-line" />}>
         <Content searchParams={props.searchParams} />
       </Suspense>
     </div>

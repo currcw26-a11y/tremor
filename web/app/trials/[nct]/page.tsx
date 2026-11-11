@@ -206,7 +206,7 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
 
 export default function TrialPage(props: PageProps<"/trials/[nct]">) {
   return (
-    <Suspense fallback={<div className="h-96 animate-pulse rounded-xl bg-line" />}>
+    <Suspense fallback={<div className="h-96 animate-pulse rounded-lg bg-line" />}>
       <TrialDetails params={props.params} />
     </Suspense>
   );

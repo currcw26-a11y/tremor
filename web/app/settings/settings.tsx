@@ -42,17 +42,17 @@ export function Settings() {
     setSaving(false);
   }
 
-  if (user === undefined) return <div className="h-40 animate-pulse rounded-xl bg-line" />;
+  if (user === undefined) return <div className="h-40 animate-pulse rounded-lg bg-line" />;
   if (!user)
     return (
-      <div className="rounded-xl border border-line bg-surface p-6 text-center">
+      <div className="max-w-xl border-t border-foreground pt-5">
         <p className="font-semibold">Sign in to choose your alerts.</p>
-        <button onClick={() => signIn("/settings")} className="mt-4 rounded-full bg-foreground px-4 py-2 font-semibold text-background">
+        <button onClick={() => signIn("/settings")} className="mt-4 rounded-md bg-foreground px-4 py-2 font-medium text-background transition-colors hover:bg-navy-2">
           Sign in with Google
         </button>
       </div>
     );
-  if (!profile) return <div className="h-40 animate-pulse rounded-xl bg-line" />;
+  if (!profile) return <div className="h-40 animate-pulse rounded-lg bg-line" />;
 
   return (
     <div className="space-y-4">
@@ -60,16 +60,16 @@ export function Settings() {
         Emails go to <strong className="text-foreground">{profile.email}</strong>.
       </p>
       {profile.unsubscribed && (
-        <div className="rounded-xl border border-shaky bg-shaky/10 p-4">
+        <div className="rounded-lg border border-shaky bg-shaky/10 p-4">
           <p className="font-semibold">All emails are off.</p>
-          <button onClick={() => save({ unsubscribed: false })} disabled={saving} className="mt-2 rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background">
+          <button onClick={() => save({ unsubscribed: false })} disabled={saving} className="mt-2 rounded-md bg-foreground px-4 py-1.5 text-sm font-medium text-background transition-colors hover:bg-navy-2">
             Turn emails back on
           </button>
         </div>
       )}
-      <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+      <ul className="max-w-2xl divide-y divide-line border-y border-line">
         {OPTIONS.map((o) => (
-          <li key={o.key} className="flex items-start justify-between gap-4 p-4">
+          <li key={o.key} className="flex items-start justify-between gap-6 py-5">
             <span>
               <span className="block font-semibold">{o.title}</span>
               <span className="mt-1 block text-sm text-muted">{o.help}</span>

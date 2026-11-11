@@ -45,7 +45,7 @@ function Chart({ points, current, currentLabel, now, width }: { points: ScorePoi
 
   if (data.length < 2 && spanDays < 2) {
     return (
-      <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">
+      <p className="rounded-lg border border-dashed border-line p-4 text-sm text-muted">
         Tremor started scoring this trial {data.length ? `on ${niceDate(points[0].computed_at)}` : "recently"}. This
         chart fills in as the score changes over time.
       </p>
