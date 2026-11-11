@@ -38,7 +38,8 @@ def test_signals_add_up_to_shaky_and_tremor():
     tremor = shaky + [change("date_delayed", months=6)]
     extra = [Signal("key_exec_departure", "x", TODAY, W["key_exec_departure"]),
              Signal("fda_advisory_meeting", "x", TODAY, W["fda_advisory_meeting"])]
-    assert score(trial_signals(TRIAL, tremor, TODAY) + extra, "RECRUITING", TODAY)[:2] == (75, "tremor")
+    # 25 + 15 + 10 + 10 (key executive, lowered from 15 on Nov 11) + 10 = 70: just reaches red
+    assert score(trial_signals(TRIAL, tremor, TODAY) + extra, "RECRUITING", TODAY)[:2] == (70, "tremor")
 
 
 def test_score_never_goes_above_100():
@@ -136,3 +137,17 @@ def test_one_layoff_counted_once_even_if_reported_twice():
     sigs = company_signals([filing], [], 3, layoff_notices=[notice])
     layoffs = [s for s in sigs if s.type == "layoffs"]
     assert len(layoffs) == 1 and "CA" in layoffs[0].label and "52 people" in layoffs[0].label
+
+
+def test_a_second_key_executive_leaving_within_6_months_adds_points():
+    from datetime import timedelta
+    from tremor.scoring import company_signals, repeat_departure
+    d = TODAY
+    assert repeat_departure([d - timedelta(days=100), d]) == d
+    assert repeat_departure([d - timedelta(days=300), d]) is None          # too far apart
+    assert repeat_departure([d, d]) is None                                 # same day = same news
+    filings = [{"filed_at": (d - timedelta(days=90)).isoformat(), "key_exec_departure": True, "items": ["5.02"]},
+               {"filed_at": d.isoformat(), "key_exec_departure": True, "items": ["5.02"]}]
+    types = [x.type for x in company_signals(filings, [], trial_count=2)]
+    assert types.count("key_exec_departure") == 2 and "repeat_exec_departure" in types
+    assert "repeat_exec_departure" not in [x.type for x in company_signals(filings[:1], [], trial_count=2)]

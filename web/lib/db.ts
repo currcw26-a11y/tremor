@@ -362,7 +362,7 @@ export async function getTrackRecord() {
     query<BacktestSummary>("backtest_summary", { select: "*" }),
     queryAll<BacktestCase>("backtest_cases", {
       select: "signal_type,ticker,signal_day,outcome,news_day,move_pct,detail",
-      signal_type: "in.(layoffs,key_exec_departure,trial_stopped)",
+      signal_type: "in.(layoffs,key_exec_departure,repeat_exec_departure,trial_stopped)",
       order: "signal_day.desc",
     }),
     query<LiveAlert>(

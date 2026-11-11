@@ -25,7 +25,7 @@ def run(today: date | None = None) -> dict:
 
     summaries = _backtest_summaries()
     fields = ("nct_id,ticker,overall_status,primary_completion_date,results_first_posted,"
-              "interventions,score,score_label,score_breakdown,score_updated_at")
+              "interventions,score,score_label,score_breakdown,score_updated_at,latest_snapshot_id")
     trials = db.select("trials", fields + (",outlook" if summaries is not None else ""), tracked="eq.true")
     changes = defaultdict(list)
     for c in db.select("trial_changes", "id,nct_id,change_type,details,is_paperwork,detected_at",
@@ -46,6 +46,15 @@ def run(today: date | None = None) -> dict:
         notices[n["ticker"]].append(n)
     for j in db.select("job_counts", "ticker,day,clinical_jobs", day=f"gte.{(today - timedelta(days=60)).isoformat()}"):
         job_counts[j["ticker"]].append(j)
+
+    # The company's stated reason for stopping, from Tremor's saved copy of the record
+    why_stopped = {}
+    stopped = [t for t in trials if t["overall_status"] in ("TERMINATED", "SUSPENDED", "WITHDRAWN")]
+    snap_ids = [str(t["latest_snapshot_id"]) for t in stopped if t.get("latest_snapshot_id")]
+    if snap_ids and summaries is not None:
+        for r in db.select("trial_snapshots", "nct_id,why:data->protocolSection->statusModule->>whyStopped",
+                           id=f"in.({','.join(snap_ids)})"):
+            why_stopped[r["nct_id"]] = r.get("why")
 
     trials_per_company = defaultdict(int)
     for t in trials:
@@ -75,7 +84,8 @@ def run(today: date | None = None) -> dict:
                "score_updated_at": now}
         changed = first_time or moved or new_signal or old_types != new_types
         if summaries is not None:
-            row["outlook"] = outlook.build(t, [b["type"] for b in bd], summaries, trials_per_company[tk], today)
+            row["outlook"] = outlook.build({**t, "why_stopped": why_stopped.get(t["nct_id"])}, [b["type"] for b in bd],
+                                           summaries, trials_per_company[tk], today)
             changed = changed or row["outlook"] != t.get("outlook")
             if not (first_time or moved or new_signal or old_types != new_types):
                 row["score_updated_at"] = t.get("score_updated_at") or now

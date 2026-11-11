@@ -73,3 +73,16 @@ def test_email_shows_past_cases_for_the_alerts_own_signal():
     assert "How sure are we: High. Based on 177 past cases." in plain
     assert "one of only 2 late-stage cancer trials" in plain
     assert not re.search(r"\b(buy|sell)\b", plain.lower())
+
+
+def test_stopped_trial_shows_the_companys_own_reason_first():
+    summ = {**SUMMARIES["trial_stopped"], "extra": {**SUMMARIES["trial_stopped"]["extra"],
+            "by_reason": {"business": {"moves": 15, "typical_move": 1.0}, "safety_or_efficacy": {"moves": 4}}}}
+    words = outlook.past_cases("trial_stopped", summ, why_stopped="Business reasons and not based on any safety concerns.")["sentences"]
+    assert words[0].startswith("The company's stated reason: “Business reasons")
+    assert "a business decision" in words[1]
+    assert "barely moved on the announcement (15 cases)" in words[2]
+    none = outlook.past_cases("trial_stopped", summ, why_stopped=None)["sentences"]
+    assert "didn't give a reason" in none[0]
+    page = outlook.past_cases("trial_stopped", summ, why_stopped=False)["sentences"]   # track record page
+    assert not any("stated reason" in w or "didn't give" in w for w in page)

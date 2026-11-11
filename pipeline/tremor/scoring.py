@@ -149,6 +149,15 @@ def job_drop(counts: list[dict], cfg: dict | None = None) -> dict | None:
     return None
 
 
+def repeat_departure(days: list[date], window: int = 182) -> date | None:
+    """The newest departure that came within `window` days after an earlier one (different filings), if any."""
+    ds = sorted(set(days))
+    for i in range(len(ds) - 1, 0, -1):
+        if 0 < (ds[i] - ds[i - 1]).days <= window:
+            return ds[i]
+    return None
+
+
 def company_signals(filings: list[dict], sales: list[dict], trial_count: int, cfg: dict | None = None,
                     layoff_notices: list[dict] | None = None, job_counts: list[dict] | None = None) -> list[Signal]:
     """Company-wide signals (apply to every trial the company runs)."""
@@ -161,10 +170,11 @@ def company_signals(filings: list[dict], sales: list[dict], trial_count: int, cf
         signals.append(Signal("insider_selling_cluster", f"{len(c['insiders'])} insiders sold shares within a month",
                               c["end"], w["insider_selling_cluster"] * factor,
                               source={"insiders": c["insiders"], "accessions": c["accessions"]}))
-    layoffs = []
+    layoffs, departures = [], []
     for f in filings:
         when = _d(f["filed_at"])
         if f.get("key_exec_departure"):
+            departures.append(when)
             signals.append(Signal("key_exec_departure", "A key executive is leaving", when,
                                   w["key_exec_departure"] * factor,
                                   source={"url": f.get("url"), "text": f.get("departure_details")}))
@@ -176,6 +186,11 @@ def company_signals(filings: list[dict], sales: list[dict], trial_count: int, cf
             people = f" affecting {n['employees']} people" if n.get("employees") else ""
             layoffs.append(Signal("layoffs", f"Filed a layoff notice in {n['state']}{people}", _d(n["notice_date"]),
                                   w["layoffs"] * factor, source={"state": n["state"], "location": n.get("location")}))
+    # A second key executive leaving within ~6 months: the strongest pattern in the backtest (1 in 4)
+    second = repeat_departure(departures, cfg["signals"].get("repeat_exec_window_days", 182))
+    if second and w.get("repeat_exec_departure"):
+        signals.append(Signal("repeat_exec_departure", "A second key executive left within 6 months", second,
+                              w["repeat_exec_departure"] * factor))
     # One layoff event often shows up in several places (an SEC report AND state notices): count only the newest
     if layoffs:
         signals.append(max(layoffs, key=lambda x: x.occurred))

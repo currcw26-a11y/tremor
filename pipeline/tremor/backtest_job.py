@@ -3,6 +3,7 @@
     python -m tremor.backtest_job
 """
 import hashlib
+import statistics
 from collections import Counter, defaultdict
 from datetime import date, timedelta
 
@@ -201,8 +202,13 @@ def run(today: date | None = None) -> dict:
     found = sum(1 for v in news.values() if v[1] is not None)
     print(f"  announcement day + stock move found for {found} of {len(trial_events)} trial events", flush=True)
 
+    # "A second key executive left within ~6 months" (same rule as the live score)
+    for t, ds in by["key_exec_departure"].items():
+        ds = sorted(set(ds))
+        by["repeat_exec_departure"][t] = [d for i, d in enumerate(ds) if i and 0 < (d - ds[i - 1]).days <= 182]
+
     all_cases, summaries = [], []
-    for kind in ("layoffs", "key_exec_departure"):
+    for kind in ("layoffs", "key_exec_departure", "repeat_exec_departure"):
         cases = bt.build_cases(kind, by[kind], stops, completions, news, today)
         all_cases += cases
         summaries.append(bt.summarize(kind, cases, baseline))
@@ -233,11 +239,17 @@ def run(today: date | None = None) -> dict:
     for s in summaries:
         s["extra"] = None
         if s["signal_type"] == "trial_stopped":
-            s["extra"] = {"reasons": dict(Counter(c["reason"] for c in stopped)),
+            by_reason = {}
+            for reason in set(c["reason"] for c in stopped):
+                moves = [c["move_pct"] for c in stopped if c["reason"] == reason and c["move_pct"] is not None]
+                by_reason[reason] = {"moves": len(moves),
+                                     "typical_move": round(statistics.median(moves), 1) if moves else None}
+            s["extra"] = {"reasons": dict(Counter(c["reason"] for c in stopped)), "by_reason": by_reason,
                           "safety": {"moves": safety["bad_moves"], "typical_move": safety["typical_bad_move"],
                                      "worst_move": min(safety_moves) if safety_moves else None}}
         if s["signal_type"] in outlook.BACKTESTED:   # the same plain sentences the trial pages and emails use
-            s["extra"] = {**(s["extra"] or {}), "plain": outlook.past_cases(s["signal_type"], s)["sentences"]}
+            s["extra"] = {**(s["extra"] or {}),
+                          "plain": outlook.past_cases(s["signal_type"], s, why_stopped=False)["sentences"]}
 
     unique_cases = {(c["signal_type"], c["ticker"], c["signal_day"]): c for c in all_cases}
     db.delete("backtest_cases", signal_type="not.is.null")   # start fresh: old rows used the old news-day method

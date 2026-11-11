@@ -35,8 +35,13 @@ score:
     results_overdue: 10           # main results date passed 12+ months ago, no results posted
     # From SEC filings (apply to all of the company's trials)
     insider_selling_cluster: 10   # 2+ insiders selling within 30 days, not pre-planned
-    key_exec_departure: 15        # e.g. chief medical officer or head of R&D leaves
-    layoffs: 15                   # restructuring/layoffs (8-K item 2.05 now; state notices in Week 3)
+    # Lowered from 15 to 10 on Nov 11, 2026 (owner's decision): in the backtest, each came before a stopped
+    # trial only a bit more often than a random day (11 of 90 and 20 of 177, vs about 1 in 13).
+    key_exec_departure: 10        # e.g. chief medical officer or head of R&D leaves
+    layoffs: 10                   # restructuring/layoffs (8-K item 2.05, plus state layoff notices)
+    # Added Nov 11, 2026: a SECOND key executive leaving within 6 months came before a stopped trial
+    # 5 out of 20 times (1 in 4) in the backtest. Extra points on top of the departure itself.
+    repeat_exec_departure: 10
     # From the FDA
     fda_advisory_meeting: 10      # FDA scheduled an outside-expert meeting about this trial's drug
     # Coming in later weeks (no data yet)
@@ -78,6 +83,7 @@ signals:
   # access to its report, so it isn't here; 8-K item 2.05 filings still catch big public layoffs.
   layoff_states: [ca, nj, ny, md, wa, tx, il, pa, ct, co]  # North Carolina is not covered by warn-scraper
   layoff_lookback_days: 365
+  repeat_exec_window_days: 182   # "a second key executive left within about 6 months"
 
 alerts:
   # A score rising this many points in one update is a "big jump" tremor

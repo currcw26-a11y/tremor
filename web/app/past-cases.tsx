@@ -8,6 +8,7 @@ import { Shape } from "./score";
 const TITLES: Record<string, string> = {
   layoffs: "Layoffs",
   key_exec_departure: "A key executive left",
+  repeat_exec_departure: "A second key executive left within 6 months",
   trial_stopped: "A trial was stopped early",
   primary_outcome_changed: "Main goal changed",
   enrollment_cut: "Fewer patients",

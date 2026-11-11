@@ -14,6 +14,7 @@ const STARTED = "Nov 6, 2026";
 const TITLES: Record<string, string> = {
   layoffs: "Layoffs",
   key_exec_departure: "A key executive left",
+  repeat_exec_departure: "A second key executive left within 6 months",
   trial_stopped: "A trial was stopped early",
 };
 
@@ -105,7 +106,7 @@ function SignalHistory({ s, cases, names }: { s: BacktestSummary; cases: Backtes
 
 export default async function TrackRecordPage() {
   const { summaries, cases, alerts, alertCount, names } = await getTrackRecord();
-  const order = ["layoffs", "key_exec_departure", "trial_stopped"];
+  const order = ["layoffs", "key_exec_departure", "repeat_exec_departure", "trial_stopped"];
   const shown = order.map((t) => summaries.find((s) => s.signal_type === t)).filter((s): s is BacktestSummary => !!s);
   const baseline = summaries.find((s) => s.baseline_bad_share)?.baseline_bad_share;
 

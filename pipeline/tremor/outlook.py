@@ -10,11 +10,13 @@ RECORDING_SINCE = "Nov 6, 2026"     # when Tremor started saving its own copies 
 MIN_MOVES = 10                      # fewer measured stock moves than this -> "not enough to say"
 
 # Score signals that have past cases in the backtest (backtest_summary.signal_type)
-BACKTESTED = {"layoffs": "layoffs", "key_exec_departure": "key_exec_departure", "trial_stopped": "trial_stopped"}
+BACKTESTED = {"layoffs": "layoffs", "key_exec_departure": "key_exec_departure",
+              "repeat_exec_departure": "repeat_exec_departure", "trial_stopped": "trial_stopped"}
 
 WHAT = {
     "layoffs": "smaller cancer-drug companies announced layoffs",
     "key_exec_departure": "a key executive, like the head of research, left a smaller cancer-drug company",
+    "repeat_exec_departure": "a second key executive left the same smaller cancer-drug company within 6 months",
 }
 
 # Signals Tremor can only learn about from its own recordings (no past history available for free)
@@ -64,7 +66,31 @@ def compare_words(share: float, baseline: float | None) -> str:
     return "less often than a random day"
 
 
-def past_cases(signal_type: str, summary: dict | None) -> dict:
+REASON_WORDS = {
+    "business": "a business decision (like saving money or focusing on other drugs), not a problem with the drug",
+    "safety_or_efficacy": "about how well the drug worked or its safety",
+    "enrollment": "trouble signing up enough patients",
+}
+
+
+def stated_reason(why: str | None, summary: dict | None) -> list[str]:
+    """The company's own reason for stopping this trial, and what happened to stocks after stops like it."""
+    from .backtest import stop_reason   # same sorter the backtest used
+    if not why:
+        return ["The company didn't give a reason for stopping in the trial's record."]
+    bucket = stop_reason(why)
+    out = [f"The company's stated reason: “{why.strip()[:300]}”"]
+    if bucket in REASON_WORDS:
+        out.append(f"That sounds like {REASON_WORDS[bucket]}.")
+    by_reason = ((summary or {}).get("extra") or {}).get("by_reason") or {}
+    r = by_reason.get(bucket) or {}
+    if bucket in REASON_WORDS and r.get("moves", 0) >= MIN_MOVES and r.get("typical_move") is not None:
+        out.append(f"When past stops gave this kind of reason, the stock typically {move_words(r['typical_move'])} "
+                   f"on the announcement ({r['moves']} cases).")
+    return out
+
+
+def past_cases(signal_type: str, summary: dict | None, why_stopped: str | None = None) -> dict:
     """Facts + plain sentences for one kind of signal."""
     if signal_type not in BACKTESTED:
         what = NO_HISTORY.get(signal_type, "this happened")
@@ -86,6 +112,8 @@ def past_cases(signal_type: str, summary: dict | None) -> dict:
         return out
     sent = out["sentences"]
     if signal_type == "trial_stopped":
+        if why_stopped is not False:   # False = summary text for the track record page (no single trial)
+            sent.extend(stated_reason(why_stopped, s))
         reasons = (s.get("extra") or {}).get("reasons") or {}
         biz = reasons.get("business", 0)
         sent.append(f"Since 2016, smaller cancer-drug companies stopped a trial early {n} times. "
@@ -156,7 +184,8 @@ def build(trial: dict, signal_types: list[str], summaries: dict[str, dict], tria
     for t in signal_types:
         if t not in seen:
             seen.add(t)
-            signals.append(past_cases(t, summaries.get(BACKTESTED.get(t, ""))))
+            signals.append(past_cases(t, summaries.get(BACKTESTED.get(t, "")),
+                                      why_stopped=trial.get("why_stopped") if t == "trial_stopped" else None))
     signals.sort(key=lambda s: -s["cases"])   # the ones with real history first
     big = trial_count >= 15
     notes = ["Past cases come from public records since 2016 for companies still listed today. Companies that went "
