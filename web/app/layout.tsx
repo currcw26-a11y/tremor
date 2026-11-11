@@ -51,12 +51,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               Tremor shows what changed in public records. It never tells anyone to buy or sell. Many trial
               edits are harmless paperwork. Data from ClinicalTrials.gov, the SEC, and the Federal Register.
             </p>
-            <p className="mt-3 flex gap-4">
+            <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
               <Link href="/companies" className="underline">
                 Companies
               </Link>
               <Link href="/track-record" className="underline">
                 Track record
+              </Link>
+              <Link href="/how-it-works" className="underline">
+                How the score works
               </Link>
               <Link href="/privacy" className="underline">
                 Privacy

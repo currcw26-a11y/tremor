@@ -60,14 +60,26 @@ def run() -> dict:
     confirmed = matching.confirmed_matches()
     stats = {"companies": sync_companies(confirmed)}
 
-    studies = {clinicaltrials.nct_id(s): s for s in clinicaltrials.fetch_cancer_trials()
-               if clinicaltrials.summarize(s)["sponsor_name"] in confirmed}
+    def wanted(s):
+        sm = clinicaltrials.summarize(s)
+        return sm["sponsor_name"] in confirmed and clinicaltrials.is_cancer_trial(sm)
+
+    studies = {clinicaltrials.nct_id(s): s for s in clinicaltrials.fetch_cancer_trials() if wanted(s)}
     known = {r["nct_id"]: r for r in db.select("trials", ",".join(TRIAL_FIELDS + ["content_hash", "latest_snapshot_id"]),
                                                 tracked="eq.true")}
     dropped_out = [n for n in known if n not in studies]
+    not_cancer = []
     for s in clinicaltrials.fetch_by_ids(dropped_out):
-        studies[clinicaltrials.nct_id(s)] = s
-    stats.update(trials_tracked=len(studies), refetched_by_id=len(dropped_out))
+        if clinicaltrials.is_cancer_trial(clinicaltrials.summarize(s)):
+            studies[clinicaltrials.nct_id(s)] = s
+        else:
+            not_cancer.append(clinicaltrials.nct_id(s))
+    # Not a cancer trial after all (the search is generous): stop tracking it. Its history stays saved.
+    for i in range(0, len(not_cancer), 100):
+        db.update("trials", {"tracked": False}, nct_id=f"in.({','.join(not_cancer[i:i + 100])})")
+        for n in not_cancer[i:i + 100]:
+            known.pop(n, None)
+    stats.update(trials_tracked=len(studies), refetched_by_id=len(dropped_out), untracked_not_cancer=len(not_cancer))
 
     trial_rows, new_snapshots, pending_changes = [], [], {}
     for nct, study in studies.items():

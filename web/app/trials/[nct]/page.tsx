@@ -47,6 +47,9 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
         <div className="mt-3">
           <Reasons reasons={t.score_breakdown ?? []} score={t.score} />
         </div>
+        <Link href="/how-it-works" className="mt-2 inline-block text-sm underline">
+          How the score works
+        </Link>
         <h2 className="mt-6 text-lg font-bold">Score over time</h2>
         <div className="mt-3">
           <ScoreChart points={history} current={t.score} currentLabel={t.score_label} />

@@ -35,3 +35,18 @@ def test_summarize_handles_missing_sections():
     assert t["nct_id"] == "NCT00000002"
     assert t["enrollment"] is None
     assert t["primary_outcomes"] == []
+
+
+def test_only_real_cancer_trials_are_kept():
+    from tremor.sources.clinicaltrials import is_cancer_trial
+    t = lambda conds, title="A Study": {"conditions": conds, "title": title}   # noqa: E731
+    # Pulled in by the search, but not cancer
+    for conds in (["Secondary Progressive Multiple Sclerosis"], ["Common Warts (Verruca Vulgaris)"],
+                  ["Papillomavirus Infections"], ["Generalized Myasthenia Gravis"], ["Geographic Atrophy"],
+                  ["Pulmonary Hypertension"], ["Lymphatic Malformations"]):
+        assert not is_cancer_trial(t(conds, "A Study in All Participants")), conds   # "All" isn't "ALL"
+    # Real cancer (or tumor) trials, including short codes and benign tumors cancer doctors treat
+    for conds in (["Non-small Cell Lung Cancer"], ["NMIBC"], ["mCRPC"], ["AML"], ["Meningioma"],
+                  ["Vestibular Schwannoma"], ["Gastric; Esophagogastric Junction"],
+                  ["Chemotherapy Induced Neuropathic Pain"], ["Multiple Myeloma"], ["Glioblastoma"]):
+        assert is_cancer_trial(t(conds)), conds

@@ -1,0 +1,36 @@
+{
+  "labels": {
+    "calm": 0,
+    "shaky": 40,
+    "tremor": 70
+  },
+  "half_life_days": 60,
+  "max_age_days": 365,
+  "stopped_floor": 85,
+  "big_company_trial_count": 15,
+  "big_company_factor": 0.5,
+  "enrollment_final_count_factor": 0.5,
+  "weights": {
+    "primary_outcome_changed": 25,
+    "enrollment_cut": 15,
+    "date_delayed": 10,
+    "results_overdue": 10,
+    "insider_selling_cluster": 10,
+    "key_exec_departure": 10,
+    "layoffs": 10,
+    "repeat_exec_departure": 10,
+    "fda_advisory_meeting": 10,
+    "job_postings_drop": 5,
+    "rival_trial_failed": 10
+  },
+  "detection": {
+    "enrollment_cut_percent": 15,
+    "date_delay_months": 3,
+    "results_overdue_months": 12,
+    "insider_cluster_days": 30,
+    "insider_cluster_min_people": 2,
+    "fda_meeting_days_after": 30
+  },
+  "repeat_exec_window_days": 182,
+  "big_jump_points": 15
+}

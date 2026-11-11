@@ -143,7 +143,9 @@ export async function getRecentChanges(limit = 30, includeMinor = false) {
   "use cache";
   cacheLife("minutes");
   const params: Record<string, string> = {
-    select: "*,trials(title,ticker,sponsor_name,score,score_label)",
+    // !inner + the filter below: only changes on trials Tremor still tracks
+    select: "*,trials!inner(title,ticker,sponsor_name,score,score_label,tracked)",
+    "trials.tracked": "eq.true",
     order: "detected_at.desc,id.desc",
     limit: String(limit),
   };

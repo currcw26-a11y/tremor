@@ -9,6 +9,7 @@ Which trials we pull:
 Run this file directly to see a quick summary:
     python -m tremor.sources.clinicaltrials
 """
+import re
 from collections import Counter
 from datetime import date
 
@@ -75,6 +76,27 @@ def nct_id(study: dict) -> str:
 
 def _date(module: dict, key: str):
     return (module.get(key) or {}).get("date")
+
+
+# ClinicalTrials.gov's search is generous: it treats "secondary" as "metastatic" and "papilloma" as a tumor,
+# so it also returns multiple sclerosis ("Secondary Progressive"), warts, HPV vaccines and more. This
+# stricter check runs on the trial's own conditions and title. Kept on purpose: benign tumors that cancer
+# doctors treat (meningioma, schwannoma, neurofibroma) and trials for side effects of chemotherapy.
+CANCER_TEXT = re.compile(
+    r"cancer|carcinom|tumou?r|neoplas|oncolog|lymphom|leuka?emi|myelom|sarcom|melanom|gliom|glioblastom|blastoma|"
+    r"mesotheliom|metasta|malignan|myelodysplas|myeloprolif|mastocytos|macroglobulin|waldenstr|histiocyt|"
+    r"myelofibros|polycythemia|thrombocythemia|seminoma|germ cell|adenoma|carcinoid|neuroendocrine|cholangio|"
+    r"chordoma|ependymom|astrocytom|retinoblastom|lymphoprolif|castleman|plasmacyt|gammopathy|myeloid|lymphoid|"
+    r"light chain amyloidosis|AL amyloidosis|meningiom|schwannom|neurofibrom|chemotherapy|gastric|esophag|"
+    r"hepatocellular|urothelial|bladder|prostat|pancrea|colorectal|ovarian|cervical intraepithelial", re.I)
+# Short codes only count in capitals, so the word "all" doesn't look like "ALL" (a leukemia)
+CANCER_CODES = re.compile(r"\b(ALL|AML|CLL|CML|MDS|MPN|HCC|CRC|NHL|DLBCL|NSCLC|SCLC|GIST|mCRPC|nmCRPC|CRPC|NMIBC|"
+                          r"MIBC|RCC|TNBC|HNSCC|SCCHN|GBM|MM|FL|MCL|MZL|PTCL|CTCL|AITL|BPDCN)\b")
+
+
+def is_cancer_trial(summary: dict) -> bool:
+    text = " ".join(summary.get("conditions") or []) + " " + (summary.get("title") or "")
+    return bool(CANCER_TEXT.search(text) or CANCER_CODES.search(text))
 
 
 def summarize(study: dict) -> dict:

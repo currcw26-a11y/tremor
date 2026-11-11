@@ -75,7 +75,9 @@ def results_due(today: date) -> list[dict]:
 
 def run(today: date | None = None) -> dict:
     today = today or date.today()
-    companies = {c["cik"].zfill(10): c["ticker"] for c in db.select("companies", "ticker,cik")}
+    # Only companies that still have at least one tracked cancer trial
+    with_trials = {t["ticker"] for t in db.select("trials", "ticker", tracked="eq.true")}
+    companies = {c["cik"].zfill(10): c["ticker"] for c in db.select("companies", "ticker,cik") if c["ticker"] in with_trials}
     decisions, checked = fda_decisions(companies, today)
     meetings, due = fda_meetings(today), results_due(today)
     db.delete("upcoming_events", id="gt.0")   # small table: rebuilt fresh every day
