@@ -83,6 +83,7 @@ export function Reasons({ reasons, score }: { reasons: Reason[]; score: number }
   if (!reasons.length)
     return <p className="text-muted">No warning signs right now. That&apos;s why the score is 0.</p>;
   const total = reasons.reduce((sum, r) => sum + r.points, 0);
+  const shown = wholePoints(reasons.map((r) => r.points));
   return (
     <div>
       <ul className="divide-y divide-line border-y border-line">
@@ -90,15 +91,15 @@ export function Reasons({ reasons, score }: { reasons: Reason[]; score: number }
           <li key={i} className="flex items-start justify-between gap-4 py-3">
             <div>
               <p className="font-medium">{r.label}</p>
+              {r.type !== "trial_stopped" && (
               <p className="mt-0.5 text-xs text-muted">
-                {r.type === "trial_stopped"
-                  ? "Stopped trials go straight to red"
-                  : r.fades
-                    ? `Since ${niceDate(r.occurred)} · was worth ${round(r.base_points)}, fading over time`
+                {r.fades
+                    ? `Since ${niceDate(r.occurred)} · was worth ${Math.round(r.base_points)}, fading over time`
                     : "Counts until it's fixed"}
               </p>
+              )}
             </div>
-            <span className="shrink-0 font-mono font-semibold tabular-nums">+{round(r.points)}</span>
+            <span className="shrink-0 font-mono font-semibold tabular-nums">+{shown[i]}</span>
           </li>
         ))}
       </ul>
@@ -113,4 +114,11 @@ export function Reasons({ reasons, score }: { reasons: Reason[]; score: number }
   );
 }
 
-const round = (n: number) => Math.round(n * 10) / 10;
+/** Whole numbers that still add up to the rounded total (82 + 3 = 85, not 81.9 + 3.1). */
+export function wholePoints(points: number[]): number[] {
+  const target = Math.round(points.reduce((a, b) => a + b, 0));
+  const out = points.map(Math.floor);
+  const order = points.map((p, i) => [p - Math.floor(p), i] as const).sort((a, b) => b[0] - a[0]);
+  for (let k = 0, left = target - out.reduce((a, b) => a + b, 0); left > 0 && k < order.length; k++, left--) out[order[k][1]] += 1;
+  return out;
+}

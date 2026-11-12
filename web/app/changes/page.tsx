@@ -62,7 +62,7 @@ export default function ChangesPage(props: PageProps<"/changes">) {
       </div>
       <aside className="rise rise-2 lg:col-span-4">
         <div className="lg:sticky lg:top-24">
-          <p className="border-t border-foreground pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          <p className="border-t border-foreground pt-3 text-sm font-semibold text-foreground">
             What the dots mean
           </p>
           <ul className="mt-3 space-y-4 text-sm">

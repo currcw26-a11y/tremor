@@ -13,8 +13,9 @@ export const metadata = { alternates: { canonical: "/" } };
 async function Facts() {
   const s = await getStats();
   return (
-    <p className="mt-10 font-mono text-xs uppercase tracking-[0.12em] text-muted">
-      {s.trials.toLocaleString()} trials · {s.companies.toLocaleString()} companies · checked <TimeAgo iso={s.lastRun} />
+    <p className="mt-10 text-sm text-muted">
+      Watching {s.trials.toLocaleString()} trials at {s.companies.toLocaleString()} companies. Last checked{" "}
+      <TimeAgo iso={s.lastRun} />.
     </p>
   );
 }
@@ -42,7 +43,7 @@ async function NextUp() {
                     <span className="block font-serif text-3xl font-medium leading-none">
                       {e.date_precision === "day" ? Number(d) : "—"}
                     </span>
-                    <span className="mt-1 block font-mono text-[11.5px] uppercase tracking-wide text-muted">
+                    <span className="mt-1 block text-xs text-muted">
                       {MONTHS[Number(m) - 1]} {y.slice(2)}
                     </span>
                   </span>
@@ -53,7 +54,6 @@ async function NextUp() {
                     </span>
                     <span className="mt-1 block font-medium">
                       {e.kind === "fda_decision" ? "FDA decision expected" : "Main trial results expected"}{" "}
-                      <span className="nudge text-muted">→</span>
                     </span>
                   </span>
                 </Link>
@@ -94,7 +94,7 @@ async function TopWorries() {
               <span className="min-w-0">
                 <span className="flex items-center gap-2">
                   <Ticker symbol={t.ticker} />
-                  <span className="truncate text-sm text-ink-2">{t.sponsor_name}</span>
+                  <span className="truncate text-sm text-ink-2">{companyName(t.sponsor_name, t.ticker)}</span>
                 </span>
                 <span className="mt-1 line-clamp-2 font-medium leading-snug">{t.title}</span>
                 {first && (
@@ -138,13 +138,13 @@ export default function Home() {
           </p>
           <div className="mt-7 flex flex-wrap gap-x-8 text-[15px] font-medium">
             <Link href="/learn" className="inline-block py-2">
-              <span className="link-grow">How biotech stocks move</span> <span className="nudge">→</span>
+              <span className="underline decoration-line decoration-1 underline-offset-[5px] transition-colors hover:decoration-foreground">How biotech stocks move</span>
             </Link>
             <Link href="/how-it-works" className="inline-block py-2">
-              <span className="link-grow">How the score works</span> <span className="nudge">→</span>
+              <span className="underline decoration-line decoration-1 underline-offset-[5px] transition-colors hover:decoration-foreground">How the score works</span>
             </Link>
             <Link href="/weekly" className="inline-block py-2">
-              <span className="link-grow">This week&apos;s roundup</span> <span className="nudge">→</span>
+              <span className="underline decoration-line decoration-1 underline-offset-[5px] transition-colors hover:decoration-foreground">This week&apos;s roundup</span>
             </Link>
           </div>
           <Suspense fallback={<p className="mt-10 h-4" />}>
@@ -159,7 +159,7 @@ export default function Home() {
       </section>
 
       <section>
-        <SectionHead title="Biggest worries right now" href="/trials" linkText="All trials" />
+        <SectionHead title="Highest worry scores right now" href="/trials" linkText="All trials" />
         <Suspense fallback={<div className="h-72" />}>
           <TopWorries />
         </Suspense>

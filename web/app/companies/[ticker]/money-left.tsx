@@ -2,7 +2,7 @@ import type { Company, Filing } from "@/lib/db";
 import { niceDate } from "@/lib/words";
 import { Term } from "../../term";
 
-const SHARE_SALE_FORMS = new Set(["S-3", "S-1", "424B5"]);
+const SHARE_SALE_FORMS = new Set(["S-3", "S-1", "424B5", "F-1", "F-3"]);
 
 function dollars(n: number) {
   const a = Math.abs(n);
@@ -21,18 +21,18 @@ export function MoneyLeft({ company, filings }: { company: Company; filings: Fil
   const asOf = niceDate(c.finances_as_of);
   const laterShareSale = filings.find((f) => SHARE_SALE_FORMS.has(f.form) && f.filed_at > c.finances_as_of!);
   const months = c.runway_months == null ? null : Math.round(c.runway_months);
-  const tone = months == null ? "text-calm" : months < 12 ? "text-tremor" : months < 24 ? "text-shaky-text" : "text-calm";
 
   return (
     <div>
       {months != null ? (
         <p>
-          <span className={`font-serif text-5xl font-medium tabular-nums ${tone}`}>{months < 1 ? "Under 1" : `About ${months}`}</span>{" "}
-          <span className="font-medium">month{months === 1 ? "" : "s"} of money left</span>
-          <span className="block text-sm text-muted">at its recent spending rate</span>
+          <span className="block font-serif text-5xl font-medium tabular-nums">
+            {months < 1 ? "Under 1" : `About ${months}`} <span className="text-2xl">month{months === 1 ? "" : "s"}</span>
+          </span>
+          <span className="mt-1 block text-sm text-muted">of money left at its recent spending rate</span>
         </p>
       ) : (
-        <p className="font-serif text-2xl font-medium text-calm">Not burning cash</p>
+        <p className="font-serif text-2xl font-medium">Not burning cash</p>
       )}
       <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-sm">
         <div>
@@ -59,7 +59,7 @@ export function MoneyLeft({ company, filings }: { company: Company; filings: Fil
         </p>
       )}
       {laterShareSale && (
-        <p className="mt-3 border-l-2 border-shaky pl-3 text-sm">
+        <p className="mt-3 border-l-2 border-foreground pl-3 text-sm">
           Since {asOf}, the company has filed paperwork to issue new shares ({laterShareSale.form} on{" "}
           {niceDate(laterShareSale.filed_at)}), so it may have more cash now.
         </p>

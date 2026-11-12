@@ -11,17 +11,20 @@ export const metadata = {
   alternates: { canonical: "/companies" },
 };
 
-function months(m: number | null | undefined) {
-  if (m == null) return <span className="text-muted">—</span>;
+function months(m: number | null | undefined, burn?: number | null, cash?: number | null) {
+  if (m == null) {
+    if (cash != null && burn != null && burn <= 0) return <span className="font-sans text-xs text-muted">Not burning cash</span>;
+    return <span className="text-muted" title="No recent cash numbers in its SEC reports">—</span>;
+  }
   const n = Math.round(m);
-  return <span className={n < 12 ? "text-tremor" : ""}>{n < 1 ? "under 1" : n} mo</span>;
+  return <span className={n < 12 ? "font-semibold text-foreground" : ""}>{n < 1 ? "under 1" : n} mo</span>;
 }
 
 async function List() {
   const companies = await getCompanies();
   return (
     <div className="mt-8">
-      <div className="hidden grid-cols-[minmax(0,1fr)_7rem_7rem_9rem] gap-4 border-b border-foreground pb-2 font-mono text-[11px] uppercase tracking-[0.12em] text-muted md:grid">
+      <div className="hidden grid-cols-[minmax(0,1fr)_7rem_7rem_9rem] gap-4 border-b border-foreground pb-2 text-xs font-medium text-muted md:grid">
         <span>Company</span>
         <span className="text-right">Trials</span>
         <span className="text-right">Money left</span>
@@ -43,7 +46,7 @@ async function List() {
                 {c.count}
                 <span className="md:hidden"> tracked trial{c.count === 1 ? "" : "s"}</span>
               </span>
-              <span className="hidden text-right font-mono text-sm md:block">{months(c.runway_months)}</span>
+              <span className="hidden text-right font-mono text-sm md:block">{months(c.runway_months, c.monthly_burn_usd, c.cash_usd)}</span>
               <span className="row-span-2 justify-self-end md:row-span-1">
                 <ScoreBadge score={c.top} label={c.label} />
               </span>

@@ -20,7 +20,7 @@ export function SectionHead({
       <Tag className={`font-serif font-medium tracking-tight ${Tag === "h2" ? "text-2xl" : "text-xl"}`}>{title}</Tag>
       {href && (
         <Link href={href} className="tap shrink-0 text-sm text-ink-2 hover:text-foreground">
-          <span className="link-grow">{linkText}</span> <span className="nudge">→</span>
+          <span className="link-grow">{linkText}</span>
         </Link>
       )}
       {children}

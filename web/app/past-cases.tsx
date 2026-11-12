@@ -123,11 +123,11 @@ export function OutlookSection({ outlook, company }: { outlook: Outlook | null |
 
       <dl className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-3">
         <div className="border-t-2 border-foreground pt-3">
-          <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">How big a deal for them</dt>
+          <dt className="text-sm font-semibold text-foreground">How big a deal for them</dt>
           <dd className="mt-2 text-sm leading-relaxed text-ink-2">{outlook.stakes.text}</dd>
         </div>
         <div className="border-t-2 border-foreground pt-3">
-          <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Money left</dt>
+          <dt className="text-sm font-semibold text-foreground">Money left</dt>
           <dd className="mt-2 text-sm leading-relaxed text-ink-2">
             {months != null ? (
               <>
@@ -147,7 +147,7 @@ export function OutlookSection({ outlook, company }: { outlook: Outlook | null |
           </dd>
         </div>
         <div className="border-t-2 border-foreground pt-3">
-          <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">When we&apos;ll find out</dt>
+          <dt className="text-sm font-semibold text-foreground">When we&apos;ll find out</dt>
           <dd className="mt-2 text-sm leading-relaxed text-ink-2">
             {!ne
               ? "No upcoming results date listed."

@@ -21,9 +21,7 @@ function blocks(text: string) {
 export function Issue({ issue }: { issue: WeeklyIssue }) {
   return (
     <article className="rise">
-      <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted">
-        {niceDate(issue.week_start)} to {niceDate(issue.week_end)}
-      </p>
+      <p className="text-sm text-muted">Tremor Weekly</p>
       <h1 className="mt-2 font-serif text-4xl font-medium tracking-tight sm:text-5xl">{issue.title.replace(/^Tremor Weekly: /, "")}</h1>
       <div className="mt-8 max-w-2xl">
         {blocks(issue.body).map((b, i) =>
@@ -63,7 +61,7 @@ export function Issue({ issue }: { issue: WeeklyIssue }) {
 export function PastIssues({ issues, current }: { issues: WeeklyIssue[]; current?: string }) {
   return (
     <div className="lg:sticky lg:top-24">
-      <p className="border-t border-foreground pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+      <p className="border-t border-foreground pt-3 text-sm font-semibold text-foreground">
         All issues
       </p>
       <ul className="mt-3 space-y-2.5 text-sm">

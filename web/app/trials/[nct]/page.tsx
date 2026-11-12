@@ -42,8 +42,8 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
     ["Stage", <PhaseTerm key="stage" phases={t.phases} />],
     [<Term key="p" id="enrollment">Patients</Term>, t.enrollment != null ? `${t.enrollment.toLocaleString()} ${t.enrollment_type === "ACTUAL" ? "(final count)" : "(planned)"}` : "unknown"],
     ["Started", niceDate(t.start_date)],
-    ["Main results expected", niceDate(t.primary_completion_date)],
-    ["Fully finished", niceDate(t.completion_date)],
+    ["Main results due", niceDate(t.primary_completion_date)],
+    ["Finish date", niceDate(t.completion_date)],
     ["Results posted", t.results_first_posted ? niceDate(t.results_first_posted) : "not yet"],
     [
       <Term key="dt" id="drug_target">Drug targets</Term>,
@@ -93,7 +93,7 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
           <div className="space-y-8 lg:sticky lg:top-24">
             <StarButton kind="trial" id={t.nct_id} />
             <div>
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted">The trial</h2>
+              <h2 className="mb-2 text-sm font-semibold">The trial</h2>
               <Facts rows={facts} />
             </div>
             <div className="space-y-2 text-sm">
@@ -101,8 +101,7 @@ async function TrialDetails({ params }: { params: PageProps<"/trials/[nct]">["pa
                 <span className="link-grow">Official record on ClinicalTrials.gov</span> <span className="nudge">↗</span>
               </a>
               <Link href={`/companies/${t.ticker}`} className="block text-ink-2 hover:text-foreground">
-                <span className="link-grow">Everything about {companyName(company?.name ?? t.sponsor_name, t.ticker)}</span>{" "}
-                <span className="nudge">→</span>
+                <span className="link-grow">Everything about {companyName(company?.name ?? t.sponsor_name, t.ticker)}</span>
               </Link>
               <p className="font-mono text-xs text-muted">{t.nct_id}</p>
             </div>

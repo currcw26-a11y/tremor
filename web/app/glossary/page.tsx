@@ -61,7 +61,7 @@ export default function GlossaryPage() {
       </article>
       <aside className="hidden lg:col-span-3 lg:block">
         <nav className="sticky top-24" aria-label="Sections">
-          <p className="border-t border-foreground pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          <p className="border-t border-foreground pt-3 text-sm font-semibold text-foreground">
             Sections
           </p>
           <ul className="mt-3 space-y-2.5 text-sm">

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Change, Trial } from "@/lib/db";
-import { STATUS, describeChange, niceDate, phaseLabel, statusLabel } from "@/lib/words";
+import { STATUS, companyName, describeChange, niceDate, phaseLabel, statusLabel, tidyDates } from "@/lib/words";
 import { TimeAgo } from "./time-ago";
 import { ScoreBadge } from "./score";
 import { ChangeDiff } from "./change-diff";
@@ -26,17 +26,22 @@ export function StatusPill({ status }: { status: string }) {
   );
 }
 
-export function TrialRow({ t }: { t: Trial }) {
+/** One trial in a list. On a company's own page the company line is left out (it would repeat on every row). */
+export function TrialRow({ t, showCompany = true }: { t: Trial; showCompany?: boolean }) {
   return (
     <li className="border-b border-line last:border-b-0">
       <Link
         href={`/trials/${t.nct_id}`}
         className="group -mx-3 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-1 rounded-md px-3 py-4 transition-colors hover:bg-surface"
       >
-        <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-ink-2">
-          <Ticker symbol={t.ticker} />
-          <span className="truncate">{t.sponsor_name}</span>
-        </div>
+        {showCompany ? (
+          <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-ink-2">
+            <Ticker symbol={t.ticker} />
+            <span className="truncate">{companyName(t.sponsor_name, t.ticker)}</span>
+          </div>
+        ) : (
+          <span />
+        )}
         <ScoreBadge score={t.score} label={t.score_label} />
         <p className="col-span-2 font-medium leading-snug text-foreground">
           {t.title} <span className="nudge text-muted opacity-0 transition-opacity group-hover:opacity-100">→</span>
@@ -67,7 +72,7 @@ export function ChangeRow({ c, showTrial = true }: { c: Change; showTrial?: bool
         )}
         <p className={`font-medium leading-snug ${showTrial ? "mt-1.5" : ""}`}>{text}</p>
         {c.explanation && (
-          <p className={`mt-1.5 text-sm leading-relaxed text-ink-2 ${showTrial ? "line-clamp-2" : ""}`}>{c.explanation}</p>
+          <p className={`mt-1.5 text-sm leading-relaxed text-ink-2 ${showTrial ? "line-clamp-2" : ""}`}>{tidyDates(c.explanation)}</p>
         )}
         <p className="mt-1.5 text-xs text-muted">
           Spotted <TimeAgo iso={c.detected_at} />

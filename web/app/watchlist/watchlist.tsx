@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ScoreLabel, Trial } from "@/lib/db";
 import { signIn, supabase, useUser } from "@/lib/supabase-browser";
+import { companyName } from "@/lib/words";
 import { Empty, Ticker, TrialRow } from "../components";
 
 type Row<T> = { created_at: string } & T;
@@ -80,7 +81,7 @@ export function Watchlist() {
                 <li key={c.ticker}>
                   <Link href={`/companies/${c.ticker}`} className="flex items-center gap-3 p-3 hover:bg-background">
                     <Ticker symbol={c.ticker} />
-                    <span className="font-semibold">{c.name}</span>
+                    <span className="font-semibold">{companyName(c.name, c.ticker)}</span>
                   </Link>
                 </li>
               ))}

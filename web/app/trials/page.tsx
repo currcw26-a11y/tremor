@@ -80,7 +80,7 @@ export default function TrialsPage(props: PageProps<"/trials">) {
       <aside className="rise rise-2 hidden lg:col-span-4 lg:block">
         <div className="sticky top-24 space-y-8 text-sm">
           <div>
-            <p className="border-t border-foreground pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+            <p className="border-t border-foreground pt-3 text-sm font-semibold text-foreground">
               Reading the scores
             </p>
             <ul className="mt-3 space-y-3">
@@ -97,11 +97,11 @@ export default function TrialsPage(props: PageProps<"/trials">) {
               ))}
             </ul>
             <Link href="/how-it-works" className="mt-4 inline-block text-ink-2 hover:text-foreground">
-              <span className="link-grow">How the score works</span> <span className="nudge">→</span>
+              <span className="link-grow">How the score works</span>
             </Link>
           </div>
           <div>
-            <p className="border-t border-foreground pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+            <p className="border-t border-foreground pt-3 text-sm font-semibold text-foreground">
               Search tips
             </p>
             <p className="mt-3 leading-relaxed text-ink-2">

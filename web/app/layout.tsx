@@ -84,12 +84,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </Link>
               <p className="mt-4 max-w-sm text-sm leading-relaxed">
                 Tremor reads public records about cancer drug trials every four hours and explains what changed, in plain
-                English. Data from ClinicalTrials.gov, the SEC, the Federal Register, and state layoff notices.
+                English. Data from ClinicalTrials.gov, the SEC, the FDA, and state layoff notices.
               </p>
             </div>
             {FOOTER.map((col) => (
               <div key={col.title} className="md:col-span-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/50">{col.title}</p>
+                <p className="text-sm font-semibold text-white">{col.title}</p>
                 <ul className="mt-2 text-sm">
                   {col.links.map(([href, label]) => (
                     <li key={href}>

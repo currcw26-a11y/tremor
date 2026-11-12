@@ -36,8 +36,9 @@ export function timeAgo(iso: string | null) {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
   const hours = Math.round(mins / 60);
-  if (hours < 48) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  return `${Math.round(hours / 24)} days ago`;
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.round(hours / 24);
+  return days === 1 ? "1 day ago" : `${days} days ago`;
 }
 
 const n = (v: unknown) => (typeof v === "number" ? v.toLocaleString() : String(v ?? "?"));
@@ -98,5 +99,16 @@ export function companyName(name: string | null | undefined, ticker = "") {
       .map((w) => (KEEP_UPPER.has(w.toUpperCase()) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1)))
       .join(" ");
   }
-  return n.replace(/,?\s+(Inc|Corp|Corporation|Co|Ltd|Limited)\.?$/i, "").trim() || ticker;
+  // Drop legal endings ("Inc.", "plc", "S.A.", "AG"...), but keep "& Co." whole ("Merck & Co.")
+  const ending = /,?\s+(Inc|Corp|Corporation|Ltd|Limited|LLC|L\.?P|plc|S\.?A|N\.?V|AG|SE|A\/S|(?<!&\s)Co)\.?$/i;
+  for (let i = 0; i < 2 && ending.test(n); i++) n = n.replace(ending, "").trim();
+  return n || ticker;
+}
+
+/** AI summaries sometimes copy dates the way records store them ("2026-11-10", "2026-11"). Show them the normal way. */
+export function tidyDates(text: string) {
+  const M = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return text
+    .replace(/\b(20\d\d)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b/g, (_, y, m, d) => `${M[+m - 1]} ${+d}, ${y}`)
+    .replace(/\b(20\d\d)-(0[1-9]|1[0-2])\b/g, (_, y, m) => `${M[+m - 1]} ${y}`);
 }

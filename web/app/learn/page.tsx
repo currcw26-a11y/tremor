@@ -61,7 +61,7 @@ export default async function LearnPage() {
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
       <article className="rise min-w-0 lg:col-span-7">
-        <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted">
+        <p className="text-sm text-muted">
           2-minute read
         </p>
         <h1 className="mt-1 font-serif text-4xl font-medium tracking-tight sm:text-5xl">
@@ -89,7 +89,7 @@ export default async function LearnPage() {
             piece of news about that drug can move the stock a lot, up or down,
             in one day.
           </p>
-          <p className="border-l-2 border-tremor py-1 pl-4 font-serif text-lg italic leading-relaxed text-foreground">
+          <p className="border-l-2 border-foreground py-1 pl-4 font-serif text-lg italic leading-relaxed text-foreground">
             Example from Tremor&apos;s own data: when Soligenix announced in
             April 2026 that a trial was being stopped because the drug
             wasn&apos;t working well enough, its stock fell 76% from the day
@@ -104,7 +104,7 @@ export default async function LearnPage() {
           >
             {ROAD.map((s, i) => (
               <li key={s} className="flex items-center gap-1.5">
-                <span className="rounded-md border border-line px-2 py-1 font-mono text-xs uppercase tracking-wider text-foreground">
+                <span className="text-sm font-semibold text-foreground">
                   {s}
                 </span>
                 {i < ROAD.length - 1 && (
@@ -280,7 +280,7 @@ export default async function LearnPage() {
       </article>
       <aside className="hidden lg:col-span-4 lg:col-start-9 lg:block">
         <nav className="sticky top-24" aria-label="On this page">
-          <p className="border-t border-foreground pt-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          <p className="border-t border-foreground pt-3 text-sm font-semibold text-foreground">
             On this page
           </p>
           <ol className="mt-3 space-y-2.5 text-sm">

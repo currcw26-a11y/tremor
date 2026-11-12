@@ -42,7 +42,7 @@ function DateBox({ e }: { e: UpcomingEvent }) {
       <div className="font-serif text-3xl font-medium leading-none">
         {w.big}
       </div>
-      <div className="mt-1 font-mono text-[11.5px] uppercase leading-tight tracking-wide text-muted">
+      <div className="mt-1 text-xs leading-tight text-muted">
         {w.small}
       </div>
     </div>

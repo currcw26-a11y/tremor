@@ -40,6 +40,20 @@ Rules (never break these):
 SHORT_SYSTEM = SYSTEM.replace("Write 3 short sentences:", "Write ONE short sentence covering, briefly:")
 
 
+_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+           "November", "December"]
+
+
+def _nice(value) -> str:
+    """'2026-11-10' -> 'November 10, 2026'; '2026-11' -> 'November 2026' (so Claude copies a readable date)."""
+    v = str(value or "")
+    if len(v) >= 10 and v[4] == "-" and v[7] == "-" and v[:10].replace("-", "").isdigit():
+        return f"{_MONTHS[int(v[5:7]) - 1]} {int(v[8:10])}, {v[:4]}"
+    if len(v) == 7 and v[4] == "-" and v.replace("-", "").isdigit():
+        return f"{_MONTHS[int(v[5:7]) - 1]} {v[:4]}"
+    return v
+
+
 def describe(change: dict) -> str:
     """The code-written fact sentence (same idea as the website's describeChange)."""
     t, d = change["change_type"], change.get("details") or {}
@@ -48,7 +62,7 @@ def describe(change: dict) -> str:
     if t == "enrollment_cut":
         return f"The planned number of patients went from {old} to {new} ({round(d.get('percent_cut', 0))}% fewer)."
     if t == "date_delayed":
-        return (f"The {date_name} moved from {old} to {new}, about {round(abs(d.get('months', 0)))} months later.")
+        return (f"The {date_name} moved from {_nice(old)} to {_nice(new)}, about {round(abs(d.get('months', 0)))} months later.")
     if t == "trial_stopped":
         return f"The trial's status changed from {STATUS_WORDS.get(old, old)} to {STATUS_WORDS.get(new, new)}."
     if t in ("primary_outcome_changed", "primary_outcome_added"):
@@ -56,7 +70,7 @@ def describe(change: dict) -> str:
         after = "; ".join(o.get("measure", "") for o in new or [])
         return f"The trial's main goal (what counts as success) changed. Before: {before}. Now: {after}."
     if t == "results_posted":
-        return f"The company posted the trial's results for the first time on {new}."
+        return f"The company posted the trial's results for the first time on {_nice(new)}."
     if t == "interventions_changed":
         return f"The drugs in the trial changed. Before: {', '.join(old or [])}. Now: {', '.join(new or [])}."
     if t == "phase_changed":

@@ -98,7 +98,7 @@ async function CompanyDetails({
             </h2>
             <ul className="mt-2">
               {trials.map((t) => (
-                <TrialRow key={t.nct_id} t={t} />
+                <TrialRow key={t.nct_id} t={t} showCompany={false} />
               ))}
             </ul>
           </section>
@@ -107,9 +107,6 @@ async function CompanyDetails({
             <h2 className="border-t border-foreground pt-3 font-serif text-2xl font-medium tracking-tight">
               Company-wide warning signs
             </h2>
-            <p className="mt-3 text-sm text-muted">
-              These add points to every one of this company&apos;s trials.
-            </p>
             <div className="mt-3">
               {signals.length ? (
                 <ul className="divide-y divide-line border-y border-line">
@@ -122,13 +119,16 @@ async function CompanyDetails({
                         </span>
                       </span>
                       <span className="font-mono font-semibold tabular-nums">
-                        +{Math.round(s.points * 10) / 10}
+                        +{Math.round(s.points)}
                       </span>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <Empty>None right now.</Empty>
+              )}
+              {signals.length > 0 && (
+                <p className="mt-2 text-sm text-muted">These add points to every one of this company&apos;s trials.</p>
               )}
             </div>
           </section>
@@ -137,9 +137,6 @@ async function CompanyDetails({
             <h2 className="border-t border-foreground pt-3 font-serif text-2xl font-medium tracking-tight">
               Key executives leaving
             </h2>
-            <p className="mt-3 text-sm text-muted">
-              From the last 12 months of the company&apos;s SEC reports.
-            </p>
             <div className="mt-3">
               {departures.length ? (
                 <ul className="divide-y divide-line border-y border-line">
@@ -163,7 +160,7 @@ async function CompanyDetails({
                   ))}
                 </ul>
               ) : (
-                <Empty>None found.</Empty>
+                <Empty>None in the company&apos;s SEC reports from the last 12 months.</Empty>
               )}
             </div>
           </section>
@@ -180,11 +177,12 @@ async function CompanyDetails({
               usually say little. Tremor only counts sales that weren&apos;t
               pre-planned.
             </p>
-            <p className="mt-3 text-sm">
-              {sales.length} sale{sales.length === 1 ? "" : "s"} (
-              {unplannedSales.length} not pre-planned) · {buys.length} purchase
-              {buys.length === 1 ? "" : "s"}
-            </p>
+            {trades.length > 0 && (
+              <p className="mt-3 text-sm">
+                {sales.length} sale{sales.length === 1 ? "" : "s"} ({unplannedSales.length} not pre-planned) ·{" "}
+                {buys.length} purchase{buys.length === 1 ? "" : "s"}
+              </p>
+            )}
             <div className="mt-3">
               {trades.length ? (
                 <ul className="divide-y divide-line border-y border-line">
@@ -203,7 +201,7 @@ async function CompanyDetails({
                       </span>
                       <span className="shrink-0 text-right">
                         <span
-                          className={`block font-semibold ${t.transaction_code === "S" ? "" : "text-calm"}`}
+                          className="block font-semibold"
                         >
                           {t.transaction_code === "S" ? "Sold" : "Bought"}{" "}
                           {Math.round(t.shares ?? 0).toLocaleString()} shares
@@ -239,11 +237,7 @@ async function CompanyDetails({
             <h2 className="border-t border-foreground pt-3 font-serif text-2xl font-medium tracking-tight">
               Recent <Term id="sec">SEC filings</Term>
             </h2>
-            <p className="mt-3 text-sm text-muted">
-              Public companies must report important news and their finances to
-              the SEC, the US agency that oversees the stock market.
-            </p>
-            <ul className="mt-3 divide-y divide-line overflow-hidden rounded-lg bg-surface">
+            <ul className="mt-3 divide-y divide-line border-y border-line">
               {filings.map((f) => (
                 <li key={f.accession_number} className="py-3 text-sm">
                   <a

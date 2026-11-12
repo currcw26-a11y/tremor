@@ -51,7 +51,10 @@ from ..http import get_text
 
 # Forms we keep. 8-K = "something important happened"; 4 = insider trade;
 # 10-Q / 10-K = quarterly / yearly report (cash numbers); S-3 / S-1 / 424B5 = selling new shares.
-KEEP_FORMS = {"8-K", "8-K/A", "4", "4/A", "10-Q", "10-K", "S-3", "S-1", "424B5"}
+# Companies based outside the US file different forms: 6-K (news), 20-F / 40-F (yearly report), F-1 / F-3 (share sales).
+# 6-Ks carry no item codes, so executive departures are only detected from 8-Ks.
+KEEP_FORMS = {"8-K", "8-K/A", "4", "4/A", "10-Q", "10-K", "S-3", "S-1", "424B5",
+              "6-K", "6-K/A", "20-F", "40-F", "F-1", "F-3"}
 
 # What each 8-K item number means (only the ones Tremor cares about)
 ITEM_MEANINGS = {

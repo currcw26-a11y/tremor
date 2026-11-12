@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+
+/** "ArriVent BioPharma, Inc.: A key executive is leaving" -> "ArriVent BioPharma: A key executive is leaving" */
+const tidyHeadline = (h: string) => h.replace(/^([^:]+?),?\s+(Inc|Corp|Corporation|Ltd|Limited|LLC|plc|S\.?A|N\.?V|AG|SE|A\/S)\.?:/i, "$1:");
 import {
   getTrackRecord,
   type BacktestCase,
@@ -269,9 +272,6 @@ export default async function TrackRecordPage() {
                     <span className="text-xs text-muted">
                       {niceDate(a.detected_at.slice(0, 10))}
                     </span>
-                    <span className="font-mono text-[11px] uppercase tracking-wider text-muted">
-                      Too early to tell
-                    </span>
                   </div>
                   <p className="mt-1">
                     {a.nct_id ? (
@@ -279,10 +279,10 @@ export default async function TrackRecordPage() {
                         href={`/trials/${a.nct_id}`}
                         className="hover:underline"
                       >
-                        {a.headline}
+                        {tidyHeadline(a.headline)}
                       </Link>
                     ) : (
-                      a.headline
+                      tidyHeadline(a.headline)
                     )}
                   </p>
                 </li>
