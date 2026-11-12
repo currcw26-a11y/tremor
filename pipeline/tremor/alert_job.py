@@ -64,7 +64,7 @@ def _explain(alert: dict, trials: dict, companies: dict) -> str | None:
 
 def _reminders(companies: dict) -> list[dict]:
     try:
-        events = db.select("upcoming_events", "*")
+        events = [e for e in db.select("upcoming_events", "*") if e["kind"] != "conference"]   # no company to watch
     except RuntimeError:   # migration 010 not run yet
         return []
     names = {t: _short_name(c.get("name") or t) for t, c in companies.items()}

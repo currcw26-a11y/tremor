@@ -418,8 +418,8 @@ export async function getTrackRecord() {
 // ---------- Upcoming calendar ----------
 export type UpcomingEvent = {
   id: number;
-  kind: "fda_decision" | "fda_meeting" | "results_due";
-  ticker: string;
+  kind: "fda_decision" | "fda_meeting" | "results_due" | "conference";
+  ticker: string; // empty for conferences (they aren't about one company)
   nct_id: string | null;
   event_date: string;
   date_precision: "day" | "month";
@@ -428,6 +428,7 @@ export type UpcomingEvent = {
   source_url: string | null;
   source_form: string | null;
   filed_at: string | null;
+  end_date?: string | null; // conferences: the last day
   updated_at: string;
   trials: { score: number; score_label: ScoreLabel } | null;
   companies: { name: string } | null;

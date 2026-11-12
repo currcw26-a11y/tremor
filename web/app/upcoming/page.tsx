@@ -119,6 +119,36 @@ function FdaMeeting({ e }: { e: UpcomingEvent }) {
   );
 }
 
+function Conference({ e }: { e: UpcomingEvent }) {
+  const [, m1, d1] = e.event_date.split("-").map(Number);
+  const [, m2, d2] = (e.end_date ?? e.event_date).split("-").map(Number);
+  const month = (m: number) => MONTH_NAMES[m - 1].slice(0, 3);
+  const range = m1 === m2 ? `${month(m1)} ${d1}–${d2}` : `${month(m1)} ${d1} – ${month(m2)} ${d2}`;
+  return (
+    <li className="flex gap-4 border-b border-line py-5">
+      <DateBox e={e} />
+      <div className="min-w-0">
+        <p className="font-medium">{e.title}</p>
+        <p className="mt-0.5 text-sm text-ink-2">
+          {range}
+          {e.source_form ? ` · ${e.source_form}` : ""}
+        </p>
+        {e.quote && <p className="mt-1.5 text-sm text-muted">{e.quote}</p>}
+        {e.source_url && (
+          <a
+            href={e.source_url}
+            target="_blank"
+            rel="noreferrer"
+            className="tap mt-1 inline-block text-xs underline"
+          >
+            Conference website ↗
+          </a>
+        )}
+      </div>
+    </li>
+  );
+}
+
 function ResultsRow({ e }: { e: UpcomingEvent }) {
   return (
     <li className="flex items-start gap-3 border-t border-line py-2.5 first:border-t-0">
@@ -154,6 +184,7 @@ export default async function UpcomingPage() {
   const decisions = events.filter((e) => e.kind === "fda_decision");
   const meetings = events.filter((e) => e.kind === "fda_meeting");
   const results = events.filter((e) => e.kind === "results_due");
+  const confs = events.filter((e) => e.kind === "conference");
   const byMonth = new Map<string, UpcomingEvent[]>();
   // Exact days first, then the trials that only gave a month
   const ordered = [...results].sort(
@@ -222,6 +253,24 @@ export default async function UpcomingPage() {
               <ul className="mt-2">
                 {meetings.map((e) => (
                   <FdaMeeting key={e.id} e={e} />
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {confs.length > 0 && (
+            <section>
+              <h2 className="border-t border-foreground pt-3 font-serif text-2xl font-medium tracking-tight">
+                Big cancer conferences
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-ink-2">
+                Companies often share trial results at these meetings, so
+                stocks of small drug companies can move during them. Dates come
+                from each conference&apos;s website.
+              </p>
+              <ul className="mt-2">
+                {confs.map((e) => (
+                  <Conference key={e.id} e={e} />
                 ))}
               </ul>
             </section>

@@ -2,13 +2,42 @@
 
     python -m tremor.upcoming_job
 """
+import csv
 from datetime import date, timedelta
+from pathlib import Path
 
 from . import db
 from .backtest_job import _cached_text
 from .sources import fda_dates
 
 RESULTS_AHEAD_DAYS = 183   # show trials whose main results are expected in the next ~6 months
+CONFERENCES_CSV = Path(__file__).resolve().parents[1] / "data" / "conferences.csv"
+CONFERENCE_AHEAD_DAYS = 366
+
+
+def conferences(today: date, path: Path = CONFERENCES_CSV) -> list[dict]:
+    """Big cancer conferences from the hand-edited CSV: only rows marked confirmed=yes, not over yet,
+    starting within a year. Companies often share trial results at these, so stocks can move."""
+    if not path.exists():
+        return []
+    rows = []
+    with path.open() as f:
+        for r in csv.DictReader(f):
+            if (r.get("confirmed") or "").strip().lower() != "yes":
+                continue
+            try:
+                start, end = date.fromisoformat(r["starts"].strip()), date.fromisoformat(r["ends"].strip())
+            except ValueError:
+                print(f"    conferences.csv: bad date in {r.get('name')!r}; use YYYY-MM-DD", flush=True)
+                continue
+            if end < today or (start - today).days > CONFERENCE_AHEAD_DAYS:
+                continue
+            rows.append({"kind": "conference", "ticker": None, "nct_id": None, "event_date": start.isoformat(),
+                         "end_date": end.isoformat(), "date_precision": "day", "title": r["name"].strip(),
+                         "quote": (r.get("about") or "").strip() or None, "source_url": (r.get("url") or "").strip() or None,
+                         "source_form": (r.get("city") or "").strip() or None, "filed_at": None,
+                         "dedupe_key": f"conference:{r['name'].strip()}:{start.isoformat()}"})
+    return rows
 
 
 def fda_decisions(companies: dict[str, str], today: date) -> tuple[list[dict], int]:
@@ -80,12 +109,21 @@ def run(today: date | None = None) -> dict:
     companies = {c["cik"].zfill(10): c["ticker"] for c in db.select("companies", "ticker,cik") if c["ticker"] in with_trials}
     decisions, checked = fda_decisions(companies, today)
     meetings, due = fda_meetings(today), results_due(today)
+    try:   # conferences need migration 015 (no company, an end date)
+        db.select("upcoming_events", "end_date", limit="1")
+        confs = conferences(today)
+    except RuntimeError:
+        confs = []
     db.delete("upcoming_events", id="gt.0")   # small table: rebuilt fresh every day
     rows = decisions + meetings + due
+    if confs:
+        for r in rows:
+            r.setdefault("end_date", None)
+        rows += confs
     if rows:
         db.insert("upcoming_events", rows)
     return {"filings_checked": checked, "fda_decisions": len(decisions), "fda_meetings": len(meetings),
-            "results_due": len(due)}
+            "results_due": len(due), "conferences": len(confs)}
 
 
 if __name__ == "__main__":

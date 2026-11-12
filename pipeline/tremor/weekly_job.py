@@ -66,7 +66,7 @@ def gather(today: date) -> dict:
     soon = (today + timedelta(days=14)).isoformat()
     coming = []
     try:
-        events = db.select("upcoming_events", "kind,ticker,event_date,date_precision", event_date=f"gte.{today.isoformat()}",
+        events = db.select("upcoming_events", "kind,ticker,title,event_date,date_precision", event_date=f"gte.{today.isoformat()}",
                            order="event_date")
     except RuntimeError:
         events = []
@@ -79,6 +79,8 @@ def gather(today: date) -> dict:
             coming.append(f"FDA decision expected for {who} ({e['ticker']}) by {weekly.nice(d)}")
         elif e["kind"] == "fda_meeting":
             coming.append(f"FDA advisory meeting about {who}'s drug on {weekly.nice(d)}")
+        elif e["kind"] == "conference":
+            coming.append(f"The {e['title']} starts {weekly.nice(d)} (companies often share trial results there)")
     due = sum(1 for e in events if e["kind"] == "results_due" and e["event_date"] <= soon)
     if due:
         coming.append(f"{due} tracked trials expect their main results by then (the companies' own estimates, which often slip)")
