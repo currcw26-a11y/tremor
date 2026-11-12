@@ -136,14 +136,14 @@ export default function Home() {
             When a drug trial is in trouble, the clues often show up in public records before the news does. Tremor reads
             them and explains what changed, in plain English.
           </p>
-          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-[15px] font-medium">
-            <Link href="/learn">
+          <div className="mt-7 flex flex-wrap gap-x-8 text-[15px] font-medium">
+            <Link href="/learn" className="inline-block py-2">
               <span className="link-grow">How biotech stocks move</span> <span className="nudge">→</span>
             </Link>
-            <Link href="/how-it-works">
+            <Link href="/how-it-works" className="inline-block py-2">
               <span className="link-grow">How the score works</span> <span className="nudge">→</span>
             </Link>
-            <Link href="/weekly">
+            <Link href="/weekly" className="inline-block py-2">
               <span className="link-grow">This week&apos;s roundup</span> <span className="nudge">→</span>
             </Link>
           </div>

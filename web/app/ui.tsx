@@ -19,7 +19,7 @@ export function SectionHead({
     <div className="flex items-baseline justify-between gap-4 border-t border-foreground pt-3">
       <Tag className={`font-serif font-medium tracking-tight ${Tag === "h2" ? "text-2xl" : "text-xl"}`}>{title}</Tag>
       {href && (
-        <Link href={href} className="shrink-0 text-sm text-ink-2 hover:text-foreground">
+        <Link href={href} className="tap shrink-0 text-sm text-ink-2 hover:text-foreground">
           <span className="link-grow">{linkText}</span> <span className="nudge">→</span>
         </Link>
       )}

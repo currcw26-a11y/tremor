@@ -118,25 +118,25 @@ function SignalHistory({
                   key={`${c.ticker}-${c.signal_day}`}
                   className="border-t border-line align-top"
                 >
-                  <td className="py-1.5 pr-3">
+                  <td className="py-2 pr-3">
                     <Link
                       href={`/companies/${c.ticker}`}
-                      className="hover:underline"
+                      className="tap-sm hover:underline"
                     >
                       <Ticker symbol={c.ticker} />
                     </Link>
                   </td>
-                  <td className="whitespace-nowrap py-1.5 pr-3">
+                  <td className="whitespace-nowrap py-2 pr-3">
                     {niceDate(c.signal_day)}
                   </td>
-                  <td className="py-1.5 pr-3">
+                  <td className="py-2 pr-3">
                     {isStop
                       ? `Announced ${niceDate(c.news_day)}`
                       : c.outcome === "bad"
                         ? `Trial stopped ${niceDate(c.detail)}`
                         : "No trial stopped within a year"}
                   </td>
-                  <td className="py-1.5 text-right tabular-nums">
+                  <td className="py-2 text-right tabular-nums">
                     {move(c.move_pct)}
                   </td>
                 </tr>
