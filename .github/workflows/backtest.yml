@@ -1,0 +1,43 @@
+# Re-runs Tremor's look back at past cases (the backtest) once a month, so the track record page, the
+# "Upside and downside" breakdowns and the score explanations stay up to date as more past cases mature.
+# You can also start it by hand: GitHub → Actions → "Tremor monthly backtest" → "Run workflow".
+# The next regular pipeline run then refreshes every trial's breakdown with the new numbers.
+name: Tremor monthly backtest
+
+on:
+  schedule:
+    - cron: "41 9 2 * *"     # 9:41 UTC on the 2nd of each month (about 5 am Eastern; off the busy hours)
+  workflow_dispatch:
+
+concurrency:
+  group: pipeline             # shares the lock with the 4-hourly pipeline: never runs at the same time
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: pipeline
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pipeline/requirements.txt
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Run tests (stop if anything is broken)
+        run: python -m pytest -q
+
+      - name: Run the backtest
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+        run: python -m tremor.backtest_job
