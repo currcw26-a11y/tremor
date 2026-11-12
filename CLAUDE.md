@@ -223,6 +223,7 @@ The old site looked AI-built ("looks like every AI site with things switched aro
 - New color scheme (owner dislikes the current stone/beige look). Keep green/yellow/red ONLY for the score meaning (spec requires Calm green / Shaky yellow / Tremor red, always with word + shape), but retune shades and build a more distinctive palette around them; re-validate contrast and colorblind safety.
 - Break out of the generic AI template: fewer bordered rounded-xl cards and pill badges, no stat-tile row, no "New to X? ->" pill buttons, consider an editorial type pairing (serif display + clean sans) instead of default Geist everywhere.
 - Small interactions make it feel crafted: subtle hover states, gentle transitions/animations, small hover/tap previews. Keep them quick and respect prefers-reduced-motion.
+- Nov 12: owner REJECTED a 'polish' pass (branch `polish`, not merged) that swapped the mono uppercase labels for sentence case, removed the little → arrows and tightened spacing: 'made it more AI looking'. KEEP the current look as is: mono/uppercase small labels, the → arrows (incl. nudge), current spacing. Don't restyle without asking first.
 
 ## Notes for later weeks
 
