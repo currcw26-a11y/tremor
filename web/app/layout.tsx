@@ -66,7 +66,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Link>
             <div className="flex items-center gap-4 text-[15px] text-ink-2 sm:gap-6">
               {NAV.map((n) => (
-                <Link key={n.href} href={n.href} className={`link-grow hover:text-foreground ${n.phone ? "" : "hidden md:inline"}`}>
+                <Link key={n.href} href={n.href} className={`tap link-grow hover:text-foreground ${n.phone ? "" : "hidden md:inline"}`}>
                   {n.label}
                 </Link>
               ))}
@@ -90,10 +90,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {FOOTER.map((col) => (
               <div key={col.title} className="md:col-span-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/50">{col.title}</p>
-                <ul className="mt-3 space-y-2 text-sm">
+                <ul className="mt-2 text-sm">
                   {col.links.map(([href, label]) => (
                     <li key={href}>
-                      <Link href={href} className="link-grow text-white/85 hover:text-white">
+                      <Link href={href} className="link-grow inline-block py-2 text-white/85 hover:text-white md:py-1">
                         {label}
                       </Link>
                     </li>

@@ -33,7 +33,8 @@ Rules (never break these):
 - Write every number as digits (write 2, not two).
 - Never say or hint that anyone should buy, sell, or hold a stock.
 - No jargon. If you must use a term like "Phase 3" or "enrollment", explain it in a few words.
-- Don't guess the company's reasons; say "the company hasn't said why" if it helps.
+- Don't guess the company's reasons. If the facts include the company's stated reason, say it plainly in everyday words.
+  If they don't, you may say "the company hasn't said why".
 - Plain text only: no headings, bullet points, or emojis."""
 
 SHORT_SYSTEM = SYSTEM.replace("Write 3 short sentences:", "Write ONE short sentence covering, briefly:")
@@ -63,7 +64,7 @@ def describe(change: dict) -> str:
     return t.replace("_", " ")
 
 
-def facts_for(change: dict, trial: dict) -> str:
+def facts_for(change: dict, trial: dict, why_stopped: str | None = None) -> str:
     phases = "/".join(p.replace("PHASE", "") for p in trial.get("phases") or []) or "not listed"
     lines = [
         f"Company: {trial['sponsor_name']} (stock ticker {trial['ticker']})",
@@ -74,7 +75,23 @@ def facts_for(change: dict, trial: dict) -> str:
         f"Planned patients: {trial.get('enrollment')}",
         f"What changed: {describe(change)}",
     ]
+    if change["change_type"] == "trial_stopped":
+        lines.append(f'The company\'s stated reason for stopping, from the trial record: "{why_stopped.strip()}"'
+                     if why_stopped and why_stopped.strip() else "The trial record gives no reason for stopping.")
     return "\n".join(lines)
+
+
+def stated_reasons(nct_ids: list[str]) -> dict[str, str]:
+    """Each stopped trial's reason for stopping (whyStopped), read from its latest saved record."""
+    if not nct_ids:
+        return {}
+    rows = db.select("trials", "nct_id,latest_snapshot_id", nct_id=f"in.({','.join(nct_ids)})")
+    snap_ids = [str(r["latest_snapshot_id"]) for r in rows if r.get("latest_snapshot_id")]
+    if not snap_ids:
+        return {}
+    return {r["nct_id"]: r["why"] for r in db.select(
+        "trial_snapshots", "nct_id,why:data->protocolSection->statusModule->>whyStopped",
+        id=f"in.({','.join(snap_ids)})") if r.get("why")}
 
 
 def run() -> dict:
@@ -90,10 +107,11 @@ def run() -> dict:
     trials = {t["nct_id"]: t for t in db.select(
         "trials", "nct_id,title,sponsor_name,ticker,phases,conditions,overall_status,enrollment", nct_id=f"in.({ids})")}
 
+    why = stated_reasons(sorted({c["nct_id"] for c in todo if c["change_type"] == "trial_stopped"}))
     short = ai.over_budget()  # over budget: explanations are essential (alerts use them) but shorter
     done = failed = 0
     for c in todo:
-        text = ai.write("explanation", SHORT_SYSTEM if short else SYSTEM, facts_for(c, trials[c["nct_id"]]),
+        text = ai.write("explanation", SHORT_SYSTEM if short else SYSTEM, facts_for(c, trials[c["nct_id"]], why.get(c["nct_id"])),
                         essential=True, max_tokens=1500 if short else 2500)
         if text:
             db.update("trial_changes", {"explanation": text, "explanation_model": ai.MODEL}, id=f"eq.{c['id']}")

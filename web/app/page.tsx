@@ -42,7 +42,7 @@ async function NextUp() {
                     <span className="block font-serif text-3xl font-medium leading-none">
                       {e.date_precision === "day" ? Number(d) : "—"}
                     </span>
-                    <span className="mt-1 block font-mono text-[11px] uppercase tracking-wider text-muted">
+                    <span className="mt-1 block font-mono text-[11.5px] uppercase tracking-wide text-muted">
                       {MONTHS[Number(m) - 1]} {y.slice(2)}
                     </span>
                   </span>

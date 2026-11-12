@@ -94,3 +94,10 @@ def test_stakes_mention_approved_medicines_only_when_there_are_some():
     assert stakes(1, approved=1)["text"].endswith("It also has 1 FDA-approved medicine on the market, so this trial isn't its only hope.")
     assert "3 FDA-approved medicines" in stakes(5, approved=3)["text"]
     assert "approved" not in stakes(40, approved=30)["text"]   # big companies: already 'one of many'
+
+
+def test_compare_words_say_how_many_times():
+    from tremor.outlook import compare_words
+    assert compare_words(0.25, 0.08) == "about 3 times as often as a random day"
+    assert compare_words(0.16, 0.08) == "about twice as often as a random day"
+    assert compare_words(0.12, 0.08) == "a bit more often than a random day"

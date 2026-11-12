@@ -57,8 +57,10 @@ def compare_words(share: float, baseline: float | None) -> str:
     if not baseline:
         return ""
     ratio = share / baseline
+    if ratio >= 2.5:
+        return f"about {round(ratio)} times as often as a random day"
     if ratio >= 1.8:
-        return "about twice as often as a random day, or more"
+        return "about twice as often as a random day"
     if ratio >= 1.25:
         return "a bit more often than a random day"
     if ratio > 0.8:

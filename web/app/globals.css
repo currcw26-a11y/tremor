@@ -85,6 +85,10 @@ body {
 }
 .link-grow:hover, .link-grow:focus-visible { background-size: 100% 1px; }
 
+/* A bigger invisible touch area for small links, without moving anything (about 40px tall on phones) */
+.tap { position: relative; }
+.tap::after { content: ""; position: absolute; inset: -10px -4px; }
+
 /* An arrow that nudges forward when its row or link is hovered */
 .nudge { display: inline-block; transition: transform 0.2s ease; }
 .group:hover .nudge, a:hover > .nudge { transform: translateX(3px); }

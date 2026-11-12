@@ -76,3 +76,14 @@ def test_headlines_with_the_word_approved_do_not_cancel_a_date():
             "FDA-Approved Therapy. Our focus: obtain FDA approval. Launch if Approved February 28, 2027.")
     assert decided_dates(text) == set()
     assert [d["date"] for d in extract_dates(text, TODAY)] == ["2027-02-28"]
+
+
+def test_quote_stays_inside_the_dates_own_sentence():
+    from tremor.sources.fda_dates import quote
+    s = ("Revenue grew. The FDA provided a Prescription Drug User Fee Act (PDUFA) goal action date of November 14, 2026. "
+         "We look forward to it.")
+    i = s.index("November 14, 2026")
+    assert quote(s, i, i + 17) == "The FDA provided a Prescription Drug User Fee Act (PDUFA) goal action date of November 14, 2026."
+    s = "Resubmitted New Drug Application (PDUFA) date of December 17, 2026 “The ADA and EASD consensus statement is"
+    i = s.index("December 17, 2026")
+    assert quote(s, i, i + 17).endswith("date of December 17, 2026")

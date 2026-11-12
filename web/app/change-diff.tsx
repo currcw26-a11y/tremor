@@ -195,7 +195,7 @@ export function ChangeDiff({ c }: { c: Change }) {
           href={`https://clinicaltrials.gov/study/${c.nct_id}?tab=history`}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 inline-block text-xs underline"
+          className="tap mt-3 inline-block text-xs underline"
         >
           Every version on ClinicalTrials.gov ↗
         </a>

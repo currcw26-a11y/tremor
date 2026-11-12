@@ -32,14 +32,24 @@ MONTH_REACH = 40    # a month-only date must be even closer ("target action date
 
 
 def quote(s: str, start: int, end: int, before: int = 120, after: int = 60) -> str:
-    """The company's words around the date, cut at word edges, with filing junk ("EX-99.1", file names) removed."""
+    """The company's words around the date, cut at word edges, with filing junk ("EX-99.1", file names) removed.
+    Stays inside the date's own sentence or bullet point: starts after the previous sentence end or bullet,
+    stops at the next sentence end or the start of an unrelated quote."""
     lo, hi = max(0, start - before), min(len(s), end + after)
-    while lo > 0 and lo < start and s[lo - 1] != " ":
+    head = list(re.finditer(r"[.!?](?=\s+[A-Z“\"])|•", s[lo:start]))
+    if head:
+        lo += head[-1].end()
+    tail = re.search(r"[.!?](?=\s|$)|\s[“\"]", s[end:hi])
+    if tail:
+        hi = end + tail.start() + (1 if s[end + tail.start()] in ".!?" else 0)
+    while lo > 0 and lo < start and s[lo - 1] not in " •.!?":
         lo += 1
-    while hi < len(s) and hi > end and s[hi - 1] != " ":
+    while hi < len(s) and hi > end and s[hi - 1] not in " .!?":
         hi -= 1
     text = " ".join(JUNK.sub(" ", s[lo:hi]).split()).strip(" ;,•")
-    return ("…" if lo > 0 else "") + text + ("…" if hi < len(s) else "")
+    cut_start = lo > 0 and not head
+    cut_end = hi < len(s) and not tail
+    return ("…" if cut_start else "") + text + ("…" if cut_end else "")
 
 
 def _date(m, precision: str) -> date | None:

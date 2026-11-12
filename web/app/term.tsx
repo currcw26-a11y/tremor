@@ -38,7 +38,7 @@ export function Term({ id, children }: { id: GlossaryId; children?: React.ReactN
         aria-expanded={open}
         aria-controls={popId}
         onClick={() => setOpen((o) => !o)}
-        className="cursor-help underline decoration-muted decoration-dotted decoration-2 underline-offset-4 [font:inherit] [letter-spacing:inherit]"
+        className="tap cursor-help underline decoration-muted decoration-dotted decoration-2 underline-offset-4 [font:inherit] [letter-spacing:inherit]"
       >
         {children ?? g.term}
       </button>

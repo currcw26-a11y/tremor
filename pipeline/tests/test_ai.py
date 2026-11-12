@@ -74,3 +74,10 @@ def test_facts_contain_the_numbers_claude_needs():
              "conditions": ["Lung Cancer"], "overall_status": "RECRUITING", "enrollment": 400}
     facts = explain_job.facts_for(change, trial)
     assert "about 33 months later" in facts and "2030-04-02" in facts and "Phase 3" in facts
+
+
+def test_stopped_trial_facts_include_the_companys_stated_reason():
+    change = {"change_type": "trial_stopped", "old_value": "RECRUITING", "new_value": "TERMINATED"}
+    trial = {"sponsor_name": "X", "ticker": "X", "title": "T", "phases": ["PHASE3"], "conditions": [], "enrollment": 5}
+    assert 'stated reason for stopping, from the trial record: "Business reasons"' in explain_job.facts_for(change, trial, "Business reasons")
+    assert "gives no reason" in explain_job.facts_for(change, trial, None)

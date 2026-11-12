@@ -42,7 +42,7 @@ function DateBox({ e }: { e: UpcomingEvent }) {
       <div className="font-serif text-3xl font-medium leading-none">
         {w.big}
       </div>
-      <div className="mt-1 font-mono text-[10.5px] uppercase leading-tight tracking-wider text-muted">
+      <div className="mt-1 font-mono text-[11.5px] uppercase leading-tight tracking-wide text-muted">
         {w.small}
       </div>
     </div>
@@ -78,7 +78,7 @@ function FdaDecision({ e }: { e: UpcomingEvent }) {
             href={e.source_url}
             target="_blank"
             rel="noreferrer"
-            className="mt-1 inline-block text-xs underline"
+            className="tap mt-1 inline-block text-xs underline"
           >
             From its {e.source_form} filed {niceDate(e.filed_at)} ↗
           </a>
@@ -109,7 +109,7 @@ function FdaMeeting({ e }: { e: UpcomingEvent }) {
             href={e.source_url}
             target="_blank"
             rel="noreferrer"
-            className="mt-1 inline-block text-xs underline"
+            className="tap mt-1 inline-block text-xs underline"
           >
             FDA notice ↗
           </a>
