@@ -54,3 +54,34 @@ def test_cmo_terminated_is_flagged():
 def test_ceo_retiring_is_flagged():
     text = HEAD + "Mr. Paterson notified the Board of his decision to retire as President and Chief Executive Officer of the Company."
     assert find_key_departure(text)
+
+
+def test_6k_news_release_with_a_key_departure():
+    from tremor.exec_changes import find_key_departure
+    text = ("Example Bio Announces Leadership Transition. PARIS, France, March 3, 2026 - Example Bio SA today announced "
+            "that Dr. Jane Roe will step down as Chief Medical Officer, effective April 30, 2026. The company has begun a search.")
+    assert "step down as Chief Medical Officer" in find_key_departure(text, whole=True)
+
+
+def test_6k_false_alarms_are_ignored():
+    from tremor.exec_changes import find_key_departure
+    quote = ("“The response was durable: separation from placebo emerged early,” said Luc Truyen, M.D., "
+             "Chief Medical Officer at Example Bio.")
+    assert find_key_departure(quote, whole=True) is None                         # 'separation' means something else here
+    old = "Mr. Doe has served as interim CEO since January 2025, following the resignation of our prior Chief Executive Officer, Dr. Smith."
+    assert find_key_departure(old, whole=True) is None                           # a past role, not news
+    assert find_key_departure("x " * 20_000 + "The Chief Executive Officer will resign.", whole=True) is None  # long report
+
+
+def test_6k_succeeding_the_previous_holder_counts():
+    from tremor.exec_changes import find_key_departure
+    s = ("Innate also announced the appointment of Markus Jensen as Chief Medical Officer and member of the Executive "
+         "Leadership Team, effective September 1, 2026, succeeding Sonia Quaratino.")
+    assert find_key_departure(s, whole=True)
+    assert find_key_departure("Example Bio appoints Jane Roe as Chief Medical Officer, a new role at the company.", whole=True) is None
+
+
+def test_6k_succession_must_be_for_a_key_role():
+    from tremor.exec_changes import find_key_departure
+    s = "Example Bio appointed Ann Lee as Chairman of the Board, succeeding Tom Ray. Ms. Lee remains our Chief Executive Officer."
+    assert find_key_departure(s, whole=True) is None

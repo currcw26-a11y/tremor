@@ -33,7 +33,7 @@ def run(today: date | None = None) -> dict:
         changes[c["nct_id"]].append(c)
     filings = defaultdict(list)
     for f in db.select("sec_filings", "ticker,filed_at,items,url,key_exec_departure,departure_details",
-                       filed_at=f"gte.{since}", form="in.(8-K,8-K/A)"):
+                       filed_at=f"gte.{since}", form="in.(8-K,8-K/A,6-K,6-K/A)"):   # 6-K = non-US companies
         filings[f["ticker"]].append(f)
     sales = defaultdict(list)
     for s in db.select("insider_trades", "ticker,accession_number,insider_name,transaction_date",
