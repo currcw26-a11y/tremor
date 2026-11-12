@@ -73,7 +73,7 @@ def test_facts_contain_the_numbers_claude_needs():
     trial = {"sponsor_name": "Amgen", "ticker": "AMGN", "title": "Study X", "phases": ["PHASE3"],
              "conditions": ["Lung Cancer"], "overall_status": "RECRUITING", "enrollment": 400}
     facts = explain_job.facts_for(change, trial)
-    assert "about 33 months later" in facts and "2030-04-02" in facts and "Phase 3" in facts
+    assert "about 33 months later" in facts and "April 2, 2030" in facts and "Phase 3" in facts
 
 
 def test_stopped_trial_facts_include_the_companys_stated_reason():

@@ -100,3 +100,11 @@ export function companyName(name: string | null | undefined, ticker = "") {
   }
   return n.replace(/,?\s+(Inc|Corp|Corporation|Co|Ltd|Limited)\.?$/i, "").trim() || ticker;
 }
+
+/** AI summaries sometimes copy dates the way records store them ("2026-11-10", "2026-11"). Show them the normal way. */
+export function tidyDates(text: string) {
+  const M = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return text
+    .replace(/\b(20\d\d)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b/g, (_, y, m, d) => `${M[+m - 1]} ${+d}, ${y}`)
+    .replace(/\b(20\d\d)-(0[1-9]|1[0-2])\b/g, (_, y, m) => `${M[+m - 1]} ${y}`);
+}

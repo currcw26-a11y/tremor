@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Change, Trial } from "@/lib/db";
-import { STATUS, describeChange, niceDate, phaseLabel, statusLabel } from "@/lib/words";
+import { STATUS, describeChange, niceDate, phaseLabel, statusLabel, tidyDates } from "@/lib/words";
 import { TimeAgo } from "./time-ago";
 import { ScoreBadge } from "./score";
 import { ChangeDiff } from "./change-diff";
@@ -67,7 +67,7 @@ export function ChangeRow({ c, showTrial = true }: { c: Change; showTrial?: bool
         )}
         <p className={`font-medium leading-snug ${showTrial ? "mt-1.5" : ""}`}>{text}</p>
         {c.explanation && (
-          <p className={`mt-1.5 text-sm leading-relaxed text-ink-2 ${showTrial ? "line-clamp-2" : ""}`}>{c.explanation}</p>
+          <p className={`mt-1.5 text-sm leading-relaxed text-ink-2 ${showTrial ? "line-clamp-2" : ""}`}>{tidyDates(c.explanation)}</p>
         )}
         <p className="mt-1.5 text-xs text-muted">
           Spotted <TimeAgo iso={c.detected_at} />

@@ -2,7 +2,7 @@ import type { Company, Filing } from "@/lib/db";
 import { niceDate } from "@/lib/words";
 import { Term } from "../../term";
 
-const SHARE_SALE_FORMS = new Set(["S-3", "S-1", "424B5"]);
+const SHARE_SALE_FORMS = new Set(["S-3", "S-1", "424B5", "F-1", "F-3"]);
 
 function dollars(n: number) {
   const a = Math.abs(n);
