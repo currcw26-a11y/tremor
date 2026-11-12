@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTrackRecord } from "@/lib/db";
+import letters from "@/lib/fda-letters.json";
 import { Term } from "../term";
 
 export const metadata: Metadata = {
   title: "How biotech stocks move",
   alternates: { canonical: "/learn" },
   description:
-    "A 2-minute guide for people who have never bought a stock: why small drug companies' stocks jump and crash, and how to read Tremor.",
+    "A short guide for people who have never bought a stock: why small drug companies' stocks jump and crash, and how to read Tremor.",
 };
 
 function Step({
@@ -39,6 +40,7 @@ const STEPS = [
   "Why small drug companies swing so hard",
   "The road every drug travels",
   "The big days",
+  "When the FDA says no",
   "Money matters",
   "Why prices don't always react the way you'd expect",
   "How to read Tremor",
@@ -147,13 +149,61 @@ export default async function LearnPage() {
           <p>
             Tremor&apos;s{" "}
             <Link href="/upcoming" className="font-semibold underline">
-              Coming up
+              Calendar
             </Link>{" "}
-            page lists these dates when they&apos;re known.
+            lists these dates when they&apos;re known.
           </p>
         </Step>
 
-        <Step n={5} title="Money matters">
+        <Step n={5} title="When the FDA says no">
+          <p>
+            When the FDA won&apos;t approve a drug yet, it sends the company a{" "}
+            <Term id="crl">complete response letter</Term> listing what has to
+            be fixed. The FDA has published {letters.total} of these letters,
+            from {letters.first_year} to {letters.last_year}. Tremor sorted them
+            by what they asked for:
+          </p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              <span className="font-semibold text-foreground">
+                {letters.making} out of {letters.total}
+              </span>{" "}
+              raised problems with how the medicine is made, like a factory
+              inspection that found issues or quality tests that weren&apos;t
+              good enough.
+            </li>
+            <li>
+              <span className="font-semibold text-foreground">
+                {letters.evidence} out of {letters.total}
+              </span>{" "}
+              raised problems with the evidence: the trials didn&apos;t clearly
+              show the drug works or is safe enough, so the FDA wants more data
+              or another trial.
+            </li>
+            <li>
+              {letters.both} letters raised both, and {letters.neither}{" "}
+              didn&apos;t clearly fit either group.
+            </li>
+          </ul>
+          <p className="border-l-2 border-foreground py-1 pl-4 font-serif text-lg italic leading-relaxed text-foreground">
+            A &ldquo;no&rdquo; often isn&apos;t the end: {letters.approved_later}{" "}
+            out of {letters.total} of these drugs were approved later.
+          </p>
+          <p>
+            Most of the other {letters.not_yet_approved} letters were sent in{" "}
+            {letters.recent_from} or later, so some of those drugs may still be
+            approved. Fixing a factory problem usually takes less time than
+            running a new trial, which can take years, so the reason in the
+            letter matters to the stock.
+          </p>
+          <p className="text-sm text-muted">
+            Sorted by the sections each letter includes, from the FDA&apos;s
+            published letters (openFDA). The FDA hasn&apos;t published every
+            letter it has ever sent.
+          </p>
+        </Step>
+
+        <Step n={6} title="Money matters">
           <p>
             Running trials is expensive, and small companies spend cash every
             month. Tremor shows each company&apos;s{" "}
@@ -164,7 +214,7 @@ export default async function LearnPage() {
           </p>
         </Step>
 
-        <Step n={6} title="Why prices don't always react the way you'd expect">
+        <Step n={7} title="Why prices don't always react the way you'd expect">
           <ul className="list-disc space-y-1 pl-5">
             <li>
               Professional investors watch the same public records, so some news
@@ -181,7 +231,7 @@ export default async function LearnPage() {
           </ul>
         </Step>
 
-        <Step n={7} title="How to read Tremor">
+        <Step n={8} title="How to read Tremor">
           <ul className="list-disc space-y-1 pl-5">
             <li>
               The <Term id="worry_score">worry score</Term> counts warning

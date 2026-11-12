@@ -64,6 +64,11 @@ export const GLOSSARY = {
     group: "fda",
     text: "A drug the FDA has allowed to be sold in the US after it passed its trials. Sales of approved medicines bring in money, so a company that has some depends less on any one trial.",
   },
+  crl: {
+    term: "Complete response letter",
+    group: "fda",
+    text: "The letter the FDA sends when it won't approve a drug yet. It lists what the company has to fix, like a factory problem or missing evidence. The company can fix the problems and apply again.",
+  },
   fda_advisory: {
     term: "FDA advisory meeting",
     group: "fda",
