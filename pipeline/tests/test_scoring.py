@@ -23,23 +23,25 @@ def test_no_signals_means_calm_zero():
 
 def test_main_goal_change_today_is_full_points():
     value, label, _ = score(trial_signals(TRIAL, [change("primary_outcome_changed")], TODAY), "RECRUITING", TODAY)
-    assert value == W["primary_outcome_changed"] == 25
-    assert label == "calm"
+    assert value == W["primary_outcome_changed"] == 40
+    assert label == "shaky"   # a critical event shows yellow on its own (Nov 12)
 
 
 def test_points_halve_after_one_half_life():
     sigs = trial_signals(TRIAL, [change("primary_outcome_changed", days_ago=HALF)], TODAY)
-    assert score(sigs, "RECRUITING", TODAY)[0] == round(25 / 2)
+    assert score(sigs, "RECRUITING", TODAY)[0] == round(40 / 2)
 
 
 def test_signals_add_up_to_shaky_and_tremor():
-    shaky = [change("primary_outcome_changed"), change("enrollment_cut", percent_cut=20)]
-    assert score(trial_signals(TRIAL, shaky, TODAY), "RECRUITING", TODAY)[:2] == (40, "shaky")
-    tremor = shaky + [change("date_delayed", months=6)]
+    shaky = [change("date_delayed", months=6)]
     extra = [Signal("key_exec_departure", "x", TODAY, W["key_exec_departure"]),
-             Signal("fda_advisory_meeting", "x", TODAY, W["fda_advisory_meeting"])]
-    # 25 + 15 + 10 + 10 (key executive, lowered from 15 on Nov 11) + 10 = 70: just reaches red
-    assert score(trial_signals(TRIAL, tremor, TODAY) + extra, "RECRUITING", TODAY)[:2] == (70, "tremor")
+             Signal("fda_advisory_meeting", "x", TODAY, W["fda_advisory_meeting"]),
+             Signal("insider_selling_cluster", "x", TODAY, W["insider_selling_cluster"])]
+    # 10 + 10 + 10 + 10 = 40: four smaller signs together reach yellow
+    assert score(trial_signals(TRIAL, shaky, TODAY) + extra, "RECRUITING", TODAY)[:2] == (40, "shaky")
+    # main goal changed (40) + patients cut (40) = 80: red
+    tremor = [change("primary_outcome_changed"), change("enrollment_cut", percent_cut=20)]
+    assert score(trial_signals(TRIAL, tremor, TODAY), "RECRUITING", TODAY)[:2] == (80, "tremor")
 
 
 def test_score_never_goes_above_100():

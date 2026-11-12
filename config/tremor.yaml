@@ -29,8 +29,8 @@ score:
   # Points for each kind of signal
   weights:
     # From changes to the trial's official record
-    primary_outcome_changed: 25   # main goal changed or removed
-    enrollment_cut: 15            # patients cut by 15% or more
+    primary_outcome_changed: 40   # main goal changed or removed (25 -> 40 on Nov 12, owner: a critical event shows Shaky on its own)
+    enrollment_cut: 40            # patients cut by 15% or more (15 -> 40 on Nov 12, same reason; final-count cuts still x0.5)
     date_delayed: 10              # results or finish date pushed back 3+ months
     results_overdue: 10           # main results date passed 12+ months ago, no results posted
     # From SEC filings (apply to all of the company's trials)

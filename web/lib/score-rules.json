@@ -11,8 +11,8 @@
   "big_company_factor": 0.5,
   "enrollment_final_count_factor": 0.5,
   "weights": {
-    "primary_outcome_changed": 25,
-    "enrollment_cut": 15,
+    "primary_outcome_changed": 40,
+    "enrollment_cut": 40,
     "date_delayed": 10,
     "results_overdue": 10,
     "insider_selling_cluster": 10,

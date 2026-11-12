@@ -263,8 +263,12 @@ export default async function HowItWorks() {
           leaving went from 15 to 10 points each, because they came before bad
           news only a bit more often than a random day. A second executive
           leaving within 6 months got +10 extra, because that came before bad
-          news about 1 in 4 times. Signs that can&apos;t be tested yet keep
-          their starting points.
+          news about 1 in 4 times. On Nov 12, 2026 a changed main goal and a
+          big cut in patients each went to 40 points (from 25 and 15), so
+          either one on its own turns a trial yellow. That one is a judgment
+          call, not tested on past cases yet: there&apos;s no free archive of
+          old trial records, so Tremor will check it as its own history builds
+          up.
         </p>
         <p className="mt-2">
           <Link href="/track-record" className="font-semibold underline">
