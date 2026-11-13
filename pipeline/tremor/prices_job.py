@@ -3,7 +3,10 @@
     python -m tremor.prices_job --backfill   (about 40 minutes for 196 companies: 5 requests a minute)
 """
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+import requests
 
 from . import db
 from .sources import prices
@@ -46,20 +49,33 @@ def backfill_long_history(limit: int = 95) -> dict:
     return {"long_history_added": done, "still_to_do": max(0, len(todo) - done)}
 
 
-def run() -> dict:
-    """Daily: fill in the last few trading days (1 request per day, all companies at once)."""
+def new_york_today(now: datetime | None = None) -> date:
+    """Today's date in New York, where the market is. A day's prices exist only once that day is over there:
+    at 01:00 UTC it is still the evening of the previous day in New York."""
+    return (now or datetime.now(timezone.utc)).astimezone(ZoneInfo("America/New_York")).date()
+
+
+def run(now: datetime | None = None) -> dict:
+    """Daily: fill in the last few finished trading days (1 request per day, all companies at once)."""
     tickers = {c["ticker"] for c in db.select("companies", "ticker")}
+    today = new_york_today(now)
     latest = db.select("prices", "day", order="day.desc", limit="1")
-    start = date.fromisoformat(latest[0]["day"]) + timedelta(days=1) if latest else date.today() - timedelta(days=5)
-    added, day = 0, start
-    while day < date.today() and (day - start).days < 10:  # catch up at most 10 days per run
+    start = date.fromisoformat(latest[0]["day"]) + timedelta(days=1) if latest else today - timedelta(days=5)
+    added, day, waiting = 0, start, None
+    while day < today and (day - start).days < 10:  # catch up at most 10 days per run
         if day.weekday() < 5:  # markets are closed on weekends
-            rows = prices.one_day(day.isoformat(), tickers)
+            try:
+                rows = prices.one_day(day.isoformat(), tickers)
+            except requests.HTTPError as err:
+                if err.response is not None and err.response.status_code == 403:
+                    waiting = day.isoformat()   # the price service hasn't released this day yet: next run tries again
+                    break
+                raise
             if rows:
                 db.upsert("prices", rows, on_conflict="ticker,day")
                 added += len(rows)
         day += timedelta(days=1)
-    return {"price_rows_added": added}
+    return {"price_rows_added": added, **({"waiting_for": waiting} if waiting else {})}
 
 
 if __name__ == "__main__":
